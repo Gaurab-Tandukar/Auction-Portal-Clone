@@ -1,0 +1,126 @@
+﻿@{
+    ViewData["Title"] = "Account Login";
+}
+
+<div class="container py-4" style="max-width: 550px;">
+    <!-- Live Auth Status Banner -->
+    <div id="statusBanner" class="alert alert-secondary d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <strong>Current Status:</strong> <span id="authStatus">Checking...</span>
+        </div>
+        <button id="logoutBtn" class="btn btn-sm btn-outline-danger d-none" onclick="handleLogout()">Logout</button>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-dark text-white fw-bold">POST /api/login</div>
+        <div class="card-body">
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="mb-3">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" id="loginEmail" class="form-control" placeholder="user@example.com" required />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Password</label>
+                    <input type="password" id="loginPassword" class="form-control" placeholder="Password123#" required />
+                </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="loginRememberMe" />
+                    <label class="form-check-label" for="loginRememberMe">Remember Me</label>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 mb-2">Log In</button>
+            </form>
+            <hr />
+            <button class="btn btn-outline-info w-100 mb-3" onclick="fetchProfile()">GET /api/user/profile/me</button>
+            <div class="text-center">
+                <a href="/register" class="text-decoration-none">Don't have an account? Register here.</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inspector -->
+    <div class="card shadow-sm mt-4">
+        <div class="card-header bg-secondary text-white fw-bold">API Response Inspector</div>
+        <div class="card-body bg-dark text-light">
+            <pre id="outputLog" class="m-0" style="max-height: 200px; overflow-y: auto; color: #00ff66;">Ready for testing...</pre>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const logOutput = (title, data) => {
+            const terminal = document.getElementById('outputLog');
+            const timestamp = new Date().toLocaleTimeString();
+            const header = `\n--- [${timestamp}] ${title} ---`;
+            const content = typeof data === 'object' ? JSON.stringify(data, null, 2) : data;
+            terminal.innerHTML = header + '\n' + content + '\n' + terminal.innerHTML;
+        };
+
+        const updateStatus = (user) => {
+            const statusSpan = document.getElementById('authStatus');
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (user && user.email) {
+                const roles = user.roles ? user.roles.join(', ') : 'No Role';
+                statusSpan.innerHTML = `<span class="badge bg-success">Logged in as ${user.email} (${roles})</span>`;
+                logoutBtn.classList.remove('d-none');
+            } else {
+                statusSpan.innerHTML = '<span class="badge bg-secondary">Not Authenticated</span>';
+                logoutBtn.classList.add('d-none');
+            }
+        };
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const payload = {
+                email: document.getElementById('loginEmail').value,
+                password: document.getElementById('loginPassword').value,
+                rememberMe: document.getElementById('loginRememberMe').checked
+            };
+
+            try {
+                const res = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                logOutput('POST /api/login', data);
+                if (res.ok) {
+                    updateStatus(data);
+                }
+            } catch (err) {
+                logOutput('Login Error', err.message);
+            }
+        }
+
+        async function fetchProfile() {
+            try {
+                const res = await fetch('/api/user/profile/me');
+                const data = await res.json();
+                logOutput('GET /api/user/profile/me', data);
+                if (res.ok) {
+                    updateStatus(data);
+                } else {
+                    updateStatus(null);
+                }
+            } catch (err) {
+                logOutput('Profile Fetch Error', err.message);
+            }
+        }
+
+        async function handleLogout() {
+            try {
+                const res = await fetch('/api/logout', { method: 'POST' });
+                const data = await res.json();
+                logOutput('POST /api/logout', data);
+                if (res.ok) {
+                    updateStatus(null);
+                }
+            } catch (err) {
+                logOutput('Logout Error', err.message);
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", fetchProfile);
+    </script>
+}

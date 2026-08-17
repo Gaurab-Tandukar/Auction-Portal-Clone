@@ -1,0 +1,114 @@
+﻿@{
+    ViewData["Title"] = "User Profile";
+}
+
+<div class="container py-4" style="max-width: 650px;">
+    <div id="loadingSpinner" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-2 text-muted">Fetching user profile...</p>
+    </div>
+
+    <div id="profileCard" class="card shadow-sm d-none">
+        <div class="card-header bg-dark text-white fw-bold d-flex justify-content-between align-items-center">
+            <span>User Account Profile</span>
+            <span id="biddingBadge" class="badge"></span>
+        </div>
+        <div class="card-body">
+            <div class="mb-3 border-bottom pb-2">
+                <label class="text-muted small fw-bold text-uppercase">User ID</label>
+                <div id="profId" class="fw-semibold text-break">--</div>
+            </div>
+            <div class="mb-3 border-bottom pb-2">
+                <label class="text-muted small fw-bold text-uppercase">Full Name</label>
+                <div id="profFullName" class="fs-5 fw-bold text-primary">--</div>
+            </div>
+            <div class="mb-3 border-bottom pb-2">
+                <label class="text-muted small fw-bold text-uppercase">Email Address</label>
+                <div id="profEmail" class="fw-semibold">--</div>
+            </div>
+            <div class="mb-3 border-bottom pb-2">
+                <label class="text-muted small fw-bold text-uppercase">National ID Number</label>
+                <div id="profNationalId" class="fw-semibold">--</div>
+            </div>
+            <div class="mb-3">
+                <label class="text-muted small fw-bold text-uppercase">Assigned System Roles</label>
+                <div id="profRoles" class="mt-1">--</div>
+            </div>
+
+            <hr />
+            <div class="d-flex justify-content-between">
+                <a href="/" class="btn btn-outline-secondary">Back to Home</a>
+                <button class="btn btn-danger" onclick="handleProfileLogout()">Sign Out</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Access Denied Card -->
+    <div id="unauthorizedCard" class="card border-danger shadow-sm d-none">
+        <div class="card-body text-center py-4">
+            <h4 class="text-danger fw-bold">Access Denied</h4>
+            <p class="text-muted">You must be logged in to view your profile page.</p>
+            <a href="/login" class="btn btn-primary mt-2">Go to Login</a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", async () => {
+            const spinner = document.getElementById("loadingSpinner");
+            const card = document.getElementById("profileCard");
+            const unauthCard = document.getElementById("unauthorizedCard");
+
+            try {
+                const res = await fetch('/api/user/profile/me');
+                spinner.classList.add("d-none");
+
+                if (res.ok) {
+                    const user = await res.json();
+
+                    document.getElementById("profId").innerText = user.id;
+                    document.getElementById("profFullName").innerText = user.fullName;
+                    document.getElementById("profEmail").innerText = user.email;
+                    document.getElementById("profNationalId").innerText = user.nationalIdNumber || "Not Provided";
+
+                    // Render Bidding Status Badge
+                    const badge = document.getElementById("biddingBadge");
+                    if (user.isVerifiedForBidding) {
+                        badge.className = "badge bg-success";
+                        badge.innerText = "Verified Biddder";
+                    } else {
+                        badge.className = "badge bg-warning text-dark";
+                        badge.innerText = "Unverified Bidder";
+                    }
+
+                    // Render Roles
+                    const rolesContainer = document.getElementById("profRoles");
+                    rolesContainer.innerHTML = user.roles.map(r =>
+                        `<span class="badge bg-dark me-1 fs-6">${r}</span>`
+                    ).join('');
+
+                    card.classList.remove("d-none");
+                } else {
+                    unauthCard.classList.remove("d-none");
+                }
+            } catch (err) {
+                spinner.classList.add("d-none");
+                unauthCard.classList.remove("d-none");
+            }
+        });
+
+        async function handleProfileLogout() {
+            try {
+                const res = await fetch('/api/logout', { method: 'POST' });
+                if (res.ok) {
+                    window.location.href = '/login';
+                }
+            } catch (err) {
+                console.error("Logout error", err);
+            }
+        }
+    </script>
+}
