@@ -43,7 +43,6 @@ namespace Auction_Portal_Clone.Controllers
                 UserName = dto.Email,
                 Email = dto.Email,
                 FullName = dto.FullName,
-                NationalIdNumber = dto.NationalIdNumber,
                 RegisteredAt = DateTime.UtcNow
             };
 

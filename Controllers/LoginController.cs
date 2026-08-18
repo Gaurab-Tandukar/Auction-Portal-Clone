@@ -54,7 +54,6 @@ namespace Auction_Portal_Clone.Controllers
                 Id = user.Id,
                 Email = user.Email!,
                 FullName = user.FullName,
-                NationalIdNumber = user.NationalIdNumber,
                 IsVerifiedForBidding = user.IsVerifiedForBidding,
                 Roles = roles
             });
