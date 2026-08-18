@@ -10,6 +10,7 @@ namespace Auction_Portal_Clone.Models
 
         // Navigation Properties
         public ICollection<Bid> Bids { get; set; } = new List<Bid>();
+
         public ICollection<SavedListing> SavedListings { get; set; } = new List<SavedListing>();
     }
 }

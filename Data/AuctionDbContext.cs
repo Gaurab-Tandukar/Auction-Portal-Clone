@@ -1,9 +1,7 @@
 using Auction_Portal_Clone.Models;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
-using System.Reflection.Emit;
 
 namespace Auction_Portal_Clone.Data
 {
@@ -168,6 +166,9 @@ namespace Auction_Portal_Clone.Data
             IConfigurationRoot configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: false)
+                .AddJsonFile("appsettings.Development.json", optional: true)
+                .AddUserSecrets<AuctionDbContext>()
+                .AddEnvironmentVariables()
                 .Build();
 
             var optionsBuilder = new DbContextOptionsBuilder<AuctionDbContext>();

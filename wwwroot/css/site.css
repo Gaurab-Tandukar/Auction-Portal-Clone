@@ -1,31 +1,213 @@
-html {
-  font-size: 14px;
+/* ==========================================================================
+   Fonts
+   ========================================================================== */
+@import url('https://fonts.googleapis.com/css2?family=Itim&family=Kanit:ital,wght@0,400;0,600;0,700;1,400&display=swap');
+
+/* ==========================================================================
+   Theme Tokens
+   ========================================================================== */
+:root {
+    /* Brand colors */
+    --bs-body-bg: #E7ECEF;
+    --bs-body-color: #292F36;
+    --bs-primary: #F7C120;
+    --bs-primary-rgb: 247, 193, 32;
+    --bs-primary-hover: #E0AD19;
+    --bs-primary-active: #CC9D16;
+    --bs-secondary: #0D0628;
+    --bs-secondary-rgb: 13, 6, 40;
+    --bs-secondary-hover: #190D40;
+    --bs-secondary-active: #211152;
+    /* Custom utility colors */
+    --bs-mint-white: #F7FFF7;
+    --bs-charcoal: #292F36;
+    /* Typography */
+    --bs-body-font-family: 'Itim', cursive, sans-serif;
+    --bs-title-font-family: 'Kanit', sans-serif;
 }
 
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
-}
-
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
-}
-
+/* ==========================================================================
+   Base Typography
+   ========================================================================== */
 body {
-  margin-bottom: 60px;
+    font-family: var(--bs-body-font-family);
+    background-color: var(--bs-body-bg);
+    color: var(--bs-body-color);
 }
 
-.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
-  color: var(--bs-secondary-color);
-  text-align: end;
+h1, h2, h3, h4, h5, h6,
+.h1, .h2, .h3, .h4, .h5, .h6 {
+    font-family: var(--bs-title-font-family);
+    font-weight: 600;
 }
 
-.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
-  text-align: start;
+/* ==========================================================================
+   Custom Utility Classes
+   ========================================================================== */
+.bg-mint {
+    background-color: var(--bs-mint-white) !important;
+}
+
+.text-mint {
+    color: var(--bs-mint-white) !important;
+}
+
+.bg-dark-charcoal {
+    background-color: var(--bs-charcoal) !important;
+}
+
+.text-dark-charcoal {
+    color: var(--bs-charcoal) !important;
+}
+
+/* ==========================================================================
+   Buttons
+   ========================================================================== */
+.btn-primary {
+    --bs-btn-bg: var(--bs-primary);
+    --bs-btn-border-color: var(--bs-primary);
+    --bs-btn-color: var(--bs-secondary);
+    --bs-btn-hover-bg: var(--bs-primary-hover);
+    --bs-btn-hover-border-color: var(--bs-primary-hover);
+    --bs-btn-hover-color: var(--bs-secondary);
+    --bs-btn-active-bg: var(--bs-primary-active);
+    --bs-btn-active-border-color: var(--bs-primary-active);
+    --bs-btn-active-color: var(--bs-secondary);
+}
+
+.btn-secondary {
+    --bs-btn-bg: var(--bs-secondary);
+    --bs-btn-border-color: var(--bs-secondary);
+    --bs-btn-color: var(--bs-mint-white);
+    --bs-btn-hover-bg: var(--bs-secondary-hover);
+    --bs-btn-hover-border-color: var(--bs-secondary-hover);
+    --bs-btn-hover-color: var(--bs-mint-white);
+    --bs-btn-active-bg: var(--bs-secondary-active);
+    --bs-btn-active-border-color: var(--bs-secondary-active);
+    --bs-btn-active-color: var(--bs-mint-white);
+}
+
+.btn-outline-primary {
+    --bs-btn-color: var(--bs-charcoal);
+    --bs-btn-border-color: var(--bs-primary);
+    --bs-btn-hover-bg: var(--bs-primary);
+    --bs-btn-hover-border-color: var(--bs-primary);
+    --bs-btn-hover-color: var(--bs-secondary);
+    --bs-btn-active-bg: var(--bs-primary-active);
+    --bs-btn-active-border-color: var(--bs-primary-active);
+    --bs-btn-active-color: var(--bs-secondary);
+}
+
+.btn-outline-secondary {
+    --bs-btn-color: var(--bs-secondary);
+    --bs-btn-border-color: var(--bs-secondary);
+    --bs-btn-hover-bg: var(--bs-secondary);
+    --bs-btn-hover-border-color: var(--bs-secondary);
+    --bs-btn-hover-color: var(--bs-mint-white);
+    --bs-btn-active-bg: var(--bs-secondary-active);
+    --bs-btn-active-border-color: var(--bs-secondary-active);
+    --bs-btn-active-color: var(--bs-mint-white);
+}
+
+.btn-login {
+    --bs-btn-color: var(--bs-mint-white);
+    --bs-btn-border-color: var(--bs-mint-white);
+    --bs-btn-bg: transparent;
+    --bs-btn-hover-bg: var(--bs-mint-white);
+    --bs-btn-hover-border-color: var(--bs-mint-white);
+    --bs-btn-hover-color: var(--bs-charcoal);
+}
+
+/* ==========================================================================
+   Cards
+   ========================================================================== */
+.card {
+    --bs-card-bg: var(--bs-mint-white);
+    --bs-card-color: var(--bs-charcoal);
+    --bs-card-border-color: rgba(13, 6, 40, 0.12);
+    --bs-card-cap-bg: var(--bs-body-bg);
+    --bs-card-cap-color: var(--bs-secondary);
+}
+
+.card-title,
+.card-header {
+    font-family: var(--bs-title-font-family);
+}
+
+/* ==========================================================================
+   Forms
+   ========================================================================== */
+.form-control,
+.form-select {
+    background-color: var(--bs-mint-white);
+    color: var(--bs-charcoal);
+    border-color: rgba(13, 6, 40, 0.25);
+}
+
+    .form-control:focus,
+    .form-select:focus {
+        background-color: var(--bs-mint-white);
+        color: var(--bs-charcoal);
+        border-color: var(--bs-primary);
+        box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.35);
+    }
+
+.form-check-input:checked {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+}
+
+/* ==========================================================================
+   Navbar
+   ========================================================================== */
+.navbar {
+    background-color: var(--bs-secondary) !important;
+    --bs-navbar-bg: var(--bs-secondary);
+    --bs-navbar-color: var(--bs-mint-white);
+    --bs-navbar-hover-color: var(--bs-primary);
+    --bs-navbar-active-color: var(--bs-primary);
+    --bs-navbar-brand-color: var(--bs-mint-white);
+    --bs-navbar-brand-hover-color: var(--bs-primary);
+}
+
+.navbar-brand {
+    font-family: var(--bs-title-font-family);
+    color: var(--bs-mint-white);
+}
+
+.navbar .nav-link {
+    color: var(--bs-mint-white);
+}
+
+    .navbar .nav-link:hover,
+    .navbar .nav-link:focus,
+    .navbar .nav-link.active {
+        color: var(--bs-primary);
+    }
+
+/* ==========================================================================
+   Dropdowns
+   ========================================================================== */
+.dropdown-menu {
+    --bs-dropdown-bg: var(--bs-mint-white);
+    --bs-dropdown-color: var(--bs-charcoal);
+    --bs-dropdown-link-color: var(--bs-charcoal);
+    --bs-dropdown-link-hover-bg: var(--bs-body-bg);
+    --bs-dropdown-link-hover-color: var(--bs-secondary);
+    --bs-dropdown-link-active-bg: var(--bs-primary);
+    --bs-dropdown-link-active-color: var(--bs-secondary);
+    --bs-dropdown-border-color: rgba(13, 6, 40, 0.12);
+}
+
+/* ==========================================================================
+   Badges
+   ========================================================================== */
+.badge.bg-primary {
+    background-color: var(--bs-primary) !important;
+    color: var(--bs-secondary) !important;
+}
+
+.badge.bg-secondary {
+    background-color: var(--bs-secondary) !important;
+    color: var(--bs-mint-white) !important;
 }
