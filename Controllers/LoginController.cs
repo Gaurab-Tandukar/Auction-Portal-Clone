@@ -5,58 +5,65 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Auction_Portal_Clone.Controllers
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class LoginController : Controller // Changed from ControllerBase to Controller
+    public class LoginController : Controller
     {
-        private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
+        private readonly UserManager<User> _userManager;
 
-        public LoginController(
-            UserManager<User> userManager,
-            SignInManager<User> signInManager)
+        public LoginController(SignInManager<User> signInManager, UserManager<User> userManager)
         {
-            _userManager = userManager;
             _signInManager = signInManager;
+            _userManager = userManager;
         }
 
-        // 1. GET: /login (Renders the Razor View)
-        [HttpGet("/login")]
+        [HttpGet]
         public IActionResult Index()
         {
-            return View(); // Looks for Views/Login/Index.cshtml
+            if (User.Identity != null && User.Identity.IsAuthenticated)
+            {
+                return RedirectToAction("Index", "Home");
+            }
+            return View();
         }
 
-        // 2. POST: api/login (API endpoint for AJAX submission)
         [HttpPost]
-        public async Task<IActionResult> Login([FromBody] LoginRequestDto dto)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Index(LoginRequestDTO model)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            {
+                return View(model);
+            }
 
-            var user = await _userManager.FindByEmailAsync(dto.Email);
+            var user = await _userManager.FindByEmailAsync(model.Email);
             if (user == null)
-                return Unauthorized(new { message = "Invalid email or password." });
+            {
+                ModelState.AddModelError(string.Empty, "Invalid login credentials.");
+                return View(model);
+            }
 
             var result = await _signInManager.PasswordSignInAsync(
-                user.UserName!, dto.Password, dto.RememberMe, lockoutOnFailure: true);
+                user.UserName!,
+                model.Password,
+                isPersistent: false,
+                lockoutOnFailure: true
+            );
+
+            if (result.Succeeded)
+            {
+                return RedirectToAction("Index", "Home");
+            }
 
             if (result.IsLockedOut)
-                return BadRequest(new { message = "Account is locked due to multiple failed login attempts." });
-
-            if (!result.Succeeded)
-                return Unauthorized(new { message = "Invalid email or password." });
-
-            var roles = await _userManager.GetRolesAsync(user);
-
-            return Ok(new UserResponseDto
             {
-                Id = user.Id,
-                Email = user.Email!,
-                FullName = user.FullName,
-                IsVerifiedForBidding = user.IsVerifiedForBidding,
-                Roles = roles
-            });
+                ModelState.AddModelError(string.Empty, "Account locked out due to multiple failed attempts. Try again in 15 minutes.");
+            }
+            else
+            {
+                ModelState.AddModelError(string.Empty, "Invalid login credentials.");
+            }
+
+            return View(model);
         }
     }
 }

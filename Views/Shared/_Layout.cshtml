@@ -1,4 +1,9 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Identity
+@using Auction_Portal_Clone.Models
+@inject SignInManager<User> SignInManager
+@inject UserManager<User> UserManager
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -49,8 +54,27 @@
 
                     <!-- Right Action Items -->
                     <div class="d-flex align-items-center gap-2 mt-3 mt-lg-0">
-                        <a href="#" class="btn btn-outline-dark rounded-pill px-4 py-2 fw-semibold">Login</a>
-                        <a href="#" class="btn btn-coral rounded-pill px-4 py-2 fw-semibold">Sign Up</a>
+                        @if (SignInManager.IsSignedIn(User))
+                        {
+                            var user = await UserManager.GetUserAsync(User);
+                            var displayName = user?.FullName ?? User.Identity?.Name ?? "User";
+
+                            <a asp-controller="UserProfile" asp-action="Index" class="btn btn-light border rounded-pill px-3 py-2 fw-semibold text-dark text-decoration-none">
+                                Hi, <span style="color: #FF6B57;">@displayName</span>
+                            </a>
+
+                            <form asp-controller="Logout" asp-action="Index" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-outline-dark rounded-pill px-4 py-2 fw-semibold">
+                                    Logout
+                                </button>
+                            </form>
+                        }
+                        else
+                        {
+                            <a asp-controller="Login" asp-action="Index" class="btn btn-outline-dark rounded-pill px-4 py-2 fw-semibold">Login</a>
+                            <a asp-controller="Register" asp-action="Index" class="btn btn-coral rounded-pill px-4 py-2 fw-semibold">Sign Up</a>
+                        }
                     </div>
                 </div>
             </div>

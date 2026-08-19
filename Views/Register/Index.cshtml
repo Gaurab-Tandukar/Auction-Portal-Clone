@@ -1,83 +1,234 @@
-﻿@{
-    ViewData["Title"] = "Register Account";
+﻿@model Auction_Portal_Clone.DTO.RegisterRequestDTO
+@{
+    ViewData["Title"] = "Register";
 }
 
-<div class="container py-4" style="max-width: 550px;">
-    <div class="card shadow-sm">
-        <div class="card-header bg-dark text-white fw-bold">POST /api/register</div>
-        <div class="card-body">
-            <form id="registerForm" onsubmit="handleRegister(event)">
-                <div class="mb-3">
-                    <label class="form-label">Full Name</label>
-                    <input type="text" id="regFullName" class="form-control" placeholder="John Doe" required />
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Email Address</label>
-                    <input type="email" id="regEmail" class="form-control" placeholder="user@example.com" required />
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Password</label>
-                    <input type="password" id="regPassword" class="form-control" placeholder="Password123#" required />
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">National ID (Optional)</label>
-                    <input type="text" id="regNationalId" class="form-control" placeholder="NID-992011" />
-                </div>
-                <div class="form-check mb-3">
-                    <input class="form-check-input" type="checkbox" id="regIsAdmin" />
-                    <label class="form-check-label" for="regIsAdmin">Register as Bank Admin</label>
-                </div>
-                <button type="submit" class="btn btn-success w-100">Register Account</button>
-            </form>
-            <div class="mt-3 text-center">
-                <a href="/login" class="text-decoration-none">Already have an account? Log in here.</a>
-            </div>
-        </div>
-    </div>
+<style>
+    .auth-wrapper {
+        position: relative;
+        min-height: calc(100vh - 120px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 15px;
+    }
 
-    <!-- Inspector -->
-    <div class="card shadow-sm mt-4">
-        <div class="card-header bg-secondary text-white fw-bold">API Response Inspector</div>
-        <div class="card-body bg-dark text-light">
-            <pre id="outputLog" class="m-0" style="max-height: 200px; overflow-y: auto; color: #00ff66;">Ready for testing...</pre>
+    .auth-glow-right {
+        position: absolute;
+        width: 400px;
+        height: 400px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(255, 107, 87, 0.15) 0%, rgba(250, 247, 242, 0) 70%);
+        filter: blur(60px);
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    .auth-card {
+        width: 100%;
+        max-width: 580px;
+        background: rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 107, 87, 0.15);
+        border-radius: 28px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.06);
+        position: relative;
+        z-index: 1;
+    }
+
+    .btn-coral {
+        background-color: #FF6B57;
+        color: #FFFFFF;
+        font-weight: 600;
+        border: none;
+        transition: all 0.3s ease;
+    }
+
+    .btn-coral:hover {
+        background-color: #e55a47;
+        color: #FFFFFF;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(255, 107, 87, 0.3);
+    }
+
+    .btn-coral.btn-blocked {
+        background-color: #cccccc !important;
+        color: #666666 !important;
+        opacity: 0.7;
+        cursor: not-allowed;
+        transform: none !important;
+        box-shadow: none !important;
+    }
+
+    .text-gradient-coral {
+        background: linear-gradient(135deg, #111111 20%, #FF6B57 80%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .form-check-input:checked {
+        background-color: #FF6B57;
+        border-color: #FF6B57;
+    }
+</style>
+
+<div class="auth-wrapper">
+    <div class="auth-glow-right"></div>
+
+    <div class="auth-card p-4 p-sm-5">
+        <div class="text-center mb-4">
+            <h1 class="h3 fw-extrabold text-dark mb-1">
+                Create <span class="text-gradient-coral">Bidding Account</span>
+            </h1>
+            <p class="text-secondary small">Join verified bidders and participate in premium auctions</p>
         </div>
+
+        <form asp-controller="Register" asp-action="Index" method="post" id="registerForm" novalidate>
+            
+            <!-- First Name & Last Name -->
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label asp-for="FirstName" class="form-label fw-semibold text-dark fs-6">First Name</label>
+                    <input asp-for="FirstName" class="form-control rounded-3 py-2 px-3" placeholder="John">
+                    <div class="invalid-feedback">First name is required.</div>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="LastName" class="form-label fw-semibold text-dark fs-6">Last Name</label>
+                    <input asp-for="LastName" class="form-control rounded-3 py-2 px-3" placeholder="Doe">
+                    <div class="invalid-feedback">Last name is required.</div>
+                </div>
+            </div>
+
+            <!-- Email Address -->
+            <div class="mb-3">
+                <label asp-for="Email" class="form-label fw-semibold text-dark fs-6">Email Address</label>
+                <input asp-for="Email" class="form-control rounded-3 py-2 px-3" placeholder="john.doe@example.com">
+                <div class="invalid-feedback">Enter a valid email address.</div>
+            </div>
+
+            <!-- Phone Number & Age -->
+            <div class="row g-3 mb-3">
+                <div class="col-md-7">
+                    <label asp-for="PhoneNumber" class="form-label fw-semibold text-dark fs-6">Phone Number</label>
+                    <input asp-for="PhoneNumber" class="form-control rounded-3 py-2 px-3" placeholder="+1 (555) 000-0000">
+                    <div class="invalid-feedback">Valid phone number is required.</div>
+                </div>
+                <div class="col-md-5">
+                    <label asp-for="Age" class="form-label fw-semibold text-dark fs-6">Age</label>
+                    <input asp-for="Age" type="number" class="form-control rounded-3 py-2 px-3" placeholder="18+">
+                    <div class="invalid-feedback">Must be 18 or older.</div>
+                </div>
+            </div>
+
+            <!-- Passwords -->
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label asp-for="Password" class="form-label fw-semibold text-dark fs-6">Password</label>
+                    <input asp-for="Password" type="password" class="form-control rounded-3 py-2 px-3" placeholder="••••••••">
+                    <div class="invalid-feedback">Min. 8 characters required.</div>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="ConfirmPassword" class="form-label fw-semibold text-dark fs-6">Confirm Password</label>
+                    <input asp-for="ConfirmPassword" type="password" class="form-control rounded-3 py-2 px-3" placeholder="••••••••">
+                    <div class="invalid-feedback">Passwords do not match.</div>
+                </div>
+            </div>
+
+            <!-- Terms & Age Guarantee -->
+            <div class="form-check mb-4">
+                <input class="form-check-input" type="checkbox" id="privacyPolicy" required>
+                <label class="form-check-label text-secondary small" for="privacyPolicy">
+                    I confirm I am at least 18 years old and agree to the 
+                    <a asp-controller="Home" asp-action="Privacy" class="fw-semibold text-decoration-none" style="color: #FF6B57;">Terms of Bidding</a> and 
+                    <a asp-controller="Home" asp-action="Privacy" class="fw-semibold text-decoration-none" style="color: #FF6B57;">Privacy Policy</a>.
+                </label>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="d-grid mb-3">
+                <button type="submit" class="btn btn-coral py-2.5 rounded-3 fs-6" id="submitBtn">
+                    Complete Registration
+                </button>
+            </div>
+
+            <p class="text-center text-muted small mb-0">
+                Already registered as a bidder?
+                <a asp-controller="Login" asp-action="Index" class="text-decoration-none fw-bold" style="color: #FF6B57;">Sign In</a>
+            </p>
+        </form>
     </div>
 </div>
 
 @section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
     <script>
-        const logOutput = (title, data) => {
-            const terminal = document.getElementById('outputLog');
-            const timestamp = new Date().toLocaleTimeString();
-            const header = `\n--- [${timestamp}] ${title} ---`;
-            const content = typeof data === 'object' ? JSON.stringify(data, null, 2) : data;
-            terminal.innerHTML = header + '\n' + content + '\n' + terminal.innerHTML;
-        };
+        (function() {
+            const form = document.getElementById('registerForm');
+            const submitBtn = document.getElementById('submitBtn');
+            const checkbox = document.getElementById('privacyPolicy');
 
-        async function handleRegister(e) {
-            e.preventDefault();
-            const payload = {
-                fullName: document.getElementById('regFullName').value,
-                email: document.getElementById('regEmail').value,
-                password: document.getElementById('regPassword').value,
-                nationalIdNumber: document.getElementById('regNationalId').value || null,
-                isAdminRegistration: document.getElementById('regIsAdmin').checked
+            const rules = {
+                FirstName: v => v.trim().length > 0,
+                LastName: v => v.trim().length > 0,
+                Email: v => /^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/.test(v.trim()),
+                PhoneNumber: v => v.trim().length >= 7,
+                Age: v => v !== "" && parseInt(v, 10) >= 18,
+                Password: v => v.length >= 8,
+                ConfirmPassword: v => v.length > 0 && v === form.querySelector('[name="Password"]').value
             };
 
-            try {
-                const res = await fetch('/api/register', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                const data = await res.json();
-                logOutput('POST /api/register', data);
-                if (res.ok) {
-                    setTimeout(() => window.location.href = '/login', 1500);
-                }
-            } catch (err) {
-                logOutput('Registration Error', err.message);
+            const inputs = {};
+            Object.keys(rules).forEach(name => {
+                inputs[name] = form.querySelector(`[name="${name}"]`);
+            });
+
+            function validateField(name, showFeedback) {
+                const el = inputs[name];
+                if (!el) return true;
+                const isValid = rules[name](el.value);
+                el.classList.toggle('is-invalid', showFeedback && !isValid);
+                return isValid;
             }
-        }
+
+            function allValid() {
+                const fieldsValid = Object.keys(rules).every(name => inputs[name] && rules[name](inputs[name].value));
+                return fieldsValid && checkbox.checked;
+            }
+
+            function updateButtonState() {
+                submitBtn.classList.toggle('btn-blocked', !allValid());
+            }
+
+            Object.keys(rules).forEach(name => {
+                const el = inputs[name];
+                if (!el) return;
+
+                el.addEventListener('input', () => {
+                    if (el.classList.contains('is-invalid')) validateField(name, true);
+                    if (name === 'Password') {
+                        validateField('ConfirmPassword', inputs.ConfirmPassword.classList.contains('is-invalid'));
+                    }
+                    updateButtonState();
+                });
+
+                el.addEventListener('blur', () => {
+                    validateField(name, true);
+                    updateButtonState();
+                });
+            });
+
+            checkbox.addEventListener('change', updateButtonState);
+
+            form.addEventListener('submit', (e) => {
+                if (!allValid()) {
+                    e.preventDefault();
+                    Object.keys(rules).forEach(name => validateField(name, true));
+                    const firstInvalid = form.querySelector('.is-invalid');
+                    if (firstInvalid) firstInvalid.focus();
+                }
+            });
+
+            updateButtonState();
+        })();
     </script>
 }

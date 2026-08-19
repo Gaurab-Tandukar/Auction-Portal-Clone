@@ -1,126 +1,198 @@
-﻿@{
-    ViewData["Title"] = "Account Login";
+﻿@model Auction_Portal_Clone.DTO.LoginRequestDTO
+@{
+    ViewData["Title"] = "Login";
 }
 
-<div class="container py-4" style="max-width: 550px;">
-    <!-- Live Auth Status Banner -->
-    <div id="statusBanner" class="alert alert-secondary d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <strong>Current Status:</strong> <span id="authStatus">Checking...</span>
-        </div>
-        <button id="logoutBtn" class="btn btn-sm btn-outline-danger d-none" onclick="handleLogout()">Logout</button>
-    </div>
+<style>
+    .auth-wrapper {
+        position: relative;
+        min-height: calc(100vh - 120px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 15px;
+    }
 
-    <div class="card shadow-sm">
-        <div class="card-header bg-dark text-white fw-bold">POST /api/login</div>
-        <div class="card-body">
-            <form id="loginForm" onsubmit="handleLogin(event)">
-                <div class="mb-3">
-                    <label class="form-label">Email Address</label>
-                    <input type="email" id="loginEmail" class="form-control" placeholder="user@example.com" required />
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Password</label>
-                    <input type="password" id="loginPassword" class="form-control" placeholder="Password123#" required />
-                </div>
-                <div class="form-check mb-3">
-                    <input class="form-check-input" type="checkbox" id="loginRememberMe" />
-                    <label class="form-check-label" for="loginRememberMe">Remember Me</label>
-                </div>
-                <button type="submit" class="btn btn-primary w-100 mb-2">Log In</button>
-            </form>
-            <hr />
-            <button class="btn btn-outline-info w-100 mb-3" onclick="fetchProfile()">GET /api/user/profile/me</button>
-            <div class="text-center">
-                <a href="/register" class="text-decoration-none">Don't have an account? Register here.</a>
+    .auth-glow {
+        position: absolute;
+        width: 320px;
+        height: 320px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(255, 107, 87, 0.18) 0%, rgba(250, 247, 242, 0) 70%);
+        filter: blur(50px);
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    .auth-card {
+        width: 100%;
+        max-width: 440px;
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 107, 87, 0.15);
+        border-radius: 28px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.06);
+        position: relative;
+        z-index: 1;
+    }
+
+    .btn-coral {
+        background-color: #FF6B57;
+        color: #FFFFFF;
+        font-weight: 600;
+        border: none;
+        transition: all 0.3s ease;
+    }
+
+    .btn-coral:hover {
+        background-color: #e55a47;
+        color: #FFFFFF;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(255, 107, 87, 0.3);
+    }
+
+    .btn-coral.btn-blocked {
+        background-color: #cccccc !important;
+        color: #666666 !important;
+        opacity: 0.7;
+        cursor: not-allowed;
+        transform: none !important;
+        box-shadow: none !important;
+    }
+
+    .text-gradient-coral {
+        background: linear-gradient(135deg, #111111 20%, #FF6B57 80%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+</style>
+
+<div class="auth-wrapper">
+    <div class="auth-glow"></div>
+
+    <div class="auth-card p-4 p-sm-5">
+        <div class="text-center mb-4">
+            <h1 class="h3 fw-extrabold text-dark mb-1">
+                Welcome <span class="text-gradient-coral">Back</span>
+            </h1>
+            <p class="text-secondary small">Access your live bids and saved auction assets</p>
+        </div>
+
+        <form asp-controller="Login" asp-action="Index" method="post" id="loginForm" novalidate>
+            <div class="mb-3">
+                <label asp-for="Email" class="form-label fw-semibold text-dark fs-6">Email Address</label>
+                <input asp-for="Email" class="form-control rounded-3 py-2 px-3" placeholder="bidder@auctionportal.com">
+                <div class="invalid-feedback">Enter a valid email address.</div>
             </div>
-        </div>
-    </div>
 
-    <!-- Inspector -->
-    <div class="card shadow-sm mt-4">
-        <div class="card-header bg-secondary text-white fw-bold">API Response Inspector</div>
-        <div class="card-body bg-dark text-light">
-            <pre id="outputLog" class="m-0" style="max-height: 200px; overflow-y: auto; color: #00ff66;">Ready for testing...</pre>
+            <div class="mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <label asp-for="Password" class="form-label fw-semibold text-dark fs-6 mb-0">Password</label>
+                    <a href="#" class="small text-decoration-none text-muted">Forgot?</a>
+                </div>
+                <input asp-for="Password" type="password" class="form-control rounded-3 py-2 px-3" placeholder="••••••••">
+                <div class="invalid-feedback">Password is required.</div>
+            </div>
+
+            <div class="d-grid mb-3">
+                <button type="submit" class="btn btn-coral py-2.5 rounded-3 fs-6" id="submitBtn">
+                    Sign In to Portal
+                </button>
+            </div>
+
+            <p class="text-center text-muted small mb-0">
+                Don't have a bidding account?
+                <a asp-controller="Register" asp-action="Index" class="text-decoration-none fw-bold" style="color: #FF6B57;">Register Now</a>
+            </p>
+        </form>
+    </div>
+</div>
+
+<!-- Toast container -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1080;">
+    <div id="backendToast" class="toast align-items-center text-bg-danger border-0 rounded-3 shadow" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body" id="backendToastBody"></div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
         </div>
     </div>
 </div>
 
 @section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
     <script>
-        const logOutput = (title, data) => {
-            const terminal = document.getElementById('outputLog');
-            const timestamp = new Date().toLocaleTimeString();
-            const header = `\n--- [${timestamp}] ${title} ---`;
-            const content = typeof data === 'object' ? JSON.stringify(data, null, 2) : data;
-            terminal.innerHTML = header + '\n' + content + '\n' + terminal.innerHTML;
-        };
+        (function() {
+            const form = document.getElementById('loginForm');
+            const submitBtn = document.getElementById('submitBtn');
 
-        const updateStatus = (user) => {
-            const statusSpan = document.getElementById('authStatus');
-            const logoutBtn = document.getElementById('logoutBtn');
-            if (user && user.email) {
-                const roles = user.roles ? user.roles.join(', ') : 'No Role';
-                statusSpan.innerHTML = `<span class="badge bg-success">Logged in as ${user.email} (${roles})</span>`;
-                logoutBtn.classList.remove('d-none');
-            } else {
-                statusSpan.innerHTML = '<span class="badge bg-secondary">Not Authenticated</span>';
-                logoutBtn.classList.add('d-none');
-            }
-        };
-
-        async function handleLogin(e) {
-            e.preventDefault();
-            const payload = {
-                email: document.getElementById('loginEmail').value,
-                password: document.getElementById('loginPassword').value,
-                rememberMe: document.getElementById('loginRememberMe').checked
+            const rules = {
+                Email: v => /^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/.test(v.trim()),
+                Password: v => v.trim().length > 0
             };
 
-            try {
-                const res = await fetch('/api/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+            const inputs = {};
+            Object.keys(rules).forEach(name => {
+                inputs[name] = form.querySelector(`[name="${name}"]`);
+            });
+
+            function validateField(name, showFeedback) {
+                const el = inputs[name];
+                if (!el) return true;
+                const isValid = rules[name](el.value);
+                el.classList.toggle('is-invalid', showFeedback && !isValid);
+                return isValid;
+            }
+
+            function allValid() {
+                return Object.keys(rules).every(name => inputs[name] && rules[name](inputs[name].value));
+            }
+
+            function updateButtonState() {
+                submitBtn.classList.toggle('btn-blocked', !allValid());
+            }
+
+            Object.keys(rules).forEach(name => {
+                const el = inputs[name];
+                if (!el) return;
+
+                el.addEventListener('input', () => {
+                    if (el.classList.contains('is-invalid')) validateField(name, true);
+                    updateButtonState();
                 });
-                const data = await res.json();
-                logOutput('POST /api/login', data);
-                if (res.ok) {
-                    updateStatus(data);
-                }
-            } catch (err) {
-                logOutput('Login Error', err.message);
-            }
-        }
 
-        async function fetchProfile() {
-            try {
-                const res = await fetch('/api/user/profile/me');
-                const data = await res.json();
-                logOutput('GET /api/user/profile/me', data);
-                if (res.ok) {
-                    updateStatus(data);
-                } else {
-                    updateStatus(null);
-                }
-            } catch (err) {
-                logOutput('Profile Fetch Error', err.message);
-            }
-        }
+                el.addEventListener('blur', () => {
+                    validateField(name, true);
+                    updateButtonState();
+                });
+            });
 
-        async function handleLogout() {
-            try {
-                const res = await fetch('/api/logout', { method: 'POST' });
-                const data = await res.json();
-                logOutput('POST /api/logout', data);
-                if (res.ok) {
-                    updateStatus(null);
+            form.addEventListener('submit', (e) => {
+                if (!allValid()) {
+                    e.preventDefault();
+                    Object.keys(rules).forEach(name => validateField(name, true));
+                    const firstInvalid = form.querySelector('.is-invalid');
+                    if (firstInvalid) firstInvalid.focus();
                 }
-            } catch (err) {
-                logOutput('Logout Error', err.message);
-            }
-        }
+            });
 
-        document.addEventListener("DOMContentLoaded", fetchProfile);
+            updateButtonState();
+        })();
+
+        (function() {
+            const errors = @Html.Raw(Json.Serialize(
+                    ViewData.ModelState.IsValid ? null : ViewData.ModelState.Values
+                            .SelectMany(v => v.Errors)
+                            .Select(e => e.ErrorMessage)
+                            .FirstOrDefault()
+            ));
+
+            if (errors) {
+                const toastEl = document.getElementById('backendToast');
+                const toastBody = document.getElementById('backendToastBody');
+                toastBody.textContent = errors;
+                const toast = new bootstrap.Toast(toastEl, { delay: 4000 });
+                toast.show();
+            }
+        })();
     </script>
 }

@@ -2,23 +2,31 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Auction_Portal_Clone.DTO
 {
-    public class RegisterRequestDto
+    public class RegisterRequestDTO
     {
-        [Required]
-        [EmailAddress]
+        [Required(ErrorMessage = "First name is required.")]
+        public string FirstName { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Last name is required.")]
+        public string LastName { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Email is required.")]
+        [EmailAddress(ErrorMessage = "Enter a valid email address.")]
         public string Email { get; set; } = string.Empty;
 
-        [Required]
-        [StringLength(100, MinimumLength = 6, ErrorMessage = "Password must be at least 6 characters.")]
+        [Required(ErrorMessage = "Phone number is required.")]
+        public string PhoneNumber { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Age is required.")]
+        [Range(18, 120, ErrorMessage = "You must be at least 18 years old.")]
+        public int Age { get; set; }
+
+        [Required(ErrorMessage = "Password is required.")]
+        [MinLength(8, ErrorMessage = "Password must be at least 8 characters.")]
         public string Password { get; set; } = string.Empty;
 
-        [Required]
-        [StringLength(100)]
-        public string FullName { get; set; } = string.Empty;
-
-        public string? NationalIdNumber { get; set; }
-
-        // Set to true if creating a Bank Admin account (can be restricted in production)
-        public bool IsAdminRegistration { get; set; } = false;
+        [Required(ErrorMessage = "Confirm Password is required.")]
+        [Compare("Password", ErrorMessage = "Passwords do not match.")]
+        public string ConfirmPassword { get; set; } = string.Empty;
     }
 }

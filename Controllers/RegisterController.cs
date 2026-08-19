@@ -5,64 +5,67 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Auction_Portal_Clone.Controllers
 {
-    [ApiController]
-    [Route("api/[controller]")]
     public class RegisterController : Controller
     {
         private readonly UserManager<User> _userManager;
-        private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly SignInManager<User> _signInManager;
 
-        public RegisterController(
-            UserManager<User> userManager,
-            RoleManager<IdentityRole> roleManager)
+        public RegisterController(UserManager<User> userManager, SignInManager<User> signInManager)
         {
             _userManager = userManager;
-            _roleManager = roleManager;
+            _signInManager = signInManager;
         }
 
-        // 1. GET: /register (Renders the Razor View)
-        [HttpGet("/register")]
+        [HttpGet]
         public IActionResult Index()
         {
-            return View(); // Looks for Views/Register/Index.cshtml
+            if (User.Identity != null && User.Identity.IsAuthenticated)
+            {
+                return RedirectToAction("Index", "Home");
+            }
+            return View();
         }
 
-        // 2. POST: api/register (API endpoint for AJAX submission)
         [HttpPost]
-        public async Task<IActionResult> Register([FromBody] RegisterRequestDto dto)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Index(RegisterRequestDTO model)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            {
+                return View(model);
+            }
 
-            var existingUser = await _userManager.FindByEmailAsync(dto.Email);
+            var existingUser = await _userManager.FindByEmailAsync(model.Email);
             if (existingUser != null)
-                return BadRequest(new { message = "User with this email already exists." });
+            {
+                ModelState.AddModelError(string.Empty, "An account with this email address already exists.");
+                return View(model);
+            }
 
             var user = new User
             {
-                UserName = dto.Email,
-                Email = dto.Email,
-                FullName = dto.FullName,
+                UserName = model.Email,
+                Email = model.Email,
+                FullName = $"{model.FirstName.Trim()} {model.LastName.Trim()}".Trim(),
+                PhoneNumber = model.PhoneNumber,
+                IsVerifiedForBidding = true,
                 RegisteredAt = DateTime.UtcNow
             };
 
-            var result = await _userManager.CreateAsync(user, dto.Password);
-            if (!result.Succeeded)
+            var result = await _userManager.CreateAsync(user, model.Password);
+
+            if (result.Succeeded)
             {
-                return BadRequest(new { errors = result.Errors.Select(e => e.Description) });
+                await _signInManager.SignInAsync(user, isPersistent: false);
+                return RedirectToAction("Index", "Home");
             }
 
-            // Assign security role
-            string roleToAssign = dto.IsAdminRegistration ? "BankAdmin" : "PublicUser";
-
-            if (!await _roleManager.RoleExistsAsync(roleToAssign))
+            foreach (var error in result.Errors)
             {
-                await _roleManager.CreateAsync(new IdentityRole(roleToAssign));
+                ModelState.AddModelError(string.Empty, error.Description);
             }
 
-            await _userManager.AddToRoleAsync(user, roleToAssign);
-
-            return Ok(new { message = "Registration successful.", userId = user.Id });
+            return View(model);
         }
     }
 }
