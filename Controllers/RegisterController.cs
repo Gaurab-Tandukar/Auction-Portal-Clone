@@ -7,7 +7,7 @@ namespace Auction_Portal_Clone.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class RegisterController : Controller // Changed from ControllerBase to Controller
+    public class RegisterController : Controller
     {
         private readonly UserManager<User> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;

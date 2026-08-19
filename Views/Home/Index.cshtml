@@ -1,111 +1,326 @@
 ﻿@{
     ViewData["Title"] = "Auction Portal";
+
+    var auctionItems = new[]
+    {
+        new { Image = "https://images.unsplash.com/photo-1541701494587-cb58502866ab?auto=format&fit=crop&w=600&q=80", Title = "Fine Art" },
+        new { Image = "https://images.unsplash.com/photo-1563089145-599997674d42?auto=format&fit=crop&w=600&q=80", Title = "Rare Collectibles" },
+        new { Image = "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=600&q=80", Title = "Vintage Watches" },
+        new { Image = "https://images.unsplash.com/photo-1617814076367-b759c7d7e738?auto=format&fit=crop&w=600&q=80", Title = "Sports Car" },
+        new { Image = "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=600&q=80", Title = "Luxury Real Estate" },
+        new { Image = "https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=600&q=80", Title = "Superbike" },
+        new { Image = "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=600&q=80", Title = "High Jewelry" }
+    };
 }
 
-<div class="container py-5">
-    <!-- Hero Section -->
-    <div class="row align-items-center mb-5 bg-white rounded-4 shadow-sm overflow-hidden hero-section">
-        <div class="col-lg-7 p-5 text-center text-lg-start">
-            <h1 class="display-4 fw-bolder text-dark mb-3">
-                <span class="text-primary">Bank</span> Auction Portal
-            </h1>
-            <p class="lead text-muted mb-4">
-                Your premier destination for testing and navigating property auctions. Discover seamlessly integrated bidding tools.
-            </p>
-            <div id="homeAuthBanner" class="alert alert-secondary d-inline-block px-4 py-2 border-0 shadow-sm rounded-pill">
-                <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
-                Checking authentication session...
-            </div>
+<style>
+    /* ==========================================================================
+           Visual Enhancement & Background Glows
+           ========================================================================== */
+    .hero-wrapper {
+        position: relative;
+    }
+
+    /* Ambient Accent Glows filling side space */
+    .hero-glow-left, .hero-glow-right {
+        position: absolute;
+        width: 380px;
+        height: 380px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(255, 107, 87, 0.18) 0%, rgba(250, 247, 242, 0) 70%);
+        filter: blur(50px);
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    .hero-glow-left {
+        top: -40px;
+        left: -100px;
+    }
+
+    .hero-glow-right {
+        top: 60px;
+        right: -100px;
+    }
+
+    /* Vibrant Gradient Accent Text */
+    .text-gradient-coral {
+        background: linear-gradient(135deg, #111111 20%, #FF6B57 80%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* Floating Abstract Accent Cards for Side Fillers */
+    .floating-badge {
+        position: absolute;
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 107, 87, 0.2);
+        padding: 10px 18px;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 600;
+        font-size: 0.88rem;
+        z-index: 2;
+        animation: floatAnim 4s ease-in-out infinite alternate;
+    }
+
+    .floating-badge-left {
+        top: 25%;
+        left: 3%;
+        transform: rotate(-4deg);
+    }
+
+    .floating-badge-right {
+        top: 32%;
+        right: 3%;
+        transform: rotate(5deg);
+        animation-delay: -2s;
+    }
+
+    .floating-badge .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background-color: #FF6B57;
+        box-shadow: 0 0 10px #FF6B57;
+    }
+
+    /* Pulsing Live Dot */
+    .pulse-dot {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: var(--bs-primary);
+        box-shadow: 0 0 0 0 rgba(255, 107, 87, 0.7);
+        animation: pulse 1.8s infinite;
+        margin-right: 6px;
+    }
+
+    /* ==========================================================================
+           Carousel Base Styles
+           ========================================================================== */
+    .carousel-viewport {
+        width: 100%;
+        overflow: hidden;
+        position: relative;
+        padding: 50px 0;
+        z-index: 1;
+    }
+
+    .carousel-track {
+        display: flex;
+        gap: 20px;
+        width: max-content;
+        align-items: center;
+        animation: autoRotate 25s linear infinite;
+        will-change: transform;
+    }
+
+    .carousel-viewport:hover .carousel-track {
+        animation-play-state: paused;
+    }
+
+    .auction-card-item {
+        width: 220px;
+        height: 380px;
+        border-radius: 28px;
+        overflow: hidden;
+        flex-shrink: 0;
+        position: relative;
+        background-color: #EFECE6;
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+        cursor: pointer;
+        will-change: transform, height, width;
+        transition: transform 0.1s ease-out, height 0.1s ease-out, width 0.1s ease-out;
+    }
+
+        .auction-card-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s ease, filter 0.4s ease;
+        }
+
+        .auction-card-item:hover {
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+            z-index: 10;
+        }
+
+            .auction-card-item:hover img {
+                transform: scale(1.12);
+                filter: brightness(1.05);
+            }
+
+    .auction-card-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, rgba(0,0,0,0) 30%, rgba(0, 0, 0, 0.85) 100%);
+        display: flex;
+        align-items: flex-end;
+        padding: 18px;
+        color: #FFFFFF;
+    }
+
+    .handwriting-note {
+        font-family: var(--bs-handwriting-font);
+        font-size: 1.4rem;
+        color: #333333;
+        position: absolute;
+        line-height: 1;
+    }
+
+    /* Keyframe Animations */
+    @@keyframes autoRotate {
+        from {
+            transform: translateX(0);
+        }
+
+        to {
+            transform: translateX(-50%);
+        }
+    }
+
+    @@keyframes pulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(255, 107, 87, 0.7);
+        }
+
+        70% {
+            box-shadow: 0 0 0 8px rgba(255, 107, 87, 0);
+        }
+
+        100% {
+            box-shadow: 0 0 0 0 rgba(255, 107, 87, 0);
+        }
+    }
+
+    @@keyframes floatAnim {
+        0% {
+            transform: translateY(0px) rotate(-4deg);
+        }
+
+        100% {
+            transform: translateY(-12px) rotate(-2deg);
+        }
+    }
+</style>
+
+<section class="hero-wrapper py-5 text-center overflow-hidden">
+    <!-- Soft Ambient Accent Glows -->
+    <div class="hero-glow-left d-none d-lg-block"></div>
+    <div class="hero-glow-right d-none d-lg-block"></div>
+
+    <!-- Floating Interactive Side Badges -->
+    <div class="floating-badge floating-badge-left d-none d-xl-flex">
+        <span class="dot"></span>
+        <span>$2.4M Asset Sold Today</span>
+    </div>
+    <div class="floating-badge floating-badge-right d-none d-xl-flex">
+        <span class="pulse-dot"></span>
+        <span>142 Live Bids Active</span>
+    </div>
+
+    <div class="container py-2 position-relative" style="z-index: 2;">
+        <!-- Top Pill Badge with Pulse -->
+        <div class="d-inline-flex align-items-center px-3 py-2 rounded-pill mb-4 shadow-sm"
+             style="background-color: var(--bs-pill-bg); color: var(--bs-pill-text); font-weight: 700; font-size: 0.88rem; border: 1px solid rgba(255,107,87,0.2);">
+            <span class="pulse-dot"></span> Join over 100,000 active bidders
         </div>
-        <div class="col-lg-5 p-0 d-none d-lg-block">
-             <div class="bg-primary h-100 w-100" style="min-height: 350px; background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);">
-                 <!-- Optional: add illustration or abstract shapes here -->
-                 <div class="d-flex align-items-center justify-content-center h-100 text-white opacity-50">
-                     <i class="fs-1 bi bi-building"></i>
-                 </div>
-             </div>
+
+        <!-- Eye-Catching Two-Tone Gradient Heading -->
+        <h1 class="display-3 fw-extrabold mb-3 mx-auto" style="letter-spacing: -1.5px; max-width: 880px;">
+            Bid &amp; Win <span class="text-gradient-coral">Premium Live Assets</span>
+        </h1>
+
+        <!-- Subtitle with Bolding -->
+        <p class="fs-5 text-secondary mx-auto mb-5" style="max-width: 620px; line-height: 1.6;">
+            Discover exclusive auctions from verified sellers. From <strong class="text-dark">luxury vehicles</strong> to <strong class="text-dark">rare art</strong>, your next win is one click away.
+        </p>
+    </div>
+
+    <!-- Dynamic Arc Carousel -->
+    <div class="carousel-viewport my-2" id="carouselViewport">
+        <div class="carousel-track" id="carouselTrack">
+            @foreach (var item in auctionItems)
+            {
+                <div class="auction-card-item">
+                    <img src="@item.Image" alt="@item.Title" loading="lazy" />
+                    <div class="auction-card-overlay">
+                        <span class="fw-semibold fs-6">@item.Title</span>
+                    </div>
+                </div>
+            }
+            @foreach (var item in auctionItems)
+            {
+                <div class="auction-card-item">
+                    <img src="@item.Image" alt="@item.Title" loading="lazy" />
+                    <div class="auction-card-overlay">
+                        <span class="fw-semibold fs-6">@item.Title</span>
+                    </div>
+                </div>
+            }
         </div>
     </div>
 
-    <div class="row g-4 justify-content-center">
-        <!-- Card 1: Register -->
-        <div class="col-md-4">
-            <div class="card h-100 shadow-sm border-0 rounded-4 hover-lift transition-all">
-                <div class="card-body text-center p-4">
-                    <div class="icon-circle bg-success bg-opacity-10 text-success mb-4 mx-auto" style="width:70px; height:70px; border-radius:50%; display:flex; align-items:center; justify-content:center;">
-                        <span class="fs-2">📝</span>
-                    </div>
-                    <h5 class="card-title fw-bold mb-3">User Registration</h5>
-                    <p class="card-text text-muted mb-4">Create a new Public User or Bank Admin account.</p>
-                </div>
-                <div class="card-footer bg-transparent border-0 p-4 pt-0">
-                    <a href="/register" class="btn btn-success w-100 rounded-pill py-2 fw-semibold">Register Now</a>
-                </div>
-            </div>
-        </div>
+    <!-- CTA Area -->
+    <div class="container mt-4 position-relative" style="z-index: 2;">
+        <div class="d-inline-block position-relative">
+            <span class="handwriting-note d-none d-md-block" style="bottom: 12px; left: -110px; transform: rotate(-8deg);">
+                It's free &rarr;
+            </span>
 
-        <!-- Card 2: Login -->
-        <div class="col-md-4">
-            <div class="card h-100 shadow-sm border-0 rounded-4 hover-lift transition-all">
-                <div class="card-body text-center p-4">
-                     <div class="icon-circle bg-primary bg-opacity-10 text-primary mb-4 mx-auto" style="width:70px; height:70px; border-radius:50%; display:flex; align-items:center; justify-content:center;">
-                        <span class="fs-2">🔑</span>
-                    </div>
-                    <h5 class="card-title fw-bold mb-3">Account Login</h5>
-                    <p class="card-text text-muted mb-4">Authenticate session cookies for testing protected endpoints.</p>
-                </div>
-                <div class="card-footer bg-transparent border-0 p-4 pt-0">
-                    <a href="/login" class="btn btn-primary w-100 rounded-pill py-2 fw-semibold">Login to Account</a>
-                </div>
-            </div>
-        </div>
+            <a href="@Url.Action("Index", "Auctions")" class="btn btn-coral fs-5">
+                Explore Auctions
+            </a>
 
-        <!-- Card 3: User Profile -->
-        <div class="col-md-4">
-            <div class="card h-100 shadow-sm border-0 rounded-4 hover-lift transition-all">
-                <div class="card-body text-center p-4">
-                    <div class="icon-circle bg-info bg-opacity-10 text-info mb-4 mx-auto" style="width:70px; height:70px; border-radius:50%; display:flex; align-items:center; justify-content:center;">
-                        <span class="fs-2">👤</span>
-                    </div>
-                    <h5 class="card-title fw-bold mb-3">User Profile</h5>
-                    <p class="card-text text-muted mb-4">View authenticated user details, verification state, and security roles.</p>
-                </div>
-                 <div class="card-footer bg-transparent border-0 p-4 pt-0">
-                    <a href="/profile" class="btn btn-info text-white w-100 rounded-pill py-2 fw-semibold">View Profile</a>
-                </div>
-            </div>
+            <span class="handwriting-note d-none d-md-block" style="top: -24px; right: -140px; transform: rotate(10deg);">
+                &nwarr; Elevate your style
+            </span>
         </div>
     </div>
-</div>
+</section>
 
 @section Scripts {
-    <style>
-        .hover-lift {
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-        .hover-lift:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
-        }
-
-    </style>
     <script>
-        document.addEventListener("DOMContentLoaded", async () => {
-            const banner = document.getElementById("homeAuthBanner");
-            try {
-                const res = await fetch('/api/user/profile/me');
-                if (res.ok) {
-                    const data = await res.json();
-                    banner.className = "alert alert-success d-inline-block px-4 py-2 border-0 shadow-sm rounded-pill";
-                    banner.innerHTML = `<i class="bi bi-check-circle-fill me-2"></i><strong>Logged in as:</strong> ${data.email} <span class="badge bg-success ms-2">${data.roles.join(', ')}</span>`;
-                } else {
-                    banner.className = "alert alert-warning d-inline-block px-4 py-2 border-0 shadow-sm rounded-pill";
-                    banner.innerHTML = `<i class="bi bi-exclamation-triangle-fill me-2"></i><strong>Session Status:</strong> Not Logged In`;
-                }
-            } catch (err) {
-                banner.className = "alert alert-danger d-inline-block px-4 py-2 border-0 shadow-sm rounded-pill";
-                banner.innerHTML = `<i class="bi bi-x-circle-fill me-2"></i>Unable to reach auth server.`;
+        document.addEventListener("DOMContentLoaded", function () {
+            const viewport = document.getElementById("carouselViewport");
+            const cards = document.querySelectorAll(".auction-card-item");
+
+            function updateCardShapes() {
+                const viewportRect = viewport.getBoundingClientRect();
+                const viewportCenter = viewportRect.left + viewportRect.width / 2;
+                const maxDistance = viewportRect.width / 2;
+
+                cards.forEach(card => {
+                    const cardRect = card.getBoundingClientRect();
+                    const cardCenter = cardRect.left + cardRect.width / 2;
+
+                    let distanceFromCenter = Math.abs(viewportCenter - cardCenter) / maxDistance;
+                    distanceFromCenter = Math.min(Math.max(distanceFromCenter, 0), 1);
+
+                    const minHeight = 210;
+                    const maxHeight = 380;
+                    const minWidth = 210;
+                    const maxWidth = 230;
+
+                    const currentHeight = minHeight + (maxHeight - minHeight) * Math.pow(distanceFromCenter, 1.2);
+                    const currentWidth = minWidth + (maxWidth - minWidth) * distanceFromCenter;
+                    const translateY = (1 - distanceFromCenter) * 35;
+
+                    card.style.height = `${currentHeight}px`;
+                    card.style.width = `${currentWidth}px`;
+                    card.style.transform = `translateY(${translateY}px)`;
+                });
+
+                requestAnimationFrame(updateCardShapes);
             }
+
+            requestAnimationFrame(updateCardShapes);
         });
     </script>
 }
