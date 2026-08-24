@@ -8,7 +8,6 @@ namespace Auction_Portal_Clone.DTO
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public decimal ReservePrice { get; set; }
-        public string Location { get; set; } = string.Empty;
         public double Latitude { get; set; }
         public double Longitude { get; set; }
         public DateTime AuctionStartDate { get; set; }
@@ -17,6 +16,13 @@ namespace Auction_Portal_Clone.DTO
 
         public int CategoryId { get; set; }
         public string CategoryName { get; set; } = string.Empty;
+
+        public int MunicipalityId { get; set; }
+        public string MunicipalityName { get; set; } = string.Empty;
+        public int DistrictId { get; set; }
+        public string DistrictName { get; set; } = string.Empty;
+        public int ProvinceId { get; set; }
+        public string ProvinceName { get; set; } = string.Empty;
 
         public List<string> ImageUrls { get; set; } = new();
         public List<AttachmentDocumentDTO> DocumentUrls { get; set; } = new();

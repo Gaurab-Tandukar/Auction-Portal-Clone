@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <Folder Include="Migrations\" />
+    <Folder Include="Views\Auction\" />
     <Folder Include="wwwroot\images\" />
   </ItemGroup>
 

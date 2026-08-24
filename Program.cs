@@ -14,6 +14,7 @@ builder.Services.AddScoped<IAuctionCatalogService, AuctionCatalogService>();
 builder.Services.AddScoped<ISavedListingService, SavedListingService>();
 builder.Services.AddScoped<IBidService, BidService>();
 builder.Services.AddScoped<IAdminAuctionItemService, AdminAuctionItemService>();
+builder.Services.AddScoped<IAdminDashboardService, AdminDashboardService>();
 
 builder.Services.AddIdentity<User, IdentityRole>(options =>
 {

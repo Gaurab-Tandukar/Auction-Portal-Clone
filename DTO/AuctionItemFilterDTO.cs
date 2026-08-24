@@ -3,7 +3,9 @@ namespace Auction_Portal_Clone.DTO
     public class AuctionItemFilterDTO
     {
         public int? CategoryId { get; set; }
-        public string? City { get; set; }
+        public int? ProvinceId { get; set; }
+        public int? DistrictId { get; set; }
+        public int? MunicipalityId { get; set; }
         public decimal? MinPrice { get; set; }
         public decimal? MaxPrice { get; set; }
         public DateTime? AuctionDateFrom { get; set; }

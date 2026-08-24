@@ -1,9 +1,11 @@
 ﻿using Auction_Portal_Clone.DTO;
 using Auction_Portal_Clone.Models;
 using Auction_Portal_Clone.Services;
+using Auction_Portal_Clone.Data;
 using Auction_Portal_Clone.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Auction_Portal_Clone.Controllers.Admin
 {
@@ -13,15 +15,20 @@ namespace Auction_Portal_Clone.Controllers.Admin
     {
         private readonly IAdminAuctionItemService _adminService;
         private readonly IWebHostEnvironment _env;
+        private readonly AuctionDbContext _context;
 
         private static readonly string[] AllowedImageExtensions = { ".jpg", ".jpeg", ".png", ".webp" };
         private static readonly string[] AllowedDocExtensions = { ".pdf" };
         private const long MaxFileSizeBytes = 10 * 1024 * 1024; // 10 MB
 
-        public AdminAuctionItemController(IAdminAuctionItemService adminService, IWebHostEnvironment env)
+        public AdminAuctionItemController(
+            IAdminAuctionItemService adminService,
+            IWebHostEnvironment env,
+            AuctionDbContext context)
         {
             _adminService = adminService;
             _env = env;
+            _context = context;
         }
 
         // GET /Admin/AuctionItem
@@ -29,13 +36,18 @@ namespace Auction_Portal_Clone.Controllers.Admin
         public async Task<IActionResult> Index([FromQuery] AuctionItemFilterDTO filter)
         {
             var result = await _adminService.GetAllForAdminAsync(filter);
+            ViewData["Filter"] = filter;
+            ViewData["Categories"] = await _context.Categories.Where(c => c.Active == true).ToListAsync();
+            await PopulateLocationViewData();
             return View(result);
         }
 
         // GET /Admin/AuctionItem/Create
         [HttpGet("Create")]
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
+            ViewData["Categories"] = await _context.Categories.Where(c => c.Active == true).ToListAsync();
+            await PopulateLocationViewData();
             return View(new AdminAuctionItemCreateDTO());
         }
 
@@ -45,12 +57,18 @@ namespace Auction_Portal_Clone.Controllers.Admin
         public async Task<IActionResult> Create(AdminAuctionItemCreateDTO dto, List<IFormFile>? images, List<IFormFile>? documents)
         {
             if (!ModelState.IsValid)
+            {
+                ViewData["Categories"] = await _context.Categories.Where(c => c.Active == true).ToListAsync();
+                await PopulateLocationViewData();
                 return View(dto);
+            }
 
             var result = await _adminService.CreateAsync(dto);
             if (!result.Succeeded)
             {
                 ModelState.AddModelError(string.Empty, result.ErrorMessage!);
+                ViewData["Categories"] = await _context.Categories.Where(c => c.Active == true).ToListAsync();
+                await PopulateLocationViewData();
                 return View(dto);
             }
 
@@ -74,7 +92,28 @@ namespace Auction_Portal_Clone.Controllers.Admin
             if (item is null)
                 return NotFound();
 
-            return View(item);
+            // Map AuctionItemDetailDTO -> AdminAuctionItemUpdateDTO so the view's
+            // model type matches what the POST action binds to.
+            var dto = new AdminAuctionItemUpdateDTO
+            {
+                Id = item.Id,
+                Title = item.Title,
+                Description = item.Description,
+                ReservePrice = item.ReservePrice,
+                Latitude = item.Latitude,
+                Longitude = item.Longitude,
+                AuctionStartDate = item.AuctionStartDate,
+                AuctionEndDate = item.AuctionEndDate,
+                Status = item.Status,
+                CategoryId = item.CategoryId,
+                MunicipalityId = item.MunicipalityId
+            };
+
+            ViewData["Categories"] = await _context.Categories.ToListAsync();
+            ViewData["Attachments"] = await LoadAttachments(id);
+            await PopulateLocationViewData();
+
+            return View(dto);
         }
 
         // POST /Admin/AuctionItem/Edit/5
@@ -86,12 +125,20 @@ namespace Auction_Portal_Clone.Controllers.Admin
                 return BadRequest();
 
             if (!ModelState.IsValid)
+            {
+                ViewData["Categories"] = await _context.Categories.ToListAsync();
+                ViewData["Attachments"] = await LoadAttachments(id);
+                await PopulateLocationViewData();
                 return View(dto);
+            }
 
             var result = await _adminService.UpdateAsync(dto);
             if (!result.Succeeded)
             {
                 ModelState.AddModelError(string.Empty, result.ErrorMessage!);
+                ViewData["Categories"] = await _context.Categories.ToListAsync();
+                ViewData["Attachments"] = await LoadAttachments(id);
+                await PopulateLocationViewData();
                 return View(dto);
             }
 
@@ -128,6 +175,38 @@ namespace Auction_Portal_Clone.Controllers.Admin
         {
             await _adminService.RemoveAttachmentAsync(attachmentId);
             return RedirectToAction(nameof(Edit), new { id = auctionItemId });
+        }
+
+        // --- Location dropdown helper ---
+        private async Task PopulateLocationViewData()
+        {
+            ViewData["Provinces"] = await _context.Provinces
+                .OrderBy(p => p.Name)
+                .ToListAsync();
+
+            ViewData["Districts"] = await _context.Districts
+                .OrderBy(d => d.Name)
+                .Select(d => new { d.Id, d.Name, d.ProvinceId })
+                .ToListAsync();
+
+            ViewData["Municipalities"] = await _context.Municipalities
+                .OrderBy(m => m.Name)
+                .Select(m => new { m.Id, m.Name, m.DistrictId })
+                .ToListAsync();
+        }
+
+        private async Task<List<ItemAttachmentDTO>> LoadAttachments(int auctionItemId)
+        {
+            return await _context.ItemAttachments
+                .Where(a => a.AuctionItemId == auctionItemId)
+                .Select(a => new ItemAttachmentDTO
+                {
+                    Id = a.Id,
+                    FileUrl = a.FileUrl,
+                    FileName = a.FileName,
+                    FileType = a.FileType
+                })
+                .ToListAsync();
         }
 
         // --- File upload helper ---

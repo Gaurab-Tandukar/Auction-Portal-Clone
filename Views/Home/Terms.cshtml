@@ -1,0 +1,112 @@
+﻿@{
+    ViewData["Title"] = "Terms of Service";
+}
+
+<style>
+    .legal-wrapper {
+        position: relative;
+        padding: 50px 0 80px;
+    }
+
+    .legal-glow-right {
+        position: absolute;
+        width: 350px;
+        height: 350px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(255, 107, 87, 0.15) 0%, rgba(250, 247, 242, 0) 70%);
+        filter: blur(50px);
+        pointer-events: none;
+        top: 20px;
+        right: -80px;
+        z-index: 0;
+    }
+
+    .legal-card {
+        background: rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 107, 87, 0.15);
+        border-radius: 28px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.04);
+        position: relative;
+        z-index: 1;
+    }
+
+    .text-gradient-coral {
+        background: linear-gradient(135deg, #111111 20%, #FF6B57 80%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .legal-content h2 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #111111;
+        margin-top: 1.75rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .legal-content p, .legal-content li {
+        color: #555555;
+        line-height: 1.7;
+        font-size: 0.95rem;
+    }
+
+    .legal-content ul {
+        padding-left: 1.25rem;
+    }
+</style>
+
+<div class="legal-wrapper">
+    <div class="legal-glow-right"></div>
+
+    <div class="container" style="max-width: 860px;">
+        <div class="legal-card p-4 p-md-5">
+            <div class="text-center mb-4 pb-3 border-bottom">
+                <span class="badge rounded-pill px-3 py-2 mb-2" style="background-color: var(--bs-pill-bg); color: var(--bs-pill-text); font-weight: 700;">
+                    Legal Agreement
+                </span>
+                <h1 class="display-5 fw-extrabold text-dark mb-2">
+                    Terms &amp; <span class="text-gradient-coral">Conditions</span>
+                </h1>
+                <p class="text-muted small">Effective date: August 2026</p>
+            </div>
+
+            <div class="legal-content">
+                <p>By registering, accessing, or placing bids on the <strong>Siddhartha Bank Auction Portal</strong>, you agree to comply with and be bound by the following Terms &amp; Conditions. Please read them carefully.</p>
+
+                <h2>1. Eligibility &amp; Account Responsibility</h2>
+                <ul>
+                    <li>Bidders must be at least 18 years of age and legally capable of entering into binding contracts.</li>
+                    <li>You are responsible for maintaining the confidentiality of your login credentials and for all activities conducted under your account.</li>
+                    <li>Providing false profile information or fraudulent contact details will result in immediate account termination and forfeiture of bidding privileges.</li>
+                </ul>
+
+                <h2>2. Binding Bids &amp; Bidding Rules</h2>
+                <ul>
+                    <li><strong>Binding Obligations:</strong> Every submitted bid represents an irrevocable, legally binding offer to purchase the listed asset at the specified price.</li>
+                    <li><strong>Bid Retraction:</strong> Placed bids cannot be retracted or modified once confirmed by the system.</li>
+                    <li><strong>Winning Bidders:</strong> If declared the highest valid bidder upon auction conclusion, you are obligated to complete the transaction according to the asset's specified payment terms.</li>
+                </ul>
+
+                <h2>3. Asset Verification &amp; Disclaimers</h2>
+                <p>All auction assets (including Real Estate, Vehicles, Fine Art, and Collectibles) are offered on an <em>"As Is, Where Is"</em> basis unless explicitly specified otherwise. Bidders are strongly advised to inspect listing details, legal disclaimers, and asset conditions prior to placing bids.</p>
+
+                <h2>4. Default &amp; Account Lockout</h2>
+                <p>Failure to fulfill payment obligations for a winning bid within the stipulated time frame constitutes a breach of contract. Siddhartha Bank reserves the right to:</p>
+                <ul>
+                    <li>Revoke bidding privileges and suspend or terminate your account.</li>
+                    <li>Offer the asset to the next highest qualified bidder or re-list the item.</li>
+                    <li>Pursue legal remedies available under local banking and commercial laws.</li>
+                </ul>
+
+                <h2>5. System Availability &amp; Modifications</h2>
+                <p>While we strive for 100% portal uptime, Siddhartha Bank is not liable for temporary service interruptions, network delays, or technical glitches during auction events. We reserve the right to amend these Terms at any time with prior portal notification.</p>
+
+                <div class="mt-5 pt-4 border-top text-center">
+                    <p class="text-muted small mb-0">Need clarification on bidding terms?</p>
+                    <a asp-controller="Home" asp-action="Index" class="fw-semibold text-decoration-none" style="color: #FF6B57;">&larr; Return to Home Page</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
