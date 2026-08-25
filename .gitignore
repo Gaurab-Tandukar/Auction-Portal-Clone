@@ -361,3 +361,17 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+###############################################################################
+# Project-specific: runtime-generated content
+###############################################################################
+
+# User-uploaded attachments (images/PDFs saved by AttachmentUploadService)
+wwwroot/uploads/
+
+# Local secrets / connection strings (if ever added to appsettings)
+appsettings.*.local.json
+appsettings.Local.json
+
+# EF Core migrations bundle output (if you ever generate one)
+*.migrations.sql
