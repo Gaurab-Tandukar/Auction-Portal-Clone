@@ -1,55 +1,55 @@
 /* ==========================================================================
    Global Theme Tokens & Base Styles
    ========================================================================== */
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Caveat:wght@600&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Caveat:wght@600&display=swap");
 
 :root {
-    --bs-body-bg: #FAF7F2; /* Warm Cream Background */
-    --bs-body-color: #111111; /* Dark Charcoal Text */
-    --bs-primary: #FF6B57; /* Coral CTA Accent */
-    --bs-primary-hover: #E85542;
-    --bs-pill-bg: #FFE5D9; /* Coral Pill Badge */
-    --bs-pill-text: #B83A28;
-    --bs-body-font-family: 'Plus Jakarta Sans', sans-serif;
-    --bs-title-font-family: 'Plus Jakarta Sans', sans-serif;
-    --bs-handwriting-font: 'Caveat', cursive;
+  --bs-body-bg: #faf7f2; /* Warm Cream Background */
+  --bs-body-color: #111111; /* Dark Charcoal Text */
+  --bs-primary: #ff6b57; /* Coral CTA Accent */
+  --bs-primary-hover: #e85542;
+  --bs-pill-bg: #ffe5d9; /* Coral Pill Badge */
+  --bs-pill-text: #b83a28;
+  --bs-body-font-family: "Plus Jakarta Sans", sans-serif;
+  --bs-title-font-family: "Plus Jakarta Sans", sans-serif;
+  --bs-handwriting-font: "Caveat", cursive;
 }
 
 body {
-    font-family: var(--bs-body-font-family);
-    background-color: var(--bs-body-bg);
-    color: var(--bs-body-color);
+  font-family: var(--bs-body-font-family);
+  background-color: var(--bs-body-bg);
+  color: var(--bs-body-color);
 }
 
 /* Global Navbar Styling */
 .navbar {
-    background-color: var(--bs-body-bg) !important;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  background-color: var(--bs-body-bg) !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 
-    .navbar .nav-link,
-    .navbar-brand {
-        color: #111111 !important;
-        font-weight: 600;
-    }
+.navbar .nav-link,
+.navbar-brand {
+  color: #111111 !important;
+  font-weight: 600;
+}
 
-        .navbar .nav-link:hover {
-            color: var(--bs-primary) !important;
-        }
+.navbar .nav-link:hover {
+  color: var(--bs-primary) !important;
+}
 
 .btn-coral {
-    background-color: var(--bs-primary);
-    color: #FFFFFF !important;
-    border: none;
-    border-radius: 999px;
-    padding: 14px 38px;
-    font-weight: 700;
-    box-shadow: 0 10px 20px rgba(255, 107, 87, 0.25);
-    transition: all 0.3s ease;
+  background-color: var(--bs-primary);
+  color: #ffffff !important;
+  border: none;
+  border-radius: 999px;
+  padding: 14px 38px;
+  font-weight: 700;
+  box-shadow: 0 10px 20px rgba(255, 107, 87, 0.25);
+  transition: all 0.3s ease;
 }
 
-    .btn-coral:hover {
-        background-color: var(--bs-primary-hover);
-        transform: translateY(-2px);
-        box-shadow: 0 14px 28px rgba(255, 107, 87, 0.35);
-    }
+.btn-coral:hover {
+  background-color: var(--bs-primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px rgba(255, 107, 87, 0.35);
+}

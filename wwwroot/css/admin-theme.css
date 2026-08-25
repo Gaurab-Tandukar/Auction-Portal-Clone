@@ -1,0 +1,207 @@
+/* ========================================
+   Auction Portal Admin – Soft Discord Theme
+   Colors: #F7D6D5 → #F2E9C9 → #D0EBCD
+   ======================================== */
+
+:root {
+  --pink: #f7d6d5;
+  --cream: #f2e9c9;
+  --mint: #d0ebcd;
+  --pink-dark: #e8b8b6;
+  --text-dark: #2c2c2c;
+  --text-muted: #6b6b6b;
+  --bg-soft: #f8f6f2;
+  --card-bg: #ffffff;
+  --border-soft: #edeae4;
+  --coral: #e8b8b6; /* replaces old coral */
+}
+
+/* ===== Global ===== */
+body {
+  background: linear-gradient(165deg, #f7d6d5 0%, #f2e9c9 45%, #d0ebcd 100%);
+  background-attachment: fixed;
+  color: var(--text-dark);
+  font-family:
+    "Inter",
+    system-ui,
+    -apple-system,
+    sans-serif;
+}
+
+.container-fluid {
+  max-width: 1400px;
+}
+
+/* ===== Cards ===== */
+.card {
+  background: rgba(255, 255, 255, 0.82) !important;
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.5) !important;
+  border-radius: 1.25rem !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06) !important;
+}
+
+.card-header {
+  background: transparent !important;
+  border-bottom: none !important;
+}
+
+/* ===== Buttons ===== */
+.btn-coral {
+  background: linear-gradient(135deg, #f7d6d5, #e8b8b6) !important;
+  color: #2c2c2c !important;
+  border: none !important;
+  font-weight: 600;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 14px rgba(247, 214, 213, 0.45);
+}
+.btn-coral:hover {
+  background: linear-gradient(135deg, #e8b8b6, #d4a5a3) !important;
+  color: #2c2c2c !important;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(247, 214, 213, 0.55);
+}
+
+.btn-light {
+  background: rgba(255, 255, 255, 0.7) !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  color: var(--text-muted) !important;
+}
+.btn-light:hover {
+  background: #fff !important;
+  color: var(--text-dark) !important;
+}
+
+.btn-outline-primary,
+.btn-outline-secondary {
+  border-radius: 0.75rem !important;
+}
+
+.btn-outline-danger {
+  border-radius: 0.75rem !important;
+}
+
+/* ===== Forms ===== */
+.form-control,
+.form-select {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border: 1.5px solid var(--border-soft) !important;
+  border-radius: 0.75rem !important;
+  color: var(--text-dark);
+  transition: all 0.2s ease;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: #f7d6d5 !important;
+  box-shadow: 0 0 0 0.25rem rgba(247, 214, 213, 0.35) !important;
+  background: #fff !important;
+}
+
+.input-group-text {
+  background: rgba(255, 255, 255, 0.7) !important;
+  border: 1.5px solid var(--border-soft) !important;
+  color: var(--text-muted) !important;
+}
+
+.form-label {
+  letter-spacing: 0.05em;
+  color: var(--text-muted) !important;
+}
+
+/* ===== Table ===== */
+.table {
+  --bs-table-bg: transparent;
+}
+.table thead th {
+  background: rgba(255, 255, 255, 0.5) !important;
+  border-bottom: 1px solid var(--border-soft) !important;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+}
+.table-hover > tbody > tr:hover {
+  background-color: rgba(247, 214, 213, 0.18) !important;
+}
+
+/* ===== Badges ===== */
+.badge {
+  font-weight: 600;
+  border-radius: 50rem;
+  padding: 0.4em 0.9em;
+}
+
+/* ===== Alerts ===== */
+.alert {
+  border: none !important;
+  border-radius: 1rem !important;
+  backdrop-filter: blur(8px);
+}
+.alert-success {
+  background: rgba(208, 235, 205, 0.85) !important;
+  color: #1a3c2e;
+}
+.alert-danger {
+  background: rgba(247, 214, 213, 0.9) !important;
+  color: #5c2a2a;
+}
+.alert-warning {
+  background: rgba(242, 233, 201, 0.9) !important;
+  color: #5c4a1a;
+}
+
+/* ===== Pagination ===== */
+.pagination .page-link {
+  border: none !important;
+  border-radius: 0.75rem !important;
+  margin: 0 3px;
+  color: var(--text-dark);
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+.pagination .page-item.active .page-link {
+  background: linear-gradient(135deg, #f7d6d5, #e8b8b6) !important;
+  color: #2c2c2c !important;
+  box-shadow: 0 4px 14px rgba(247, 214, 213, 0.45);
+}
+.pagination .page-link:hover {
+  background: #f7d6d5 !important;
+  color: #2c2c2c;
+}
+
+/* ===== Modals ===== */
+.modal-content {
+  border: none !important;
+  border-radius: 1.25rem !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(16px);
+}
+
+/* ===== Utility ===== */
+.tracking-wider {
+  letter-spacing: 0.05em;
+}
+.tracking-tight {
+  letter-spacing: -0.025em;
+}
+.fs-7 {
+  font-size: 0.75rem;
+}
+
+.hover-primary:hover {
+  color: #e8b8b6 !important;
+}
+
+/* Soft scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(#f7d6d5, #d0ebcd);
+  border-radius: 10px;
+}
