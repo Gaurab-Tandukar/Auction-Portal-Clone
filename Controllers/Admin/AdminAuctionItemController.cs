@@ -1,11 +1,7 @@
 ﻿using Auction_Portal_Clone.DTO;
-using Auction_Portal_Clone.Models;
-using Auction_Portal_Clone.Services;
-using Auction_Portal_Clone.Data;
 using Auction_Portal_Clone.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace Auction_Portal_Clone.Controllers.Admin
 {
@@ -14,21 +10,17 @@ namespace Auction_Portal_Clone.Controllers.Admin
     public class AdminAuctionItemController : Controller
     {
         private readonly IAdminAuctionItemService _adminService;
-        private readonly IWebHostEnvironment _env;
-        private readonly AuctionDbContext _context;
-
-        private static readonly string[] AllowedImageExtensions = { ".jpg", ".jpeg", ".png", ".webp" };
-        private static readonly string[] AllowedDocExtensions = { ".pdf" };
-        private const long MaxFileSizeBytes = 10 * 1024 * 1024; // 10 MB
+        private readonly IAttachmentUploadService _uploadService;
+        private readonly IAdminViewDataHelper _viewDataHelper;
 
         public AdminAuctionItemController(
             IAdminAuctionItemService adminService,
-            IWebHostEnvironment env,
-            AuctionDbContext context)
+            IAttachmentUploadService uploadService,
+            IAdminViewDataHelper viewDataHelper)
         {
             _adminService = adminService;
-            _env = env;
-            _context = context;
+            _uploadService = uploadService;
+            _viewDataHelper = viewDataHelper;
         }
 
         // GET /Admin/AuctionItem
@@ -37,8 +29,10 @@ namespace Auction_Portal_Clone.Controllers.Admin
         {
             var result = await _adminService.GetAllForAdminAsync(filter);
             ViewData["Filter"] = filter;
-            ViewData["Categories"] = await _context.Categories.Where(c => c.Active == true).ToListAsync();
-            await PopulateLocationViewData();
+
+            await _viewDataHelper.PopulateCategoriesAsync(ViewData, activeOnly: true);
+            await _viewDataHelper.PopulateLocationViewDataAsync(ViewData);
+
             return View(result);
         }
 
@@ -46,8 +40,9 @@ namespace Auction_Portal_Clone.Controllers.Admin
         [HttpGet("Create")]
         public async Task<IActionResult> Create()
         {
-            ViewData["Categories"] = await _context.Categories.Where(c => c.Active == true).ToListAsync();
-            await PopulateLocationViewData();
+            await _viewDataHelper.PopulateCategoriesAsync(ViewData, activeOnly: true);
+            await _viewDataHelper.PopulateLocationViewDataAsync(ViewData);
+
             return View(new AdminAuctionItemCreateDTO());
         }
 
@@ -58,8 +53,8 @@ namespace Auction_Portal_Clone.Controllers.Admin
         {
             if (!ModelState.IsValid)
             {
-                ViewData["Categories"] = await _context.Categories.Where(c => c.Active == true).ToListAsync();
-                await PopulateLocationViewData();
+                await _viewDataHelper.PopulateCategoriesAsync(ViewData, activeOnly: true);
+                await _viewDataHelper.PopulateLocationViewDataAsync(ViewData);
                 return View(dto);
             }
 
@@ -67,14 +62,14 @@ namespace Auction_Portal_Clone.Controllers.Admin
             if (!result.Succeeded)
             {
                 ModelState.AddModelError(string.Empty, result.ErrorMessage!);
-                ViewData["Categories"] = await _context.Categories.Where(c => c.Active == true).ToListAsync();
-                await PopulateLocationViewData();
+                await _viewDataHelper.PopulateCategoriesAsync(ViewData, activeOnly: true);
+                await _viewDataHelper.PopulateLocationViewDataAsync(ViewData);
                 return View(dto);
             }
 
             int newItemId = result.Data;
 
-            var uploadResult = await UploadAttachmentsAsync(newItemId, images, documents);
+            var uploadResult = await _uploadService.UploadAttachmentsAsync(newItemId, images, documents);
             if (!uploadResult.Succeeded)
             {
                 TempData["UploadWarning"] = uploadResult.ErrorMessage;
@@ -109,9 +104,9 @@ namespace Auction_Portal_Clone.Controllers.Admin
                 MunicipalityId = item.MunicipalityId
             };
 
-            ViewData["Categories"] = await _context.Categories.ToListAsync();
-            ViewData["Attachments"] = await LoadAttachments(id);
-            await PopulateLocationViewData();
+            await _viewDataHelper.PopulateCategoriesAsync(ViewData, activeOnly: false);
+            ViewData["Attachments"] = await _viewDataHelper.LoadAttachmentsAsync(id);
+            await _viewDataHelper.PopulateLocationViewDataAsync(ViewData);
 
             return View(dto);
         }
@@ -126,9 +121,9 @@ namespace Auction_Portal_Clone.Controllers.Admin
 
             if (!ModelState.IsValid)
             {
-                ViewData["Categories"] = await _context.Categories.ToListAsync();
-                ViewData["Attachments"] = await LoadAttachments(id);
-                await PopulateLocationViewData();
+                await _viewDataHelper.PopulateCategoriesAsync(ViewData, activeOnly: false);
+                ViewData["Attachments"] = await _viewDataHelper.LoadAttachmentsAsync(id);
+                await _viewDataHelper.PopulateLocationViewDataAsync(ViewData);
                 return View(dto);
             }
 
@@ -136,13 +131,13 @@ namespace Auction_Portal_Clone.Controllers.Admin
             if (!result.Succeeded)
             {
                 ModelState.AddModelError(string.Empty, result.ErrorMessage!);
-                ViewData["Categories"] = await _context.Categories.ToListAsync();
-                ViewData["Attachments"] = await LoadAttachments(id);
-                await PopulateLocationViewData();
+                await _viewDataHelper.PopulateCategoriesAsync(ViewData, activeOnly: false);
+                ViewData["Attachments"] = await _viewDataHelper.LoadAttachmentsAsync(id);
+                await _viewDataHelper.PopulateLocationViewDataAsync(ViewData);
                 return View(dto);
             }
 
-            var uploadResult = await UploadAttachmentsAsync(id, images, documents);
+            var uploadResult = await _uploadService.UploadAttachmentsAsync(id, images, documents);
             if (!uploadResult.Succeeded)
             {
                 TempData["UploadWarning"] = uploadResult.ErrorMessage;
@@ -175,95 +170,6 @@ namespace Auction_Portal_Clone.Controllers.Admin
         {
             await _adminService.RemoveAttachmentAsync(attachmentId);
             return RedirectToAction(nameof(Edit), new { id = auctionItemId });
-        }
-
-        // --- Location dropdown helper ---
-        private async Task PopulateLocationViewData()
-        {
-            ViewData["Provinces"] = await _context.Provinces
-                .OrderBy(p => p.Name)
-                .ToListAsync();
-
-            ViewData["Districts"] = await _context.Districts
-                .OrderBy(d => d.Name)
-                .Select(d => new { d.Id, d.Name, d.ProvinceId })
-                .ToListAsync();
-
-            ViewData["Municipalities"] = await _context.Municipalities
-                .OrderBy(m => m.Name)
-                .Select(m => new { m.Id, m.Name, m.DistrictId })
-                .ToListAsync();
-        }
-
-        private async Task<List<ItemAttachmentDTO>> LoadAttachments(int auctionItemId)
-        {
-            return await _context.ItemAttachments
-                .Where(a => a.AuctionItemId == auctionItemId)
-                .Select(a => new ItemAttachmentDTO
-                {
-                    Id = a.Id,
-                    FileUrl = a.FileUrl,
-                    FileName = a.FileName,
-                    FileType = a.FileType
-                })
-                .ToListAsync();
-        }
-
-        // --- File upload helper ---
-        private async Task<ServiceResult<bool>> UploadAttachmentsAsync(int auctionItemId, List<IFormFile>? images, List<IFormFile>? documents)
-        {
-            var uploadRoot = Path.Combine(_env.WebRootPath, "uploads", auctionItemId.ToString());
-            Directory.CreateDirectory(uploadRoot);
-
-            var errors = new List<string>();
-
-            if (images is not null)
-            {
-                foreach (var file in images)
-                {
-                    var error = await SaveFileAsync(file, uploadRoot, auctionItemId, AllowedImageExtensions, FileType.Image);
-                    if (error is not null) errors.Add(error);
-                }
-            }
-
-            if (documents is not null)
-            {
-                foreach (var file in documents)
-                {
-                    var error = await SaveFileAsync(file, uploadRoot, auctionItemId, AllowedDocExtensions, FileType.PDFNotice);
-                    if (error is not null) errors.Add(error);
-                }
-            }
-
-            return errors.Count == 0
-                ? ServiceResult<bool>.Success(true)
-                : ServiceResult<bool>.Failure(string.Join(" ", errors));
-        }
-
-        private async Task<string?> SaveFileAsync(IFormFile file, string uploadRoot, int auctionItemId, string[] allowedExtensions, FileType fileType)
-        {
-            if (file.Length == 0)
-                return null;
-
-            if (file.Length > MaxFileSizeBytes)
-                return $"'{file.FileName}' exceeds the 10 MB limit and was skipped.";
-
-            var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
-            if (!allowedExtensions.Contains(ext))
-                return $"'{file.FileName}' has an unsupported file type and was skipped.";
-
-            var safeFileName = $"{Guid.NewGuid()}{ext}";
-            var fullPath = Path.Combine(uploadRoot, safeFileName);
-
-            using (var stream = new FileStream(fullPath, FileMode.Create))
-            {
-                await file.CopyToAsync(stream);
-            }
-
-            var relativeUrl = $"/uploads/{auctionItemId}/{safeFileName}";
-            await _adminService.AddAttachmentAsync(auctionItemId, relativeUrl, file.FileName, fileType);
-
-            return null;
         }
     }
 }

@@ -10,11 +10,14 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<AuctionDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.AddScoped<IAuctionFilterService, AuctionFilterService>();
 builder.Services.AddScoped<IAuctionCatalogService, AuctionCatalogService>();
 builder.Services.AddScoped<ISavedListingService, SavedListingService>();
 builder.Services.AddScoped<IBidService, BidService>();
 builder.Services.AddScoped<IAdminAuctionItemService, AdminAuctionItemService>();
 builder.Services.AddScoped<IAdminDashboardService, AdminDashboardService>();
+builder.Services.AddScoped<IAttachmentUploadService, AttachmentUploadService>();
+builder.Services.AddScoped<IAdminViewDataHelper, AdminViewDataHelper>();
 
 builder.Services.AddIdentity<User, IdentityRole>(options =>
 {

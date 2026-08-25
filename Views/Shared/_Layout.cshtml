@@ -5,6 +5,7 @@
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -15,19 +16,24 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Auction_Portal_Clone.styles.css" asp-append-version="true" />
 </head>
+
 <body>
     <header>
         <!-- Updated Navbar for Light/Cream Theme -->
         <nav class="navbar navbar-expand-lg border-bottom py-3">
             <div class="container">
                 <!-- Brand / Logo -->
-                <a class="navbar-brand d-flex align-items-center gap-2 fw-bold fs-4 text-dark" asp-area="" asp-controller="Home" asp-action="Index">
-                    <img src="~/favicon.png" alt="Logo" width="36" height="36" class="d-inline-block align-text-top object-fit-contain">
+                <a class="navbar-brand d-flex align-items-center gap-2 fw-bold fs-4 text-dark" asp-area=""
+                   asp-controller="Home" asp-action="Index">
+                    <img src="~/favicon.png" alt="Logo" width="36" height="36"
+                         class="d-inline-block align-text-top object-fit-contain">
                     <span>Siddhartha Bank</span>
                 </a>
 
                 <!-- Mobile Toggle Button -->
-                <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#themeNavbar" aria-controls="themeNavbar" aria-expanded="false" aria-label="Toggle navigation">
+                <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#themeNavbar" aria-controls="themeNavbar" aria-expanded="false"
+                        aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
@@ -35,66 +41,88 @@
                 <div class="collapse navbar-collapse" id="themeNavbar">
                     <!-- Centered Navigation -->
                     <ul class="navbar-nav mx-auto mb-2 mb-lg-0 align-items-lg-center gap-lg-3">
-                        <li class="nav-item">
-                            <a class="nav-link active fw-semibold" aria-current="page" href="#">Auctions</a>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle fw-semibold" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                Categories
-                            </a>
-                            <ul class="dropdown-menu border-0 shadow-sm rounded-3">
-                                <li><a class="dropdown-item" href="#">Vehicles</a></li>
-                                <li><a class="dropdown-item" href="#">Real Estate</a></li>
-                                <li><a class="dropdown-item" href="#">Collectibles</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item fw-semibold text-primary" href="#">Live Bids</a></li>
-                            </ul>
-                        </li>
-                    </ul>
-
-                    <!-- Right Action Items -->
-                    <div class="d-flex align-items-center gap-2 mt-3 mt-lg-0">
-                        @if (SignInManager.IsSignedIn(User))
+                        @if (User.IsInRole("BankStaff"))
                         {
-                            var user = await UserManager.GetUserAsync(User);
-                            var displayName = user?.FullName ?? User.Identity?.Name ?? "User";
+                            <li class="nav-item">
+                                <a class="nav-link active fw-semibold" aria-current="page"
+                                   href="/Admin/Dashboard">Dashboard</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link active fw-semibold" aria-current="page" href="/Admin/AuctionItem">Auction
+                                    Manager</a>
+                                </li>
+                            } else
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link active fw-semibold" aria-current="page" href="#">Auctions</a>
+                                </li>
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle fw-semibold" href="#" role="button"
+                                       data-bs-toggle="dropdown" aria-expanded="false">
+                                        Categories
+                                    </a>
+                                    <ul class="dropdown-menu border-0 shadow-sm rounded-3">
+                                        <li><a class="dropdown-item" href="#">Vehicles</a></li>
+                                        <li><a class="dropdown-item" href="#">Real Estate</a></li>
+                                        <li><a class="dropdown-item" href="#">Collectibles</a></li>
+                                        <li>
+                                            <hr class="dropdown-divider">
+                                        </li>
+                                        <li><a class="dropdown-item fw-semibold text-primary" href="#">Live Bids</a></li>
+                                    </ul>
+                                </li>
+                                <a class="nav-link active fw-semibold" aria-current="page" href="#">Auctions</a>
+                            }
+                        </ul>
 
-                            <a asp-controller="UserProfile" asp-action="Index" class="btn btn-light border rounded-pill px-3 py-2 fw-semibold text-dark text-decoration-none">
-                                Hi, <span style="color: #FF6B57;">@displayName</span>
-                            </a>
+                        <!-- Right Action Items -->
+                        <div class="d-flex align-items-center gap-2 mt-3 mt-lg-0">
+                            @if (SignInManager.IsSignedIn(User))
+                            {
+                                var user = await UserManager.GetUserAsync(User);
+                                var displayName = user?.FullName ?? User.Identity?.Name ?? "User";
 
-                            <form asp-controller="Logout" asp-action="Index" method="post" class="d-inline">
-                                @Html.AntiForgeryToken()
-                                <button type="submit" class="btn btn-outline-dark rounded-pill px-4 py-2 fw-semibold">
-                                    Logout
-                                </button>
-                            </form>
-                        }
-                        else
-                        {
-                            <a asp-controller="Login" asp-action="Index" class="btn btn-outline-dark rounded-pill px-4 py-2 fw-semibold">Login</a>
-                            <a asp-controller="Register" asp-action="Index" class="btn btn-coral rounded-pill px-4 py-2 fw-semibold">Sign Up</a>
-                        }
+                                <a asp-controller="UserProfile" asp-action="Index"
+                                   class="btn btn-light border rounded-pill px-3 py-2 fw-semibold text-dark text-decoration-none">
+                                    Hi, <span style="color: #FF6B57;">@displayName</span>
+                                </a>
+
+                                <form asp-controller="Logout" asp-action="Index" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-outline-dark rounded-pill px-4 py-2 fw-semibold">
+                                        Logout
+                                    </button>
+                                </form>
+                            }
+                            else
+                            {
+                                <a asp-controller="Login" asp-action="Index"
+                                   class="btn btn-outline-dark rounded-pill px-4 py-2 fw-semibold">Login</a>
+                                <a asp-controller="Register" asp-action="Index"
+                                   class="btn btn-coral rounded-pill px-4 py-2 fw-semibold">Sign Up</a>
+                            }
+                        </div>
                     </div>
                 </div>
+            </nav>
+        </header>
+
+        <!-- Full-Width Container Wrapper for Hero Bleed -->
+        <main role="main">
+            @RenderBody()
+        </main>
+
+        <footer class="border-top footer text-muted py-4 mt-auto">
+            <div class="container text-center">
+                &copy; 2026 - Siddhartha Bank Auction Portal - <a asp-area="" asp-controller="Home" asp-action="Privacy"
+                                                                  class="text-decoration-none">Privacy</a>
             </div>
-        </nav>
-    </header>
+        </footer>
 
-    <!-- Full-Width Container Wrapper for Hero Bleed -->
-    <main role="main">
-        @RenderBody()
-    </main>
+        <script src="~/lib/jquery/dist/jquery.min.js"></script>
+        <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="~/js/site.js" asp-append-version="true"></script>
+        @await RenderSectionAsync("Scripts", required: false)
+    </body>
 
-    <footer class="border-top footer text-muted py-4 mt-auto">
-        <div class="container text-center">
-            &copy; 2026 - Siddhartha Bank Auction Portal - <a asp-area="" asp-controller="Home" asp-action="Privacy" class="text-decoration-none">Privacy</a>
-        </div>
-    </footer>
-
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    @await RenderSectionAsync("Scripts", required: false)
-</body>
 </html>

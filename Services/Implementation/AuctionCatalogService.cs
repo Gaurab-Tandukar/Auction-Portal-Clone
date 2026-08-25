@@ -9,10 +9,12 @@ namespace Auction_Portal_Clone.Services.Implementation
     public class AuctionCatalogService : IAuctionCatalogService
     {
         private readonly AuctionDbContext _db;
+        private readonly IAuctionFilterService _filterService;
 
-        public AuctionCatalogService(AuctionDbContext db)
+        public AuctionCatalogService(AuctionDbContext db, IAuctionFilterService filterService)
         {
             _db = db;
+            _filterService = filterService;
         }
 
         public async Task<PagedResultDTO<AuctionItemListItemDTO>> GetCatalogAsync(AuctionItemFilterDTO filter)
@@ -22,31 +24,11 @@ namespace Auction_Portal_Clone.Services.Implementation
                 .Include(a => a.Attachments)
                 .AsQueryable();
 
-            if (filter.CategoryId.HasValue)
-                query = query.Where(a => a.CategoryId == filter.CategoryId.Value);
+            query = _filterService.ApplyFilters(query, filter);
 
-            if (filter.ProvinceId.HasValue)
-                query = query.Where(a => a.Municipality.District.ProvinceId == filter.ProvinceId.Value);
-
-            if (filter.DistrictId.HasValue)
-                query = query.Where(a => a.Municipality.DistrictId == filter.DistrictId.Value);
-
-            if (filter.MunicipalityId.HasValue)
-                query = query.Where(a => a.MunicipalityId == filter.MunicipalityId.Value);
-
-            if (filter.MinPrice.HasValue)
-                query = query.Where(a => a.ReservePrice >= filter.MinPrice.Value);
-
-            if (filter.MaxPrice.HasValue)
-                query = query.Where(a => a.ReservePrice <= filter.MaxPrice.Value);
-
-            if (filter.AuctionDateFrom.HasValue)
-                query = query.Where(a => a.AuctionStartDate >= filter.AuctionDateFrom.Value);
-
-            if (filter.AuctionDateTo.HasValue)
-                query = query.Where(a => a.AuctionEndDate <= filter.AuctionDateTo.Value);
-
-            // Never show Draft items on the public catalog
+            // Never show Draft items on the public catalog. This stays here
+            // (not in AuctionFilterService) because it's a rule specific to
+            // the public-facing catalog, not a user-controlled filter.
             query = query.Where(a => a.Status != AuctionStatus.Draft);
 
             var totalCount = await query.CountAsync();

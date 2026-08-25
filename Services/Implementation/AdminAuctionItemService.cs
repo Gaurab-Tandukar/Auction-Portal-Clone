@@ -9,10 +9,12 @@ namespace Auction_Portal_Clone.Services.Implementation
     public class AdminAuctionItemService : IAdminAuctionItemService
     {
         private readonly AuctionDbContext _db;
+        private readonly IAuctionFilterService _filterService;
 
-        public AdminAuctionItemService(AuctionDbContext db)
+        public AdminAuctionItemService(AuctionDbContext db, IAuctionFilterService filterService)
         {
             _db = db;
+            _filterService = filterService;
         }
 
 
@@ -23,29 +25,7 @@ namespace Auction_Portal_Clone.Services.Implementation
                 .Include(a => a.Attachments)
                 .AsQueryable();
 
-            if (filter.CategoryId.HasValue)
-                query = query.Where(a => a.CategoryId == filter.CategoryId.Value);
-
-            if (filter.ProvinceId.HasValue)
-                query = query.Where(a => a.Municipality.District.ProvinceId == filter.ProvinceId.Value);
-
-            if (filter.DistrictId.HasValue)
-                query = query.Where(a => a.Municipality.DistrictId == filter.DistrictId.Value);
-
-            if (filter.MunicipalityId.HasValue)
-                query = query.Where(a => a.MunicipalityId == filter.MunicipalityId.Value);
-
-            if (filter.MinPrice.HasValue)
-                query = query.Where(a => a.ReservePrice >= filter.MinPrice.Value);
-
-            if (filter.MaxPrice.HasValue)
-                query = query.Where(a => a.ReservePrice <= filter.MaxPrice.Value);
-
-            if (filter.AuctionDateFrom.HasValue)
-                query = query.Where(a => a.AuctionStartDate >= filter.AuctionDateFrom.Value);
-
-            if (filter.AuctionDateTo.HasValue)
-                query = query.Where(a => a.AuctionEndDate <= filter.AuctionDateTo.Value);
+            query = _filterService.ApplyFilters(query, filter);
 
             var totalCount = await query.CountAsync();
             var page = filter.Page < 1 ? 1 : filter.Page;
