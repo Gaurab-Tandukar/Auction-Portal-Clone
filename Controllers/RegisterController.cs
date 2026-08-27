@@ -48,8 +48,8 @@ namespace Auction_Portal_Clone.Controllers
                 Email = model.Email,
                 FullName = $"{model.FirstName.Trim()} {model.LastName.Trim()}".Trim(),
                 PhoneNumber = model.PhoneNumber,
-                IsVerifiedForBidding = true,
-                RegisteredAt = DateTime.UtcNow
+                // IsVerifiedForBidding = true,
+                RegisteredAt = DateTime.UtcNow,
             };
 
             var result = await _userManager.CreateAsync(user, model.Password);

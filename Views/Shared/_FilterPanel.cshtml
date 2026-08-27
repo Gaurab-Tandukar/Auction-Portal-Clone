@@ -1,0 +1,209 @@
+@model Auction_Portal_Clone.DTO.AuctionItemFilterDTO
+
+@*
+    Advanced filter panel for AdminAuctionItem/Index or AuctionCatalog/Index.
+    Matches the warm cream theme, custom typography tokens, and coral accents.
+*@
+
+<form method="get" asp-action="Index" class="card border-0 shadow-sm mb-5 rounded-4 filter-panel-card">
+    <input type="hidden" name="SearchTerm" value="@Model.SearchTerm" />
+    <div class="card-body p-4 p-lg-4">
+        <div class="row g-4 align-items-end">
+
+            <!-- Category -->
+            <div class="col-md-3">
+                <label class="form-label small text-uppercase fw-bold text-muted tracking-wider">Category</label>
+                <select name="CategoryId" class="form-select rounded-3 shadow-none border-light-subtle bg-white">
+                    <option value="">All categories</option>
+                    @if (ViewData["Categories"] is IEnumerable<Auction_Portal_Clone.Models.Category> categories)
+                    {
+                        @foreach (var cat in categories)
+                        {
+                            <option value="@cat.Id" selected="@(Model.CategoryId == cat.Id)">@cat.Name</option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <!-- Province -->
+            <div class="col-md-2">
+                <label class="form-label small text-uppercase fw-bold text-muted tracking-wider">Province</label>
+                <select name="ProvinceId" id="provinceSelect"
+                        class="form-select rounded-3 shadow-none border-light-subtle bg-white">
+                    <option value="">All provinces</option>
+                    @if (ViewData["Provinces"] is IEnumerable<Auction_Portal_Clone.Models.Province> provinces)
+                    {
+                        @foreach (var p in provinces)
+                        {
+                            <option value="@p.Id" selected="@(Model.ProvinceId == p.Id)">@p.Name</option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <!-- District -->
+            <div class="col-md-2">
+                <label class="form-label small text-uppercase fw-bold text-muted tracking-wider">District</label>
+                <select name="DistrictId" id="districtSelect"
+                        class="form-select rounded-3 shadow-none border-light-subtle bg-white">
+                    <option value="">All districts</option>
+                </select>
+            </div>
+
+            <!-- Municipality -->
+            <div class="col-md-2">
+                <label class="form-label small text-uppercase fw-bold text-muted tracking-wider">Municipality</label>
+                <select name="MunicipalityId" id="municipalitySelect"
+                        class="form-select rounded-3 shadow-none border-light-subtle bg-white">
+                    <option value="">All municipalities</option>
+                </select>
+            </div>
+
+            <!-- Min Price -->
+            <div class="col-md-3">
+                <label class="form-label small text-uppercase fw-bold text-muted tracking-wider">Min Price</label>
+                <div class="input-group">
+                    <span
+                    class="input-group-text bg-white rounded-start-3 text-muted border-end-0 border-light-subtle">Rs.</span>
+                    <input type="number" name="MinPrice" value="@Model.MinPrice"
+                           class="form-control rounded-end-3 border-start-0 shadow-none border-light-subtle bg-white"
+                           step="0.01" min="0" placeholder="0.00" />
+                </div>
+            </div>
+
+            <!-- Max Price -->
+            <div class="col-md-3">
+                <label class="form-label small text-uppercase fw-bold text-muted tracking-wider">Max Price</label>
+                <div class="input-group">
+                    <span
+                    class="input-group-text bg-white rounded-start-3 text-muted border-end-0 border-light-subtle">Rs.</span>
+                    <input type="number" name="MaxPrice" value="@Model.MaxPrice"
+                           class="form-control rounded-end-3 border-start-0 shadow-none border-light-subtle bg-white"
+                           step="0.01" min="0" placeholder="0.00" />
+                </div>
+            </div>
+
+            <!-- Auction From Date -->
+            <div class="col-md-3">
+                <label class="form-label small text-uppercase fw-bold text-muted tracking-wider">Auction From</label>
+                <input type="date" name="AuctionDateFrom" value="@Model.AuctionDateFrom?.ToString("yyyy-MM-dd")"
+                       class="form-control rounded-3 shadow-none border-light-subtle bg-white" />
+            </div>
+
+            <!-- Auction To Date -->
+            <div class="col-md-3">
+                <label class="form-label small text-uppercase fw-bold text-muted tracking-wider">Auction To</label>
+                <input type="date" name="AuctionDateTo" value="@Model.AuctionDateTo?.ToString("yyyy-MM-dd")"
+                       class="form-control rounded-3 shadow-none border-light-subtle bg-white" />
+            </div>
+
+            <!-- Action Buttons -->
+            <div
+                class="col-12 d-flex flex-column flex-md-row gap-2 justify-content-md-end mt-4 pt-2 border-top border-light-subtle">
+                <button type="submit"
+                        class="btn btn-coral px-4 py-2.5 fw-semibold d-inline-flex align-items-center justify-content-center">
+                    <i class="bi bi-funnel me-2"></i>Apply Filters
+                </button>
+                <a asp-action="Index"
+                   class="btn btn-reset-custom px-4 py-2.5 fw-semibold d-inline-flex align-items-center justify-content-center text-decoration-none">
+                    <i class="bi bi-arrow-counterclockwise me-2"></i>Reset
+                </a>
+            </div>
+
+        </div>
+    </div>
+</form>
+
+<style>
+    /* Filter Panel Styling matched to Theme Tokens */
+    .filter-panel-card {
+        background-color: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.04) !important;
+        box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.03) !important;
+    }
+
+    .tracking-wider {
+        letter-spacing: 0.05em;
+    }
+
+    .form-select,
+    .form-control {
+        font-size: 0.925rem;
+        transition: all 0.2s ease-in-out;
+    }
+
+    .form-select:focus,
+    .form-control:focus {
+        border-color: var(--bs-primary) !important;
+        box-shadow: 0 0 0 3px rgba(255, 107, 87, 0.15) !important;
+    }
+
+    /* Override standard button-coral padding locally if default is too wide for filters */
+    .btn-coral {
+        padding: 10px 28px !important;
+        font-size: 0.95rem;
+    }
+
+    .btn-reset-custom {
+        background-color: #f1ede6;
+        color: #444444;
+        border: none;
+        border-radius: 999px;
+        transition: all 0.2s ease;
+    }
+
+    .btn-reset-custom:hover {
+        background-color: #e5e0d8;
+        color: #111111;
+        transform: translateY(-1px);
+    }
+</style>
+
+<script>
+    const allDistricts = @Html.Raw(Json.Serialize(ViewData["Districts"]));
+    const allMunicipalities = @Html.Raw(Json.Serialize(ViewData["Municipalities"]));
+
+    function populateDistricts(provinceId, selectedId) {
+        const sel = document.getElementById('districtSelect');
+        sel.innerHTML = '<option value="">All districts</option>';
+        allDistricts
+            .filter(d => !provinceId || d.provinceId == provinceId)
+            .forEach(d => {
+                const opt = document.createElement('option');
+                opt.value = d.id;
+                opt.textContent = d.name;
+                if (selectedId && d.id == selectedId) opt.selected = true;
+                sel.appendChild(opt);
+            });
+    }
+
+    function populateMunicipalities(districtId, selectedId) {
+        const sel = document.getElementById('municipalitySelect');
+        sel.innerHTML = '<option value="">All municipalities</option>';
+        allMunicipalities
+            .filter(m => !districtId || m.districtId == districtId)
+            .forEach(m => {
+                const opt = document.createElement('option');
+                opt.value = m.id;
+                opt.textContent = m.name;
+                if (selectedId && m.id == selectedId) opt.selected = true;
+                sel.appendChild(opt);
+            });
+    }
+
+    document.getElementById('provinceSelect').addEventListener('change', function () {
+        populateDistricts(this.value, null);
+        populateMunicipalities(null, null);
+    });
+    document.getElementById('districtSelect').addEventListener('change', function () {
+        populateMunicipalities(this.value, null);
+    });
+
+    window.addEventListener('DOMContentLoaded', function () {
+        const provinceId = @Html.Raw(Json.Serialize(Model.ProvinceId));
+        const districtId = @Html.Raw(Json.Serialize(Model.DistrictId));
+        const municipalityId = @Html.Raw(Json.Serialize(Model.MunicipalityId));
+        populateDistricts(provinceId, districtId);
+        populateMunicipalities(districtId, municipalityId);
+    });
+</script>

@@ -1,0 +1,463 @@
+@model Auction_Portal_Clone.DTO.AuctionItemDetailDTO
+@{
+    ViewData["Title"] = Model.Title;
+    bool isAuthenticated = User.Identity?.IsAuthenticated == true;
+    bool canBid = Model.Status == Auction_Portal_Clone.Models.AuctionStatus.Active;
+
+    var startUtc = DateTime.SpecifyKind(Model.AuctionStartDate, DateTimeKind.Utc).ToString("o");
+    var endUtc = DateTime.SpecifyKind(Model.AuctionEndDate, DateTimeKind.Utc).ToString("o");
+}
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+<div class="container-fluid py-5 px-4 px-lg-5">
+    <div class="mb-4">
+        <a asp-action="Index" class="btn btn-light rounded-pill text-secondary border px-4 py-2">
+            <i class="bi bi-arrow-left me-1"></i>Back to Auctions
+        </a>
+    </div>
+
+    @if (TempData["BidSuccess"] is not null)
+    {
+        <div class="alert alert-success alert-dismissible fade show rounded-4 border-0 shadow-sm mb-4" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-check-circle-fill fs-5 me-2"></i>
+                <div>@TempData["BidSuccess"]</div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["BidError"] is not null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show rounded-4 border-0 shadow-sm mb-4" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-exclamation-triangle-fill fs-5 me-2"></i>
+                <div>@TempData["BidError"]</div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="row g-4">
+        <!-- Left Column -->
+        <div class="col-lg-8">
+
+            <!-- Image Gallery -->
+            <div class="card border-0 shadow-sm mb-4 rounded-4 overflow-hidden">
+                @if (Model.ImageUrls.Any())
+                {
+                    <div id="itemCarousel" class="carousel slide" data-bs-ride="false">
+                        <div class="carousel-inner">
+                            @for (int i = 0; i < Model.ImageUrls.Count; i++)
+                            {
+                                <div class="carousel-item @(i == 0 ? "active" : "")">
+                                    <img src="@Model.ImageUrls[i]" class="d-block w-100" style="height:420px;object-fit:cover;"
+                                         alt="@Model.Title" />
+                                </div>
+                            }
+                        </div>
+                        @if (Model.ImageUrls.Count > 1)
+                        {
+                            <button class="carousel-control-prev" type="button" data-bs-target="#itemCarousel"
+                                    data-bs-slide="prev">
+                                <span class="carousel-control-prev-icon"></span>
+                            </button>
+                            <button class="carousel-control-next" type="button" data-bs-target="#itemCarousel"
+                                    data-bs-slide="next">
+                                <span class="carousel-control-next-icon"></span>
+                            </button>
+                            <div class="carousel-indicators">
+                                @for (int i = 0; i < Model.ImageUrls.Count; i++)
+                                {
+                                    <button type="button" data-bs-target="#itemCarousel" data-bs-slide-to="@i"
+                                            class="@(i == 0 ? "active" : "")"></button>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="d-flex align-items-center justify-content-center bg-light" style="height:420px;">
+                        <div class="text-center text-muted">
+                            <i class="bi bi-image fs-1 opacity-50"></i>
+                            <p class="mb-0 mt-2 small">No images available</p>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Title & Meta -->
+            <div class="card border-0 shadow-sm mb-4 rounded-4">
+                <div class="card-body px-4 py-4">
+                    <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                        <span class="badge bg-light text-dark border px-2 py-1 rounded-pill">@Model.CategoryName</span>
+                        @{
+                            var badgeClass = Model.Status switch
+                            {
+                                Auction_Portal_Clone.Models.AuctionStatus.Draft => "bg-secondary bg-opacity-10 text-secondary",
+                                Auction_Portal_Clone.Models.AuctionStatus.Upcoming => "bg-info bg-opacity-10 text-info",
+                                Auction_Portal_Clone.Models.AuctionStatus.Active => "bg-success bg-opacity-10 text-success",
+                                Auction_Portal_Clone.Models.AuctionStatus.Closed => "bg-dark bg-opacity-10 text-dark",
+                                _ => "bg-light text-dark"
+                            };
+                        }
+                        <span class="badge @badgeClass px-2 py-1 fw-semibold rounded-pill">@Model.Status</span>
+                    </div>
+                    <h1 class="h3 fw-bold text-dark mb-2">@Model.Title</h1>
+                    <p class="text-muted mb-0">
+                        <i class="bi bi-geo-alt me-1"></i>
+                        @Model.MunicipalityName, @Model.DistrictName, @Model.ProvinceName
+                    </p>
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div class="card border-0 shadow-sm mb-4 rounded-4">
+                <div class="card-header bg-transparent border-0 pt-4 px-4 pb-0">
+                    <h3 class="h5 mb-0 fw-bold text-dark d-flex align-items-center">
+                        <i class="bi bi-card-text me-2 text-primary"></i>Description
+                    </h3>
+                </div>
+                <div class="card-body px-4 pb-4 pt-3">
+                    <p class="text-dark mb-0" style="white-space: pre-line;">@Model.Description</p>
+                </div>
+            </div>
+
+            <!-- Location Map -->
+            <div class="card border-0 shadow-sm mb-4 rounded-4">
+                <div class="card-header bg-transparent border-0 pt-4 px-4 pb-0">
+                    <h3 class="h5 mb-0 fw-bold text-dark d-flex align-items-center">
+                        <i class="bi bi-map me-2 text-primary"></i>Location
+                    </h3>
+                </div>
+                <div class="card-body px-4 pb-4 pt-3">
+                    <div id="itemMap" style="height: 320px; width: 100%; border-radius: 0.75rem; overflow: hidden;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Document Vault -->
+            @if (Model.DocumentUrls.Any())
+            {
+                <div class="card border-0 shadow-sm mb-4 rounded-4 overflow-hidden">
+                    <div class="card-header bg-transparent border-0 pt-4 px-4 pb-0">
+                        <h3 class="h5 mb-0 fw-bold text-dark d-flex align-items-center">
+                            <i class="bi bi-file-earmark-lock2 me-2 text-primary"></i>Document Vault
+                        </h3>
+                        <p class="text-muted small mb-0 mt-1">Auction notices and legal documents — view securely
+                            in-browser.</p>
+                        </div>
+                        <div class="card-body px-4 pb-4 pt-3">
+                            <div id="docCarousel" class="carousel slide" data-bs-ride="false">
+                                <div class="carousel-inner">
+                                    @for (int i = 0; i < Model.DocumentUrls.Count; i++)
+                                    {
+                                        var doc = Model.DocumentUrls[i];
+                                        <div class="carousel-item @(i == 0 ? "active" : "")">
+                                            <div class="border rounded-3 overflow-hidden bg-light" style="height: 560px;">
+                                                <iframe src="@doc.FileUrl#toolbar=1&navpanes=0"
+                                                        style="width:100%; height:100%; border:0;" title="@doc.FileName"></iframe>
+                                            </div>
+                                            <div class="d-flex align-items-center justify-content-between mt-2 px-1">
+                                                <span class="small text-dark fw-medium text-truncate" title="@doc.FileName">
+                                                    <i class="bi bi-file-earmark-pdf text-danger me-1"></i>@doc.FileName
+                                                    <span class="text-muted">(@(i + 1) of @Model.DocumentUrls.Count)</span>
+                                                </span>
+                                                <a href="@doc.FileUrl" target="_blank"
+                                                   class="btn btn-sm btn-outline-secondary rounded-pill">
+                                                    <i class="bi bi-box-arrow-up-right me-1"></i>Open in New Tab
+                                                </a>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                                @if (Model.DocumentUrls.Count > 1)
+                                {
+                                    <button class="carousel-control-prev" type="button" data-bs-target="#docCarousel"
+                                            data-bs-slide="prev">
+                                        <span class="carousel-control-prev-icon" style="filter: invert(1) grayscale(100);"></span>
+                                    </button>
+                                    <button class="carousel-control-next" type="button" data-bs-target="#docCarousel"
+                                            data-bs-slide="next">
+                                        <span class="carousel-control-next-icon" style="filter: invert(1) grayscale(100);"></span>
+                                    </button>
+                                }
+                            </div>
+                            <div class="form-text text-muted small mt-2">
+                                <i class="bi bi-info-circle me-1"></i>If a document doesn't preview correctly in your browser,
+                                use "Open in New Tab" to download or view it directly.
+                            </div>
+                        </div>
+                    </div>
+                }
+
+            </div>
+            <!-- /Left Column -->
+
+            <!-- Right Column -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm mb-4 rounded-4" style="position: sticky; top: 1.5rem;">
+                    <div class="card-body px-4 py-4">
+                        <p class="small text-uppercase fw-bold text-muted tracking-wider mb-1">Reserve Price</p>
+                        <h2 class="h3 fw-bold text-dark mb-3">Rs. @Model.ReservePrice.ToString("N2")</h2>
+
+                        @if (Model.Status == Auction_Portal_Clone.Models.AuctionStatus.Upcoming ||
+                             Model.Status == Auction_Portal_Clone.Models.AuctionStatus.Active)
+                        {
+                            <div class="rounded-4 p-3 mb-3 text-center"
+                                 style="background: rgba(255, 107, 87, 0.08); border: 1px solid rgba(255, 107, 87, 0.2);">
+                                <p class="small fw-bold text-uppercase mb-1" style="color:#FF6B57; letter-spacing:0.05em;">
+                                    <i
+                                    class="bi @(Model.Status == Auction_Portal_Clone.Models.AuctionStatus.Upcoming ? "bi-hourglass-split" : "bi-broadcast") me-1"></i>
+                                    @(Model.Status == Auction_Portal_Clone.Models.AuctionStatus.Upcoming ? "Starts In" : "Time Remaining")
+                                </p>
+                                <div id="countdownTimer" class="fw-bold"
+                                     style="font-size: 1.6rem; letter-spacing: 0.05em; color: #212529;">
+                                    --:--:--
+                                </div>
+                            </div>
+                        }
+                        else if (Model.Status == Auction_Portal_Clone.Models.AuctionStatus.Closed)
+                        {
+                            <div class="rounded-4 p-3 mb-3 text-center bg-dark bg-opacity-10">
+                                <p class="small fw-bold text-uppercase mb-0 text-dark">
+                                    <i class="bi bi-flag-fill me-1"></i>Auction Closed
+                                </p>
+                            </div>
+                        }
+
+                        <div class="d-flex justify-content-between small text-muted mb-1">
+                            <span><i class="bi bi-calendar-event me-1"></i>Starts</span>
+                            <span class="text-dark fw-medium">@Model.AuctionStartDate.ToLocalTime().ToString("d MMM yyyy, HH:mm")</span>
+                        </div>
+                        <div class="d-flex justify-content-between small text-muted mb-4">
+                            <span><i class="bi bi-hourglass-bottom me-1"></i>Ends</span>
+                            <span class="text-dark fw-medium">@Model.AuctionEndDate.ToLocalTime().ToString("d MMM yyyy, HH:mm")</span>
+                        </div>
+
+                        <div class="mb-3">
+                            @if (isAuthenticated)
+                            {
+                                <button type="button" id="saveBtn"
+                                        class="btn @(Model.IsSavedByCurrentUser ? "btn-coral" : "btn-outline-secondary") w-100 rounded-pill">
+                                    <i class="bi @(Model.IsSavedByCurrentUser ? "bi-heart-fill" : "bi-heart") me-1"></i>
+                                    <span id="saveBtnLabel">@(Model.IsSavedByCurrentUser ? "Saved" : "Save Listing")</span>
+                                </button>
+                            }
+                            else
+                            {
+                                <a asp-controller="Login" asp-action="Index"
+                                   asp-route-returnUrl="@Url.Action("Details", "AuctionCatalog", new { id = Model.Id })"
+                                   class="btn btn-outline-secondary w-100 rounded-pill">
+                                    <i class="bi bi-heart me-1"></i>Log in to Save
+                                </a>
+                            }
+                        </div>
+
+                        <hr class="my-3" />
+
+                        @if (!canBid)
+                        {
+                            <div class="alert alert-secondary rounded-3 small mb-0">
+                                <i class="bi bi-info-circle me-1"></i>
+                                @(Model.Status == Auction_Portal_Clone.Models.AuctionStatus.Upcoming
+                                    ? "Bidding hasn't opened yet for this item."
+                                    : Model.Status == Auction_Portal_Clone.Models.AuctionStatus.Closed
+                                        ? "This auction has closed."
+                                        : "Bidding is not currently open for this item.")
+                            </div>
+                        }
+                        else if (!isAuthenticated)
+                        {
+                            <div class="alert alert-light border rounded-3 small mb-2">
+                                <i class="bi bi-lock me-1"></i>You need to be logged in to place a bid.
+                            </div>
+                            <a asp-controller="Login" asp-action="Index"
+                               asp-route-returnUrl="@Url.Action("Details", "AuctionCatalog", new { id = Model.Id })"
+                               class="btn btn-coral w-100 rounded-pill py-2 fw-semibold">
+                                <i class="bi bi-box-arrow-in-right me-1"></i>Log in to Bid
+                            </a>
+                        }
+                        else
+                        {
+                            @if (Model.HasCurrentUserBid)
+                            {
+                                <div class="alert alert-light border rounded-3 small mb-2">
+                                    <i class="bi bi-check2-circle me-1"></i>You've already placed a bid on this item.
+                                </div>
+                            }
+                            <form asp-controller="Bid" asp-action="Place" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="AuctionItemId" value="@Model.Id" />
+                                <label class="form-label small text-uppercase fw-bold text-muted tracking-wider">Your Bid
+                                    Amount</label>
+                                    <div class="input-group mb-2">
+                                        <span class="input-group-text bg-light border-end-0 rounded-start-3 text-muted">Rs.</span>
+                                        <input type="number" name="OfferedAmount" class="form-control rounded-end-3 border-start-0"
+                                               step="0.01" min="@Model.ReservePrice" value="@Model.ReservePrice" required />
+                                    </div>
+                                    <div class="form-text text-muted small mb-3">
+                                        <i class="bi bi-info-circle me-1"></i>Must be at least the reserve price of Rs.
+                                        @Model.ReservePrice.ToString("N2").
+                                    </div>
+                                    <button type="submit" class="btn btn-coral w-100 rounded-pill py-2 fw-semibold shadow-sm">
+                                        <i class="bi bi-hammer me-1"></i>Place Bid
+                                    </button>
+                                </form>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <!-- /Right Column -->
+
+            </div>
+        </div>
+
+        @section Scripts {
+            <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+            <script>
+                const map = L.map('itemMap', { scrollWheelZoom: false }).setView([@Model.Latitude, @Model.Longitude], 15);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+                }).addTo(map);
+                L.marker([@Model.Latitude, @Model.Longitude]).addTo(map);
+                setTimeout(() => map.invalidateSize(), 200);
+            </script>
+
+            @if (isAuthenticated)
+            {
+                <script>
+                    document.getElementById('saveBtn').addEventListener('click', async function () {
+                    const btn = this;
+                    const label = document.getElementById('saveBtnLabel');
+                    const icon = btn.querySelector('i');
+                    btn.disabled = true;
+
+                    try {
+                    const formData = new FormData();
+                    formData.append('auctionItemId', '@Model.Id');
+                    formData.append('__RequestVerificationToken', document.querySelector('input[name="__RequestVerificationToken"]').value);
+
+                    const res = await fetch('/SavedListing/Toggle', {
+                    method: 'POST',
+                    body: formData
+                    });
+
+                    if (!res.ok) throw new Error('Request failed');
+
+                    const data = await res.json();
+                    if (data.saved) {
+                    btn.classList.remove('btn-outline-secondary');
+                    btn.classList.add('btn-coral');
+                    icon.classList.remove('bi-heart');
+                    icon.classList.add('bi-heart-fill');
+                    label.textContent = 'Saved';
+                    } else {
+                    btn.classList.remove('btn-coral');
+                    btn.classList.add('btn-outline-secondary');
+                    icon.classList.remove('bi-heart-fill');
+                    icon.classList.add('bi-heart');
+                    label.textContent = 'Save Listing';
+                    }
+                    } catch (err) {
+                    alert('Something went wrong while saving this listing. Please try again.');
+                    } finally {
+                    btn.disabled = false;
+                    }
+                    });
+                </script>
+            }
+
+            @if (Model.Status == Auction_Portal_Clone.Models.AuctionStatus.Upcoming ||
+                 Model.Status == Auction_Portal_Clone.Models.AuctionStatus.Active)
+            {
+                var targetUtc = Model.Status == Auction_Portal_Clone.Models.AuctionStatus.Upcoming ? startUtc : endUtc;
+                <script>
+                    (function () {
+                    const target = new Date('@targetUtc').getTime();
+                    const el = document.getElementById('countdownTimer');
+                    let reloaded = false;
+
+                    function pad(n) { return n.toString().padStart(2, '0'); }
+
+                    function tick() {
+                    const now = Date.now();
+                    const diff = target - now;
+
+                    if (diff <= 0) {
+                    el.textContent = '00:00:00';
+                    if (!reloaded) {
+                    reloaded = true;
+                    setTimeout(() => window.location.reload(), 1500);
+                    }
+                    return;
+                    }
+
+                    const totalSeconds = Math.floor(diff / 1000);
+                    const days = Math.floor(totalSeconds / 86400);
+                    const hours = Math.floor((totalSeconds % 86400) / 3600);
+                    const minutes = Math.floor((totalSeconds % 3600) / 60);
+                    const seconds = totalSeconds % 60;
+
+                    el.textContent = (days > 0 ? days + 'd ' : '') + pad(hours) + ':' + pad(minutes) + ':' + pad(seconds);
+                    }
+
+                    tick();
+                    setInterval(tick, 1000);
+                    })();
+                </script>
+            }
+        }
+
+        <style>
+            .tracking-wider {
+            letter-spacing: 0.05em;
+            }
+
+            .carousel-item img {
+            transition: opacity 0.3s ease;
+            }
+
+            #itemCarousel .carousel-control-prev,
+            #itemCarousel .carousel-control-next {
+            width: 48px;
+            height: 48px;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(0, 0, 0, 0.35);
+            border-radius: 50%;
+            opacity: 1;
+            }
+
+            #itemCarousel .carousel-control-prev {
+            left: 16px;
+            }
+
+            #itemCarousel .carousel-control-next {
+            right: 16px;
+            }
+
+            #itemCarousel .carousel-control-prev:hover,
+            #itemCarousel .carousel-control-next:hover {
+            background-color: rgba(0, 0, 0, 0.55);
+            }
+
+            #itemCarousel .carousel-indicators {
+            margin-bottom: 0.75rem;
+            }
+
+            #itemCarousel .carousel-indicators [data-bs-target] {
+            background-color: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(0, 0, 0, 0.3);
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            }
+
+            #itemCarousel .carousel-indicators .active {
+            background-color: #FF6B57;
+            border-color: #FF6B57;
+            }
+        </style>

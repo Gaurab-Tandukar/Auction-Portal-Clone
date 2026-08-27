@@ -18,6 +18,7 @@ builder.Services.AddScoped<IAdminAuctionItemService, AdminAuctionItemService>();
 builder.Services.AddScoped<IAdminDashboardService, AdminDashboardService>();
 builder.Services.AddScoped<IAttachmentUploadService, AttachmentUploadService>();
 builder.Services.AddScoped<IAdminViewDataHelper, AdminViewDataHelper>();
+builder.Services.AddScoped<IEmailSender, GmailEmailSender>();
 
 builder.Services.AddIdentity<User, IdentityRole>(options =>
 {

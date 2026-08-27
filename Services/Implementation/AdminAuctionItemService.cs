@@ -17,7 +17,6 @@ namespace Auction_Portal_Clone.Services.Implementation
             _filterService = filterService;
         }
 
-
         public async Task<PagedResultDTO<AuctionItemListItemDTO>> GetAllForAdminAsync(AuctionItemFilterDTO filter)
         {
             var query = _db.AuctionItems
@@ -31,6 +30,9 @@ namespace Auction_Portal_Clone.Services.Implementation
             var page = filter.Page < 1 ? 1 : filter.Page;
             var pageSize = filter.PageSize < 1 ? 12 : filter.PageSize;
 
+            // NOTE: Status is projected as the raw stored value here because
+            // AuctionStatusResolver can't be translated into SQL by EF Core.
+            // We resolve it in memory right after materializing the page.
             var items = await query
                 .OrderByDescending(a => a.Id)
                 .Skip((page - 1) * pageSize)
@@ -53,6 +55,11 @@ namespace Auction_Portal_Clone.Services.Implementation
                 })
                 .ToListAsync();
 
+            foreach (var item in items)
+            {
+                item.Status = AuctionStatusResolver.Resolve(item.Status, item.AuctionStartDate, item.AuctionEndDate);
+            }
+
             return new PagedResultDTO<AuctionItemListItemDTO>
             {
                 Items = items,
@@ -73,6 +80,8 @@ namespace Auction_Portal_Clone.Services.Implementation
             if (item is null)
                 return null;
 
+            var resolvedStatus = AuctionStatusResolver.Resolve(item.Status, item.AuctionStartDate, item.AuctionEndDate);
+
             return new AuctionItemDetailDTO
             {
                 Id = item.Id,
@@ -83,7 +92,7 @@ namespace Auction_Portal_Clone.Services.Implementation
                 Longitude = item.Longitude,
                 AuctionStartDate = item.AuctionStartDate,
                 AuctionEndDate = item.AuctionEndDate,
-                Status = item.Status,
+                Status = resolvedStatus,
                 CategoryId = item.CategoryId,
                 CategoryName = item.Category.Name,
                 MunicipalityId = item.MunicipalityId,
@@ -107,6 +116,7 @@ namespace Auction_Portal_Clone.Services.Implementation
                     .ToList()
             };
         }
+
         public async Task<ServiceResult<int>> CreateAsync(AdminAuctionItemCreateDTO dto)
         {
             if (dto.AuctionEndDate <= dto.AuctionStartDate)
@@ -126,7 +136,10 @@ namespace Auction_Portal_Clone.Services.Implementation
                 Longitude = dto.Longitude,
                 AuctionStartDate = dto.AuctionStartDate,
                 AuctionEndDate = dto.AuctionEndDate,
-                Status = dto.Status,
+                // dto.Status is only ever Draft or Active (dropdown restricts it).
+                // Draft always wins as-is; Active is resolved against the dates
+                // so it correctly becomes Upcoming/Active/Closed as appropriate.
+                Status = AuctionStatusResolver.Resolve(dto.Status, dto.AuctionStartDate, dto.AuctionEndDate),
                 CategoryId = dto.CategoryId
             };
 
@@ -157,7 +170,7 @@ namespace Auction_Portal_Clone.Services.Implementation
             item.Longitude = dto.Longitude;
             item.AuctionStartDate = dto.AuctionStartDate;
             item.AuctionEndDate = dto.AuctionEndDate;
-            item.Status = dto.Status;
+            item.Status = AuctionStatusResolver.Resolve(dto.Status, dto.AuctionStartDate, dto.AuctionEndDate);
             item.CategoryId = dto.CategoryId;
 
             await _db.SaveChangesAsync();

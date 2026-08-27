@@ -1,4 +1,5 @@
 ﻿using Auction_Portal_Clone.DTO;
+using Auction_Portal_Clone.Models;
 using Auction_Portal_Clone.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -89,6 +90,11 @@ namespace Auction_Portal_Clone.Controllers.Admin
 
             // Map AuctionItemDetailDTO -> AdminAuctionItemUpdateDTO so the view's
             // model type matches what the POST action binds to.
+            //
+            // The Status dropdown only ever offers Draft / Active, so any
+            // derived value (Upcoming, Closed) must be collapsed back to
+            // "Active" here — those only ever arise from an "Active" pick
+            // plus the current date, never from a direct admin choice.
             var dto = new AdminAuctionItemUpdateDTO
             {
                 Id = item.Id,
@@ -99,7 +105,7 @@ namespace Auction_Portal_Clone.Controllers.Admin
                 Longitude = item.Longitude,
                 AuctionStartDate = item.AuctionStartDate,
                 AuctionEndDate = item.AuctionEndDate,
-                Status = item.Status,
+                Status = item.Status == AuctionStatus.Draft ? AuctionStatus.Draft : AuctionStatus.Active,
                 CategoryId = item.CategoryId,
                 MunicipalityId = item.MunicipalityId
             };
@@ -107,6 +113,11 @@ namespace Auction_Portal_Clone.Controllers.Admin
             await _viewDataHelper.PopulateCategoriesAsync(ViewData, activeOnly: false);
             ViewData["Attachments"] = await _viewDataHelper.LoadAttachmentsAsync(id);
             await _viewDataHelper.PopulateLocationViewDataAsync(ViewData);
+
+            // The item's true resolved status (e.g. Closed) is still useful
+            // to show read-only on the Edit page even though the dropdown
+            // itself only offers Draft/Active as an intent.
+            ViewData["ResolvedStatus"] = item.Status;
 
             return View(dto);
         }

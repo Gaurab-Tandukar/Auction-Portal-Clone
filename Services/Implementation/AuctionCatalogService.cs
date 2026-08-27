@@ -29,7 +29,7 @@ namespace Auction_Portal_Clone.Services.Implementation
             // Never show Draft items on the public catalog. This stays here
             // (not in AuctionFilterService) because it's a rule specific to
             // the public-facing catalog, not a user-controlled filter.
-            query = query.Where(a => a.Status != AuctionStatus.Draft);
+            query = query.Where(a => a.Status == AuctionStatus.Active);
 
             var totalCount = await query.CountAsync();
 

@@ -1,8 +1,8 @@
 ﻿using Auction_Portal_Clone.DTO;
+using Auction_Portal_Clone.Models;
 using Auction_Portal_Clone.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Auction_Portal_Clone.Models;
 
 namespace Auction_Portal_Clone.Controllers
 {
@@ -10,17 +10,33 @@ namespace Auction_Portal_Clone.Controllers
     {
         private readonly IAuctionCatalogService _catalogService;
         private readonly UserManager<User> _userManager;
+        private readonly IAdminViewDataHelper _viewDataHelper;
 
-        public AuctionCatalogController(IAuctionCatalogService catalogService, UserManager<User> userManager)
+        public AuctionCatalogController(
+            IAuctionCatalogService catalogService,
+            UserManager<User> userManager,
+            IAdminViewDataHelper viewDataHelper)
         {
             _catalogService = catalogService;
             _userManager = userManager;
+            _viewDataHelper = viewDataHelper;
         }
 
-        // GET /AuctionCatalog?categoryId=1&city=Kathmandu&minPrice=1000&page=1
+        // GET /AuctionCatalog
+        // GET /AuctionCatalog?SearchTerm=land&CategoryId=1&ProvinceId=2&Page=1
         public async Task<IActionResult> Index([FromQuery] AuctionItemFilterDTO filter)
         {
             var result = await _catalogService.GetCatalogAsync(filter);
+
+            // Keep current filter values for the search bar + advanced panel
+            ViewData["Filter"] = filter;
+
+            // Fill Category dropdown
+            await _viewDataHelper.PopulateCategoriesAsync(ViewData, activeOnly: true);
+
+            // Fill Province / District / Municipality dropdowns
+            await _viewDataHelper.PopulateLocationViewDataAsync(ViewData);
+
             return View(result);
         }
 

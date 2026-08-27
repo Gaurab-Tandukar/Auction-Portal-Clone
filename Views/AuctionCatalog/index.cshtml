@@ -1,0 +1,294 @@
+@model Auction_Portal_Clone.DTO.PagedResultDTO<Auction_Portal_Clone.DTO.AuctionItemListItemDTO>
+@using System.Globalization
+
+@{
+    ViewData["Title"] = "Auction Catalog";
+
+    var filter = ViewData["Filter"] as Auction_Portal_Clone.DTO.AuctionItemFilterDTO
+                 ?? new Auction_Portal_Clone.DTO.AuctionItemFilterDTO();
+
+    bool hasAdvancedFilters = filter.CategoryId.HasValue || filter.ProvinceId.HasValue
+        || filter.DistrictId.HasValue || filter.MunicipalityId.HasValue
+        || filter.MinPrice.HasValue || filter.MaxPrice.HasValue
+        || filter.AuctionDateFrom.HasValue || filter.AuctionDateTo.HasValue;
+
+    int totalPages = Model.TotalPages > 0
+        ? Model.TotalPages
+        : (int)Math.Ceiling((double)Model.TotalCount / Math.Max(Model.PageSize, 1));
+    if (totalPages < 1) totalPages = 1;
+}
+
+<!-- Bootstrap Icons -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<div class="container-fluid py-5 px-4 px-lg-5">
+
+    <!-- Page Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-5 gap-3">
+        <div>
+            <h1 class="h2 mb-1 fw-bold text-dark tracking-tight">Auction Catalog</h1>
+            <p class="text-muted mb-0 fs-6">
+                Browse and filter available live auctions.
+                <span class="fw-semibold text-dark">Showing @Model.Items.Count of @Model.TotalCount
+                    listing@(Model.TotalCount == 1 ? "" : "s")</span>.
+                </p>
+            </div>
+        </div>
+
+        <!-- Master Search Bar Styled to Match Theme -->
+        <form method="get" asp-controller="AuctionCatalog" asp-action="Index"
+              class="card border-0 shadow-sm mb-4 rounded-4 search-panel-card">
+            <div class="card-body p-3">
+                <div class="d-flex gap-2 flex-wrap flex-md-nowrap">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0 rounded-start-pill ps-3 border-light-subtle">
+                            <i class="bi bi-search text-muted"></i>
+                        </span>
+                        <input type="text" name="SearchTerm" value="@filter.SearchTerm"
+                               class="form-control border-start-0 shadow-none ps-0 border-light-subtle bg-white"
+                               placeholder="Search by ID, title, description, category, location..." />
+                    </div>
+
+                    <button type="submit"
+                            class="btn btn-coral px-4 fw-semibold text-nowrap d-inline-flex align-items-center justify-content-center">
+                        Search
+                    </button>
+
+                    <button type="button"
+                            class="btn btn-light border border-light-subtle rounded-pill px-3 text-nowrap position-relative bg-white"
+                            data-bs-toggle="collapse" data-bs-target="#advancedFilters"
+                            aria-expanded="@(hasAdvancedFilters ? "true" : "false")" aria-controls="advancedFilters">
+                        <i class="bi bi-sliders me-1 text-muted"></i> Filters
+                        @if (hasAdvancedFilters)
+                        {
+                            <span
+                                class="position-absolute top-0 start-100 translate-middle p-1.5 bg-primary border border-light rounded-circle">
+                                <span class="visually-hidden">Active filters</span>
+                            </span>
+                        }
+                    </button>
+
+                    @if (!string.IsNullOrWhiteSpace(filter.SearchTerm) || hasAdvancedFilters)
+                    {
+                        <a asp-controller="AuctionCatalog" asp-action="Index"
+                           class="btn btn-light border border-light-subtle rounded-pill px-3 text-nowrap d-flex align-items-center justify-content-center bg-white text-muted"
+                           title="Clear all filters">
+                            <i class="bi bi-x-lg"></i>
+                        </a>
+                    }
+                </div>
+            </div>
+        </form>
+
+        <!-- Advanced Filters Collapse -->
+        <div class="collapse @(hasAdvancedFilters ? "show" : "") mb-4" id="advancedFilters">
+            <partial name="_FilterPanel" model="filter" />
+        </div>
+
+        <!-- Results Grid -->
+        @if (Model.Items.Any())
+        {
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-5">
+                @foreach (var item in Model.Items)
+                {
+                    <div class="col">
+                        <div class="card h-100 border-0 shadow-sm rounded-4 auction-card overflow-hidden bg-white">
+
+                            <!-- Thumbnail Wrapper with aspect-ratio protection -->
+                            <div class="position-relative overflow-hidden image-container bg-light">
+                                @if (!string.IsNullOrEmpty(item.ThumbnailUrl))
+                                {
+                                    <img src="@item.ThumbnailUrl" class="w-100 h-100 auction-img" alt="@item.Title" />
+                                }
+                                else
+                                {
+                                    <div class="d-flex align-items-center justify-content-center h-100">
+                                        <i class="bi bi-image text-muted fs-1 opacity-25"></i>
+                                    </div>
+                                }
+
+                                @{
+                                    var badgeClass = item.Status switch
+                                    {
+                                        Auction_Portal_Clone.Models.AuctionStatus.Draft => "bg-secondary text-white",
+                                        Auction_Portal_Clone.Models.AuctionStatus.Upcoming => "bg-info text-dark",
+                                        Auction_Portal_Clone.Models.AuctionStatus.Active => "bg-success text-white",
+                                        Auction_Portal_Clone.Models.AuctionStatus.Closed => "bg-dark text-white",
+                                        _ => "bg-primary text-white"
+                                    };
+                                }
+                                <div class="position-absolute top-0 end-0 m-3">
+                                    <span class="badge @badgeClass rounded-pill px-3 py-2 fw-semibold shadow-sm">
+                                        @item.Status
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Card Body -->
+                            <div class="card-body d-flex flex-column p-4">
+                                <span class="text-uppercase fs-7 text-muted fw-bold tracking-wider mb-2">
+                                    @item.CategoryName
+                                </span>
+
+                                <h5 class="card-title fw-bold text-dark mb-2 text-truncate-2" title="@item.Title">
+                                    @item.Title
+                                </h5>
+
+                                <p class="card-text text-muted small mb-3 d-flex align-items-center">
+                                    <i class="bi bi-geo-alt-fill text-primary me-1 opacity-75"></i>
+                                    <span class="text-truncate">@item.MunicipalityName, @item.DistrictName</span>
+                                </p>
+
+                                <div class="mt-auto pt-3 border-top border-light-subtle">
+                                    <div class="d-flex justify-content-between align-items-end mb-3">
+                                        <div>
+                                            <span class="d-block text-muted fs-7">Reserve Price</span>
+                                            <span class="fw-bold text-dark fs-5">
+                                                Rs. @item.ReservePrice.ToString("N0", CultureInfo.InvariantCulture)
+                                            </span>
+                                        </div>
+                                        <div class="text-end">
+                                            <span class="d-block text-muted fs-7">Ends</span>
+                                            <span class="small fw-semibold text-dark">
+                                                @item.AuctionEndDate.ToLocalTime().ToString("d MMM yyyy")
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <a asp-controller="AuctionCatalog" asp-action="Details" asp-route-id="@item.Id"
+                                       class="btn btn-outline-coral w-100 rounded-pill py-2.5 fw-semibold transition-btn">
+                                        View Details
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Pagination -->
+            @if (totalPages > 1)
+            {
+                <nav aria-label="Auction catalog pagination" class="mt-4 mb-5">
+                    <ul class="pagination justify-content-center gap-1">
+                        @for (int i = 1; i <= totalPages; i++)
+                        {
+                            <li class="page-item @(i == Model.Page ? "active" : "")">
+                                <a class="page-link rounded-3 border-0 shadow-sm px-3 py-2 fw-medium @(i == Model.Page ? "bg-primary text-white" : "text-dark bg-white")"
+                                   asp-controller="AuctionCatalog" asp-action="Index" asp-route-SearchTerm="@filter.SearchTerm"
+                                   asp-route-CategoryId="@filter.CategoryId" asp-route-ProvinceId="@filter.ProvinceId"
+                                   asp-route-DistrictId="@filter.DistrictId" asp-route-MunicipalityId="@filter.MunicipalityId"
+                                   asp-route-MinPrice="@filter.MinPrice" asp-route-MaxPrice="@filter.MaxPrice"
+                                   asp-route-AuctionDateFrom="@filter.AuctionDateFrom?.ToString("yyyy-MM-dd")"
+                                   asp-route-AuctionDateTo="@filter.AuctionDateTo?.ToString("yyyy-MM-dd")" asp-route-Page="@i"
+                                   asp-route-PageSize="@filter.PageSize">
+                                    @i
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </nav>
+            }
+        }
+        else
+        {
+            <div class="text-center py-5 px-4 my-5 bg-white rounded-4 shadow-sm border border-light-subtle">
+                <div class="d-inline-flex align-items-center justify-content-center bg-light rounded-circle mb-3"
+                     style="width:80px;height:80px;">
+                    <i class="bi bi-inbox fs-1 text-muted opacity-50"></i>
+                </div>
+                <h4 class="mb-1 fw-bold text-dark">No auctions found</h4>
+                <p class="text-muted mb-4 small">Try tweaking your keywords or resetting your active filters.</p>
+                <a asp-controller="AuctionCatalog" asp-action="Index"
+                   class="btn btn-coral rounded-pill px-4 fw-semibold shadow-sm">
+                    Clear Filters
+                </a>
+            </div>
+        }
+    </div>
+
+    <style>
+        /* Typography & Utilities matched to theme tokens */
+        .tracking-wider {
+            letter-spacing: 0.08em;
+        }
+
+        .tracking-tight {
+            letter-spacing: -0.025em;
+        }
+
+        .fs-7 {
+            font-size: 0.75rem;
+        }
+
+        .text-truncate-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            height: 2.8rem;
+        }
+
+        .search-panel-card {
+            background-color: #ffffff;
+            border: 1px solid rgba(0, 0, 0, 0.04) !important;
+        }
+
+        .form-control:focus {
+            border-color: var(--bs-primary) !important;
+            box-shadow: 0 0 0 3px rgba(255, 107, 87, 0.15) !important;
+        }
+
+        /* Card & Image Container Animation Enhancements */
+        .auction-card {
+            border: 1px solid rgba(0, 0, 0, 0.04) !important;
+            transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+
+        .auction-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.06) !important;
+        }
+
+        .image-container {
+            height: 220px;
+            width: 100%;
+        }
+
+        .auction-img {
+            object-fit: cover;
+            object-position: center;
+            transition: transform 0.5s ease;
+        }
+
+        .auction-card:hover .auction-img {
+            transform: scale(1.05);
+        }
+
+        /* Outline Coral Button Style */
+        .btn-outline-coral {
+            color: var(--bs-primary);
+            border: 1.5px solid var(--bs-primary);
+            background-color: transparent;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .btn-outline-coral:hover {
+            background-color: var(--bs-primary);
+            color: #fff;
+            border-color: var(--bs-primary);
+            box-shadow: 0 4px 12px rgba(255, 107, 87, 0.25);
+        }
+
+        .pagination .page-item.active .page-link {
+            background-color: var(--bs-primary) !important;
+            color: #fff !important;
+            box-shadow: 0 4px 12px rgba(255, 107, 87, 0.25);
+        }
+
+        .pagination .page-link:hover {
+            background-color: #ffe5d9;
+            color: var(--bs-primary);
+        }
+    </style>
