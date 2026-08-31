@@ -1,4 +1,4 @@
-﻿using Auction_Portal_Clone.Services.Interfaces;
+using Auction_Portal_Clone.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -39,6 +39,26 @@ namespace Auction_Portal_Clone.Controllers
 
             // result.Data is true = now saved, false = now unsaved
             return Json(new { saved = result.Data });
+        }
+
+        // GET /SavedListing/GetWishlistPartial
+        // Returns the user's saved listings as JSON for the sidebar overlay.
+        [HttpGet]
+        public async Task<IActionResult> GetWishlistPartial()
+        {
+            var userId = _userManager.GetUserId(User)!;
+            var listings = await _savedListingService.GetUserSavedListingsAsync(userId);
+            return Json(listings);
+        }
+
+        // GET /SavedListing/GetWishlistCount
+        // Returns the count of saved listings as JSON for the navbar badge.
+        [HttpGet]
+        public async Task<IActionResult> GetWishlistCount()
+        {
+            var userId = _userManager.GetUserId(User)!;
+            var listings = await _savedListingService.GetUserSavedListingsAsync(userId);
+            return Json(new { count = listings.Count });
         }
     }
 }

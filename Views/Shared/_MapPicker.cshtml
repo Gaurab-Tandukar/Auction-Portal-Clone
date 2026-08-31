@@ -1,10 +1,7 @@
-<div class="mt-3">
-    <label class="form-label small text-uppercase fw-bold text-muted tracking-wider">
-        Pick location on map
-    </label>
-    <div id="mapPickerContainer" class="rounded-3" style="height: 300px; width: 100%; border: 1px solid #dee2e6;"></div>
+<div class="mt-2">
+    <div id="mapPickerContainer" class="rounded-3 shadow-none" style="height: 240px; width: 100%; border: 1px solid #dee2e6;"></div>
     <div class="form-text text-muted small mt-1">
-        <i class="bi bi-info-circle me-1"></i>Click on the map to set Latitude and Longitude.
+        <i class="bi bi-info-circle me-1"></i>Click anywhere on the map to place a pin and update coordinates.
     </div>
 </div>
 
@@ -13,42 +10,61 @@
 
 <script>
     (function () {
-    const latInput = document.querySelector('[name="Latitude"]');
-    const lngInput = document.querySelector('[name="Longitude"]');
+        const latInput = document.querySelector('[name="Latitude"]');
+        const lngInput = document.querySelector('[name="Longitude"]');
 
-    // Default center (adjust to your country/region, e.g. Kathmandu)
-    const defaultLat = latInput.value ? parseFloat(latInput.value) : 27.7172;
-    const defaultLng = lngInput.value ? parseFloat(lngInput.value) : 85.3240;
+        const defaultLat = latInput && latInput.value ? parseFloat(latInput.value) : 27.7172;
+        const defaultLng = lngInput && lngInput.value ? parseFloat(lngInput.value) : 85.3240;
 
-    const pickerMap = L.map('mapPickerContainer').setView([defaultLat, defaultLng], 7);
+        let pickerMap = null;
+        let marker = null;
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(pickerMap);
+        function initMap() {
+            if (pickerMap) return;
+            const container = document.getElementById('mapPickerContainer');
+            if (!container) return;
 
-    let marker = null;
-    if (latInput.value && lngInput.value) {
-    marker = L.marker([defaultLat, defaultLng]).addTo(pickerMap);
-    }
+            pickerMap = L.map('mapPickerContainer').setView([defaultLat, defaultLng], 7);
 
-    pickerMap.on('click', function (e) {
-    const { lat, lng } = e.latlng;
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(pickerMap);
 
-    latInput.value = lat.toFixed(6);
-    lngInput.value = lng.toFixed(6);
+            if (latInput && lngInput && latInput.value && lngInput.value) {
+                marker = L.marker([defaultLat, defaultLng]).addTo(pickerMap);
+            }
 
-    // trigger input event so your Preview button's checkRequirements() picks it up
-    latInput.dispatchEvent(new Event('input'));
-    lngInput.dispatchEvent(new Event('input'));
+            pickerMap.on('click', function (e) {
+                const { lat, lng } = e.latlng;
 
-    if (marker) {
-    marker.setLatLng([lat, lng]);
-    } else {
-    marker = L.marker([lat, lng]).addTo(pickerMap);
-    }
-    });
+                if (latInput && lngInput) {
+                    latInput.value = lat.toFixed(6);
+                    lngInput.value = lng.toFixed(6);
+                    latInput.dispatchEvent(new Event('input'));
+                    lngInput.dispatchEvent(new Event('input'));
+                }
 
-    // Fix sizing issues if this partial renders inside a hidden/collapsed container
-    setTimeout(() => pickerMap.invalidateSize(), 200);
+                if (marker) {
+                    marker.setLatLng([lat, lng]);
+                } else {
+                    marker = L.marker([lat, lng]).addTo(pickerMap);
+                }
+            });
+
+            setTimeout(() => pickerMap.invalidateSize(), 150);
+        }
+
+        const collapseEl = document.getElementById('mapPickerCollapse');
+        if (collapseEl) {
+            collapseEl.addEventListener('shown.bs.collapse', function () {
+                if (!pickerMap) {
+                    initMap();
+                } else {
+                    setTimeout(() => pickerMap.invalidateSize(), 100);
+                }
+            });
+        } else {
+            initMap();
+        }
     })();
 </script>

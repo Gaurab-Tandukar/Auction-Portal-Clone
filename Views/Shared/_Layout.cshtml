@@ -1,4 +1,4 @@
-﻿@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Identity
 @using Auction_Portal_Clone.Models
 @inject SignInManager<User> SignInManager
 @inject UserManager<User> UserManager
@@ -82,6 +82,22 @@
                                 var user = await UserManager.GetUserAsync(User);
                                 var displayName = user?.FullName ?? User.Identity?.Name ?? "User";
 
+                                @if (!User.IsInRole("BankStaff"))
+                                {
+                                    <!-- Wishlist Heart Button -->
+                                    <button id="wishlist-toggle-btn"
+                                            class="wishlist-nav-btn"
+                                            aria-label="Open Wishlist"
+                                            title="My Wishlist">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                             fill="none" stroke="currentColor"
+                                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                                        </svg>
+                                        <span id="wishlist-badge" class="wishlist-badge" style="display:none;">0</span>
+                                    </button>
+                                }
+
                                 <a asp-controller="UserProfile" asp-action="Index"
                                    class="btn btn-light border rounded-pill px-3 py-2 fw-semibold text-dark text-decoration-none">
                                     Hi, <span style="color: #FF6B57;">@displayName</span>
@@ -112,12 +128,163 @@
             @RenderBody()
         </main>
 
-        <footer class="border-top footer text-muted py-4 mt-auto">
-            <div class="container text-center">
-                &copy; 2026 - Siddhartha Bank Auction Portal - <a asp-area="" asp-controller="Home" asp-action="Privacy"
-                                                                  class="text-decoration-none">Privacy</a>
+        <!-- ====== PREMIUM FOOTER ====== -->
+        <footer class="portal-footer mt-auto">
+            <!-- Trust Strip -->
+            <div class="footer-trust-strip border-bottom py-3">
+                <div class="container">
+                    <div class="row g-3 text-center text-md-start">
+                        <div class="col-6 col-md-3 d-flex align-items-center justify-content-center justify-content-md-start gap-2">
+                            <i class="bi bi-shield-check text-primary fs-4"></i>
+                            <div>
+                                <div class="fw-bold small text-dark">NRB Regulated</div>
+                                <div class="text-muted" style="font-size: 0.72rem;">Class 'A' Commercial Bank</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3 d-flex align-items-center justify-content-center justify-content-md-start gap-2">
+                            <i class="bi bi-lock-fill text-primary fs-4"></i>
+                            <div>
+                                <div class="fw-bold small text-dark">Secure Escrow</div>
+                                <div class="text-muted" style="font-size: 0.72rem;">Protected Bid Deposits</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3 d-flex align-items-center justify-content-center justify-content-md-start gap-2">
+                            <i class="bi bi-file-earmark-check text-primary fs-4"></i>
+                            <div>
+                                <div class="fw-bold small text-dark">Verified Assets</div>
+                                <div class="text-muted" style="font-size: 0.72rem;">Official Legal Clearance</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3 d-flex align-items-center justify-content-center justify-content-md-start gap-2">
+                            <i class="bi bi-headset text-primary fs-4"></i>
+                            <div>
+                                <div class="fw-bold small text-dark">Bidder Support</div>
+                                <div class="text-muted" style="font-size: 0.72rem;">Direct Auction Desk Help</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Footer Links -->
+            <div class="footer-main py-5">
+                <div class="container">
+                    <div class="row g-4">
+                        <!-- Col 1: Brand -->
+                        <div class="col-lg-4 col-md-6">
+                            <div class="d-flex align-items-center gap-2 mb-3">
+                                <img src="~/favicon.png" alt="Logo" width="32" height="32" class="object-fit-contain">
+                                <span class="fw-bold fs-5 text-dark">Siddhartha Bank</span>
+                            </div>
+                            <p class="text-muted small lh-lg mb-4">
+                                Nepal's premier transparent digital auction marketplace for bank-repossessed collateral, vehicles, commercial equipment, and verified real estate.
+                            </p>
+                            <div class="d-flex gap-2">
+                                <a href="#" class="footer-social-btn" title="Facebook"><i class="bi bi-facebook"></i></a>
+                                <a href="#" class="footer-social-btn" title="Twitter/X"><i class="bi bi-twitter-x"></i></a>
+                                <a href="#" class="footer-social-btn" title="LinkedIn"><i class="bi bi-linkedin"></i></a>
+                                <a href="#" class="footer-social-btn" title="YouTube"><i class="bi bi-youtube"></i></a>
+                            </div>
+                        </div>
+
+                        <!-- Col 2: Categories -->
+                        <div class="col-lg-2 col-md-6 col-6">
+                            <h6 class="footer-heading">Auctions</h6>
+                            <ul class="footer-links list-unstyled">
+                                <li><a asp-controller="AuctionCatalog" asp-action="Index">All Auctions</a></li>
+                                <li><a href="/AuctionCatalog?CategoryId=1">Vehicles & Autos</a></li>
+                                <li><a href="/AuctionCatalog?CategoryId=2">Real Estate & Land</a></li>
+                                <li><a href="/AuctionCatalog?CategoryId=3">Commercial Assets</a></li>
+                                <li><a href="/AuctionCatalog?Status=2">Live Bidding</a></li>
+                            </ul>
+                        </div>
+
+                        <!-- Col 3: Resources & Guides -->
+                        <div class="col-lg-3 col-md-6 col-6">
+                            <h6 class="footer-heading">Support & Rules</h6>
+                            <ul class="footer-links list-unstyled">
+                                <li><a href="#">How to Bid Guide</a></li>
+                                <li><a href="#">Eligibility & KYC</a></li>
+                                <li><a href="#">Auction Regulations</a></li>
+                                <li><a href="#">Escrow & Deposit Rules</a></li>
+                                <li><a asp-controller="Home" asp-action="Privacy">Privacy Policy</a></li>
+                            </ul>
+                        </div>
+
+                        <!-- Col 4: Contact -->
+                        <div class="col-lg-3 col-md-6">
+                            <h6 class="footer-heading">Auction Desk Contact</h6>
+                            <ul class="footer-contact list-unstyled small text-muted">
+                                <li class="mb-2 d-flex align-items-start gap-2">
+                                    <i class="bi bi-geo-alt-fill text-primary mt-1"></i>
+                                    <span>Head Office, Hattisar, Kathmandu, Nepal</span>
+                                </li>
+                                <li class="mb-2 d-flex align-items-center gap-2">
+                                    <i class="bi bi-telephone-fill text-primary"></i>
+                                    <span>+977-1-4251234 / 4251235</span>
+                                </li>
+                                <li class="mb-2 d-flex align-items-center gap-2">
+                                    <i class="bi bi-envelope-fill text-primary"></i>
+                                    <span>auctions@siddharthabank.com</span>
+                                </li>
+                                <li class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-clock-fill text-primary"></i>
+                                    <span>Sun - Fri: 9:30 AM - 5:00 PM</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Copyright -->
+            <div class="footer-bottom border-top py-3 text-muted small">
+                <div class="container d-flex flex-column flex-md-row align-items-center justify-content-between gap-2">
+                    <div>
+                        &copy; 2026 <strong>Siddhartha Bank Limited</strong>. All Rights Reserved.
+                    </div>
+                    <div class="d-flex gap-3" style="font-size: 0.8rem;">
+                        <a asp-controller="Home" asp-action="Privacy" class="text-decoration-none text-muted">Privacy</a>
+                        <span>•</span>
+                        <a href="#" class="text-decoration-none text-muted">Terms of Auction</a>
+                        <span>•</span>
+                        <a href="#" class="text-decoration-none text-muted">Security</a>
+                    </div>
+                </div>
             </div>
         </footer>
+
+        <!-- ====== WISHLIST SIDEBAR OVERLAY ====== -->
+        <div id="wishlist-backdrop" class="wishlist-backdrop"></div>
+
+        <aside id="wishlist-sidebar" class="wishlist-sidebar" aria-label="Wishlist Sidebar" role="complementary">
+            <div class="wishlist-sidebar-header">
+                <div class="d-flex align-items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                         fill="#ff6b57" width="22" height="22">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                    </svg>
+                    <h2 class="wishlist-sidebar-title">My Wishlist</h2>
+                </div>
+                <button id="wishlist-close-btn" class="wishlist-close-btn" aria-label="Close Wishlist">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                         width="20" height="20">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </div>
+
+            <div id="wishlist-content" class="wishlist-content">
+                <!-- Items injected by JS -->
+                <div class="wishlist-loading">
+                    <div class="wishlist-spinner"></div>
+                    <p>Loading your wishlist…</p>
+                </div>
+            </div>
+        </aside>
+        <!-- ====== END WISHLIST SIDEBAR ====== -->
 
         <script src="~/lib/jquery/dist/jquery.min.js"></script>
         <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
