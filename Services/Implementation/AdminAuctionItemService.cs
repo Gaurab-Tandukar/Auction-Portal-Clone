@@ -130,6 +130,10 @@ namespace Auction_Portal_Clone.Services.Implementation
             if (!categoryExists)
                 return ServiceResult<int>.Failure("Selected category does not exist.");
 
+            var municipalityExists = await _db.Municipalities.AnyAsync(m => m.Id == dto.MunicipalityId);
+            if (!municipalityExists)
+                return ServiceResult<int>.Failure("Selected municipality does not exist. Please select a valid province, district, and municipality.");
+
             var item = new AuctionItem
             {
                 Title = dto.Title,
@@ -166,6 +170,10 @@ namespace Auction_Portal_Clone.Services.Implementation
             var categoryExists = await _db.Categories.AnyAsync(c => c.Id == dto.CategoryId);
             if (!categoryExists)
                 return ServiceResult<bool>.Failure("Selected category does not exist.");
+
+            var municipalityExists = await _db.Municipalities.AnyAsync(m => m.Id == dto.MunicipalityId);
+            if (!municipalityExists)
+                return ServiceResult<bool>.Failure("Selected municipality does not exist. Please select a valid province, district, and municipality.");
 
             item.Title = dto.Title;
             item.Description = dto.Description;

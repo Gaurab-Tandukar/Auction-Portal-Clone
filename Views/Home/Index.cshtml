@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewData["Title"] = "Auction Portal";
 
     var auctionItems = new[]
@@ -217,11 +217,12 @@
 
     <!-- Floating Interactive Side Badges -->
     <div class="floating-badge floating-badge-left d-none d-xl-flex">
-        <span class="dot"></span>
-        <span>$2.4M Asset Sold Today</span>
+        <i class="bi bi-trophy-fill text-warning fs-5"></i>
+        <span>Rs. 2.4 Cr Asset Sold Today</span>
     </div>
     <div class="floating-badge floating-badge-right d-none d-xl-flex">
         <span class="pulse-dot"></span>
+        <i class="bi bi-broadcast text-danger me-1"></i>
         <span>142 Live Bids Active</span>
     </div>
 
@@ -229,6 +230,7 @@
         <!-- Top Pill Badge with Pulse -->
         <div class="d-inline-flex align-items-center px-3 py-2 rounded-pill mb-4 shadow-sm"
              style="background-color: var(--bs-pill-bg); color: var(--bs-pill-text); font-weight: 700; font-size: 0.88rem; border: 1px solid rgba(255,107,87,0.2);">
+            <i class="bi bi-shield-check text-primary me-2 fs-6"></i>
             <span class="pulse-dot"></span> Join over 100,000 active bidders
         </div>
 
@@ -274,8 +276,10 @@
                 It's free &rarr;
             </span>
 
-            <a href="@Url.Action("Index", "AuctionCatalog")" class="btn btn-coral fs-5">
-                Explore Auctions
+            <a href="@Url.Action("Index", "AuctionCatalog")" class="btn btn-coral fs-5 px-4 py-2.5 rounded-pill shadow-sm d-inline-flex align-items-center gap-2">
+                <i class="bi bi-hammer"></i>
+                <span>Explore Auctions</span>
+                <i class="bi bi-arrow-right"></i>
             </a>
 
             <span class="handwriting-note d-none d-md-block" style="top: -24px; right: -140px; transform: rotate(10deg);">

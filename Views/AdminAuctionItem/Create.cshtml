@@ -310,6 +310,22 @@
             populateMunicipalities(this.value, null);
         });
 
+        window.addEventListener('DOMContentLoaded', function () {
+            const currentMunicipalityId = @Html.Raw(Json.Serialize(Model?.MunicipalityId ?? 0));
+            if (allMunicipalities && currentMunicipalityId > 0) {
+                const muni = allMunicipalities.find(m => m.id == currentMunicipalityId);
+                if (muni) {
+                    const dist = allDistricts ? allDistricts.find(d => d.id == muni.districtId) : null;
+                    if (dist) {
+                        const provSel = document.getElementById('provinceSelect');
+                        if (provSel) provSel.value = dist.provinceId;
+                        populateDistricts(dist.provinceId, muni.districtId);
+                        populateMunicipalities(muni.districtId, currentMunicipalityId);
+                    }
+                }
+            }
+        });
+
         // Map toggle label
         document.getElementById('mapPickerCollapse').addEventListener('show.bs.collapse', function () {
             document.querySelector('.map-toggle-label').textContent = 'Hide Map Picker';

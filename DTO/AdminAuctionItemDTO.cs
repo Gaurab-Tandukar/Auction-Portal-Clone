@@ -40,10 +40,12 @@ namespace Auction_Portal_Clone.DTO
 
         [Display(Name = "Auction Category")]
         [Required(ErrorMessage = "Please select a category")]
+        [Range(1, int.MaxValue, ErrorMessage = "Please select a valid auction category")]
         public int CategoryId { get; set; }
 
         [Display(Name = "Municipality")]
         [Required(ErrorMessage = "Please select a municipality")]
+        [Range(1, int.MaxValue, ErrorMessage = "Please select a valid municipality")]
         public int MunicipalityId { get; set; }
     }
 

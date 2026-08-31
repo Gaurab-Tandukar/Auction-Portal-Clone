@@ -1,264 +1,417 @@
 @model Auction_Portal_Clone.DTO.AdminDashboardSummaryDTO
 @{
     ViewData["Title"] = "Admin Dashboard";
+    var currentTime = DateTime.UtcNow.ToLocalTime().ToString("ddd, d MMM yyyy • hh:mm tt");
 }
 
-<!-- Bootstrap Icons CDN link included directly so it loads without layout changes -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
-<div class="container-fluid py-5 px-4 px-lg-5">
-    <!-- Header Section -->
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-5 gap-3">
-        <div>
-            <h1 class="h2 mb-1 fw-bold text-dark tracking-tight">Admin Dashboard</h1>
-            <p class="text-muted mb-0 fs-6">Monitor auction statuses, platform health metrics, and user activity at a glance.</p>
-        </div>
-        <div>
-            <a asp-controller="AdminAuctionItem" asp-action="Create" class="btn btn-coral">
-                <i class="bi bi-plus-lg me-2"></i>Create New Item
-            </a>
-        </div>
-    </div>
+<div class="admin-dashboard-container py-4 px-3 px-lg-5">
+    <div class="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
+        <div class="card-body p-4 d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div
+                    class="admin-avatar-box rounded-circle d-flex align-items-center justify-content-center flex-shrink-0">
+                    <i class="bi bi-shield-lock-fill fs-3 text-white"></i>
+                </div>
+                <div>
+                    <div class="d-flex align-items-baseline gap-2 flex-wrap flex-column">
+                        <h1 class="h3 mb-0 fw-bold text-dark tracking-tight">Bank Operations Dashboard</h1>
+                        <span class="badge bg-coral-subtle rounded-pill px-3 py-1 font-monospace fw-bold"
+                              style="font-size: 0.75rem; color: #b83a28 !important;">
+                            <i class="bi bi-patch-check-fill me-1"></i>Siddhartha Staff Portal
+                        </span>
+                    </div>
+                </div>
+            </div>
 
-    <!-- Status Summary Cards -->
-    <div class="row g-4 mb-5">
-        <div class="col-sm-6 col-lg-3">
-            <div class="card border-0 shadow-sm h-100 rounded-4">
-                <div class="card-body d-flex align-items-center p-4">
-                    <div class="rounded-3 p-3 bg-secondary bg-opacity-10 text-secondary me-3 flex-shrink-0">
-                        <i class="bi bi-file-earmark fs-4"></i>
-                    </div>
-                    <div>
-                        <span class="d-block text-muted mb-1 text-uppercase fw-bold fs-7 tracking-wider">Draft</span>
-                        <h2 class="mb-0 fw-bold text-dark">@Model.DraftCount</h2>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-sm-6 col-lg-3">
-            <div class="card border-0 shadow-sm h-100 rounded-4">
-                <div class="card-body d-flex align-items-center p-4">
-                    <div class="rounded-3 p-3 bg-info bg-opacity-10 text-info me-3 flex-shrink-0">
-                        <i class="bi bi-clock-history fs-4"></i>
-                    </div>
-                    <div>
-                        <span class="d-block text-muted mb-1 text-uppercase fw-bold fs-7 tracking-wider">Upcoming</span>
-                        <h2 class="mb-0 fw-bold text-dark">@Model.UpcomingCount</h2>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-sm-6 col-lg-3">
-            <div class="card border-0 shadow-sm h-100 rounded-4">
-                <div class="card-body d-flex align-items-center p-4">
-                    <div class="rounded-3 p-3 bg-success bg-opacity-10 text-success me-3 flex-shrink-0">
-                        <i class="bi bi-activity fs-4"></i>
-                    </div>
-                    <div>
-                        <span class="d-block text-muted mb-1 text-uppercase fw-bold fs-7 tracking-wider">Active</span>
-                        <h2 class="mb-0 fw-bold text-dark">@Model.ActiveCount</h2>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-sm-6 col-lg-3">
-            <div class="card border-0 shadow-sm h-100 rounded-4">
-                <div class="card-body d-flex align-items-center p-4">
-                    <div class="rounded-3 p-3 bg-dark bg-opacity-10 text-dark me-3 flex-shrink-0">
-                        <i class="bi bi-check-circle fs-4"></i>
-                    </div>
-                    <div>
-                        <span class="d-block text-muted mb-1 text-uppercase fw-bold fs-7 tracking-wider">Closed</span>
-                        <h2 class="mb-0 fw-bold text-dark">@Model.ClosedCount</h2>
-                    </div>
-                </div>
+            <div class="d-flex align-items-center gap-4 flex-wrap">
+                <a asp-controller="AuctionCatalog" asp-action="Index"
+                   class="btn btn-sm btn-light border rounded-pill px-3 py-2 text-secondary fw-semibold">
+                    <i class="bi bi-globe me-1 pe-2"></i>Public Catalog
+                </a>
+                <a asp-controller="AdminAuctionItem" asp-action="Index"
+                   class="btn btn-sm btn-outline-dark rounded-pill px-3 py-2 fw-semibold">
+                    <i class="bi bi-list-columns-reverse me-1 pe-2"></i>All Listings
+                </a>
+                <a asp-controller="AdminAuctionItem" asp-action="Create"
+                   class="btn btn-sm btn-coral rounded-pill px-3.5 py-2 fw-bold shadow-sm">
+                    <i class="bi bi-plus-circle-fill me-1.5 pe-2"></i>Create Listing
+                </a>
             </div>
         </div>
     </div>
 
-    <!-- Health / Attention Flags -->
-    <div class="mb-5">
-        <div class="d-flex align-items-center mb-3">
-            <h3 class="h5 mb-0 fw-bold text-dark text-uppercase tracking-wider">System Health &amp; Alerts</h3>
+    <!-- ══════════════════════════════════════════
+         2. CORE METRICS (4 STATUS PILLARS)
+         ══════════════════════════════════════════ -->
+    <div class="row g-3 g-lg-4 mb-4">
+        <!-- Drafts -->
+        <div class="col-6 col-lg-3">
+            <div class="card metric-card metric-draft border-0 shadow-sm rounded-4 h-100 p-3 p-lg-4 position-relative">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="metric-label">Drafts</span>
+                    <div class="metric-icon-box bg-secondary bg-opacity-10 text-secondary">
+                        <i class="bi bi-file-earmark-ruled"></i>
+                    </div>
+                </div>
+                <div class="d-flex align-items-baseline gap-2">
+                    <h2 class="h1 fw-bold text-dark mb-0">@Model.DraftCount</h2>
+                    <span class="small text-muted">assets</span>
+                </div>
+                <div class="mt-3 pt-2 border-top d-flex align-items-center justify-content-between">
+                    <span class="small text-muted">Unpublished items</span>
+                    <a asp-controller="AdminAuctionItem" asp-action="Index"
+                       class="small text-decoration-none fw-semibold text-secondary">
+                        Manage &rarr;
+                    </a>
+                </div>
+            </div>
         </div>
 
-        <div class="row g-3">
-            @if (Model.ItemsPastEndButActive > 0)
-            {
-                <div class="col-md-6 col-lg-3">
-                    <div class="card border-0 shadow-sm bg-danger bg-opacity-10 text-danger h-100 rounded-4">
-                        <div class="card-body p-4">
-                            <div class="d-flex align-items-center mb-2">
-                                <i class="bi bi-exclamation-octagon fs-5 me-2"></i>
-                                <span class="fw-bold fs-3">@Model.ItemsPastEndButActive</span>
-                            </div>
-                            <div class="small fw-semibold">Items past end date but still Active</div>
-                        </div>
+        <!-- Upcoming -->
+        <div class="col-6 col-lg-3">
+            <div
+                class="card metric-card metric-upcoming border-0 shadow-sm rounded-4 h-100 p-3 p-lg-4 position-relative">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="metric-label" style="color: #0a6a8a !important;">Upcoming</span>
+                    <div class="metric-icon-box bg-info bg-opacity-10 text-info">
+                        <i class="bi bi-hourglass-split"></i>
                     </div>
                 </div>
-            }
+                <div class="d-flex align-items-baseline gap-2">
+                    <h2 class="h1 fw-bold text-dark mb-0">@Model.UpcomingCount</h2>
+                    <span class="small text-muted">scheduled</span>
+                </div>
+                <div class="mt-3 pt-2 border-top d-flex align-items-center justify-content-between">
+                    <span class="small text-muted">Pre-auction phase</span>
+                    <a asp-controller="AdminAuctionItem" asp-action="Index"
+                       class="small text-decoration-none fw-semibold text-info">
+                        Preview &rarr;
+                    </a>
+                </div>
+            </div>
+        </div>
 
-            @if (Model.ItemsEndingSoon > 0)
-            {
-                <div class="col-md-6 col-lg-3">
-                    <div class="card border-0 shadow-sm bg-warning bg-opacity-10 text-dark h-100 rounded-4">
-                        <div class="card-body p-4">
-                            <div class="d-flex align-items-center mb-2">
-                                <i class="bi bi-stopwatch fs-5 me-2"></i>
-                                <span class="fw-bold fs-3">@Model.ItemsEndingSoon</span>
-                            </div>
-                            <div class="small fw-semibold">Ending within 48 hours</div>
-                        </div>
+        <!-- Active Live -->
+        <div class="col-6 col-lg-3">
+            <div class="card metric-card metric-active border-0 shadow-sm rounded-4 h-100 p-3 p-lg-4 position-relative">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="metric-label d-flex align-items-center gap-1.5" style="color: #0d6b3a !important;">
+                        <span class="live-dot-pulse"></span> Active Live
+                    </span>
+                    <div class="metric-icon-box bg-success bg-opacity-10 text-success">
+                        <i class="bi bi-broadcast"></i>
                     </div>
                 </div>
-            }
+                <div class="d-flex align-items-baseline gap-2">
+                    <h2 class="h1 fw-bold text-dark mb-0">@Model.ActiveCount</h2>
+                    <span class="small text-muted">bidding open</span>
+                </div>
+                <div class="mt-3 pt-2 border-top d-flex align-items-center justify-content-between">
+                    <span class="small text-muted">Accepting bids</span>
+                    <a asp-controller="AdminAuctionItem" asp-action="Index"
+                       class="small text-decoration-none fw-semibold text-success">
+                        Monitor &rarr;
+                    </a>
+                </div>
+            </div>
+        </div>
 
-            @if (Model.ItemsMissingImages > 0)
-            {
-                <div class="col-md-6 col-lg-3">
-                    <div class="card border-0 shadow-sm bg-warning bg-opacity-10 text-dark h-100 rounded-4">
-                        <div class="card-body p-4">
-                            <div class="d-flex align-items-center mb-2">
-                                <i class="bi bi-image fs-5 me-2"></i>
-                                <span class="fw-bold fs-3">@Model.ItemsMissingImages</span>
-                            </div>
-                            <div class="small fw-semibold">Items missing images</div>
-                        </div>
+        <!-- Closed -->
+        <div class="col-6 col-lg-3">
+            <div class="card metric-card metric-closed border-0 shadow-sm rounded-4 h-100 p-3 p-lg-4 position-relative">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="metric-label">Closed</span>
+                    <div class="metric-icon-box bg-dark bg-opacity-10 text-dark">
+                        <i class="bi bi-check2-all"></i>
                     </div>
                 </div>
-            }
-
-            @if (Model.ItemsMissingPdfNotice > 0)
-            {
-                <div class="col-md-6 col-lg-3">
-                    <div class="card border-0 shadow-sm bg-warning bg-opacity-10 text-dark h-100 rounded-4">
-                        <div class="card-body p-4">
-                            <div class="d-flex align-items-center mb-2">
-                                <i class="bi bi-file-earmark-pdf fs-5 me-2"></i>
-                                <span class="fw-bold fs-3">@Model.ItemsMissingPdfNotice</span>
-                            </div>
-                            <div class="small fw-semibold">Items missing PDF notice</div>
-                        </div>
-                    </div>
+                <div class="d-flex align-items-baseline gap-2">
+                    <h2 class="h1 fw-bold text-dark mb-0">@Model.ClosedCount</h2>
+                    <span class="small text-muted">archived</span>
                 </div>
-            }
-
-            @if (Model.ItemsBelowReserve > 0)
-            {
-                <div class="col-md-6 col-lg-3">
-                    <div class="card border-0 shadow-sm bg-secondary bg-opacity-10 text-dark h-100 rounded-4">
-                        <div class="card-body p-4">
-                            <div class="d-flex align-items-center mb-2">
-                                <i class="bi bi-dash-circle fs-5 me-2"></i>
-                                <span class="fw-bold fs-3">@Model.ItemsBelowReserve</span>
-                            </div>
-                            <div class="small fw-semibold">Closed items below reserve</div>
-                        </div>
-                    </div>
+                <div class="mt-3 pt-2 border-top d-flex align-items-center justify-content-between">
+                    <span class="small text-muted">Finalized auctions</span>
+                    <a asp-controller="AdminAuctionItem" asp-action="Index"
+                       class="small text-decoration-none fw-semibold text-dark">
+                        History &rarr;
+                    </a>
                 </div>
-            }
-
-            @if (Model.ItemsPastEndButActive == 0 && Model.ItemsEndingSoon == 0
-                && Model.ItemsMissingImages == 0 && Model.ItemsMissingPdfNotice == 0
-                && Model.ItemsBelowReserve == 0)
-            {
-                <div class="col-12">
-                    <div class="card border-0 shadow-sm bg-success bg-opacity-10 text-success rounded-4">
-                        <div class="card-body d-flex align-items-center p-4">
-                            <i class="bi bi-check-circle-fill fs-4 me-3"></i>
-                            <span class="fw-semibold">All system indicators look healthy. No items require immediate attention.</span>
-                        </div>
-                    </div>
-                </div>
-            }
+            </div>
         </div>
     </div>
 
-    <!-- Main Content Grid -->
-    <div class="row g-4">
-        <!-- Bid Activity -->
-        <div class="col-lg-6">
-            <div class="card border-0 shadow-sm h-100 rounded-4">
-                <div class="card-header bg-transparent border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
-                    <h3 class="h5 mb-0 fw-bold text-dark">Bid Activity Today</h3>
-                    <span class="badge bg-primary rounded-pill px-3 py-2 fw-semibold">@Model.TotalBidsToday bids</span>
-                </div>
-                <div class="card-body px-4 pb-4">
-                    <div class="p-3 bg-light rounded-3 mb-4 d-flex justify-content-between align-items-center">
-                        <span class="text-muted small text-uppercase fw-bold tracking-wider">Total Value Today</span>
-                        <span class="fs-4 fw-bold text-dark">@Model.TotalBidValueToday.ToString("C")</span>
-                    </div>
+    <!-- ══════════════════════════════════════════
+         3. ATTENTION & COMPLIANCE HEALTH TRIAGE
+         ══════════════════════════════════════════ -->
+    @{
+        bool hasAlerts = (Model.ItemsPastEndButActive > 0 || Model.ItemsEndingSoon > 0 ||
+                          Model.ItemsMissingImages > 0 || Model.ItemsMissingPdfNotice > 0 ||
+                          Model.ItemsBelowReserve > 0);
+    }
 
-                    @if (Model.RecentBids.Any())
+    <div class="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
+        <div
+            class="card-header bg-transparent border-0 pt-4 px-4 pb-2 d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-heart-pulse-fill text-danger fs-5"></i>
+                <h3 class="h5 mb-0 fw-bold text-dark">Action Center &amp; Health Triage</h3>
+            </div>
+            <span
+                class="badge @(hasAlerts ? "bg-warning bg-opacity-15 text-dark" : "bg-success bg-opacity-15 text-success") rounded-pill px-3 py-1 fw-bold small">
+                <i
+                class="bi @(hasAlerts ? "bi-exclamation-circle-fill text-warning" : "bi-check-circle-fill text-success") me-1"></i>
+                @(hasAlerts ? "Attention Items Detected" : "System Status Optimal")
+            </span>
+        </div>
+
+        <div class="card-body px-4 pb-4 pt-2">
+            @if (hasAlerts)
+            {
+                <div class="row g-3">
+                    @if (Model.ItemsPastEndButActive > 0)
                     {
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0">
-                                <thead class="table-light text-uppercase fs-7 text-muted">
-                                    <tr>
-                                        <th class="border-0 fw-bold">Item</th>
-                                        <th class="border-0 fw-bold">Bidder</th>
-                                        <th class="border-0 text-end fw-bold">Amount</th>
-                                        <th class="border-0 text-end fw-bold">Time</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var bid in Model.RecentBids)
-                                    {
-                                        <tr>
-                                            <td class="fw-semibold">
-                                                <a asp-controller="AdminAuctionItem" asp-action="Edit" asp-route-id="@bid.AuctionItemId" class="text-decoration-none text-dark hover-primary">
-                                                    @bid.AuctionItemTitle
-                                                </a>
-                                            </td>
-                                            <td class="text-muted">@bid.UserFullName</td>
-                                            <td class="text-end fw-bold text-success">@bid.OfferedAmount.ToString("C")</td>
-                                            <td class="text-end text-muted small">@bid.SubmittedAt.ToLocalTime().ToString("g")</td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
+                        <div class="col-md-6 col-lg-3">
+                            <div
+                                class="alert-action-card border-danger bg-danger bg-opacity-10 rounded-4 d-flex flex-column justify-content-between">
+                                <div>
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <span class="badge bg-danger text-white rounded-pill">Critical</span>
+                                        <i class="bi bi-clock-history fs-5 text-danger"></i>
+                                    </div>
+                                    <div class="fw-bold fs-4 text-danger">@Model.ItemsPastEndButActive</div>
+                                    <div class="small fw-semibold text-dark">Past End Date Still Active</div>
+                                    <p class="text-muted mb-0">Auto-resolver will transition or require closing.</p>
+                                </div>
+                            </div>
                         </div>
                     }
-                    else
+
+                    @if (Model.ItemsEndingSoon > 0)
                     {
-                        <div class="text-center py-5 text-muted">
-                            <i class="bi bi-inbox fs-1 d-block mb-2 opacity-50"></i>
-                            <p class="mb-0 fw-medium">No recent bids recorded today.</p>
+                        <div class="col-md-6 col-lg-3">
+                            <div
+                                class="alert-action-card border-warning bg-warning bg-opacity-10 rounded-4 d-flex flex-column justify-content-between">
+                                <div>
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <span class="badge bg-warning text-dark rounded-pill">Ending Soon</span>
+                                        <i class="bi bi-stopwatch-fill fs-5 text-dark"></i>
+                                    </div>
+                                    <div class="fw-bold fs-4 text-dark">@Model.ItemsEndingSoon</div>
+                                    <div class="small fw-semibold text-dark">Closing in Next 48 Hours</div>
+                                    <p class="text-muted mb-0">Review final bids and prepare escrow logs.</p>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    @if (Model.ItemsMissingImages > 0)
+                    {
+                        <div class="col-md-6 col-lg-3">
+                            <div
+                                class="alert-action-card border-secondary bg-light rounded-4 d-flex flex-column justify-content-between">
+                                <div>
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <span class="badge bg-secondary text-white rounded-pill">Media Gap</span>
+                                        <i class="bi bi-images fs-5 text-secondary"></i>
+                                    </div>
+                                    <div class="fw-bold fs-4 text-dark">@Model.ItemsMissingImages</div>
+                                    <div class="small fw-semibold text-dark">Listings Without Photos</div>
+                                    <p class="text-muted mb-0">Upload images to boost bidder confidence.</p>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    @if (Model.ItemsMissingPdfNotice > 0)
+                    {
+                        <div class="col-md-6 col-lg-3">
+                            <div
+                                class="alert-action-card border-coral bg-coral-subtle rounded-4 d-flex flex-column justify-content-between">
+                                <div>
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <span class="badge bg-coral text-white rounded-pill">Compliance</span>
+                                        <i class="bi bi-file-earmark-pdf-fill fs-5 text-coral"></i>
+                                    </div>
+                                    <div class="fw-bold fs-4 text-dark">@Model.ItemsMissingPdfNotice</div>
+                                    <div class="small fw-semibold text-dark">Missing PDF Legal Notice</div>
+                                    <p class="text-muted mb-0">Official notice vault requires signed PDF.</p>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    @if (Model.ItemsBelowReserve > 0)
+                    {
+                        <div class="col-md-6 col-lg-3">
+                            <div
+                                class="alert-action-card border-dark bg-dark bg-opacity-10 rounded-4 d-flex flex-column justify-content-between">
+                                <div>
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <span class="badge bg-dark text-white rounded-pill">Unmet Reserve</span>
+                                        <i class="bi bi-graph-down-arrow fs-5 text-dark"></i>
+                                    </div>
+                                    <div class="fw-bold fs-4 text-dark">@Model.ItemsBelowReserve</div>
+                                    <div class="small fw-semibold text-dark">Closed Below Reserve Price</div>
+                                    <p class="text-muted mb-0">Awaiting credit committee re-evaluation.</p>
+                                </div>
+                            </div>
                         </div>
                     }
                 </div>
+            }
+            else
+            {
+                <div class="p-4 rounded-4 text-center bg-success bg-opacity-10 border border-success border-opacity-25">
+                    <i class="bi bi-shield-check text-success fs-1 d-block mb-2"></i>
+                    <h5 class="fw-bold text-success mb-1">Everything is in Order!</h5>
+                    <p class="text-muted small mb-0">All active auctions have images, legal notices attached, and are within
+                        their scheduled time windows.</p>
+                    </div>
+                }
             </div>
         </div>
 
-        <!-- Recently Created Items -->
-        <div class="col-lg-6">
-            <div class="card border-0 shadow-sm h-100 rounded-4">
-                <div class="card-header bg-transparent border-0 pt-4 px-4">
-                    <h3 class="h5 mb-0 fw-bold text-dark">Recently Created Items</h3>
-                </div>
-                <div class="card-body px-4 pb-4">
-                    @if (Model.RecentlyCreatedItems.Any())
-                    {
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0">
-                                <thead class="table-light text-uppercase fs-7 text-muted">
-                                    <tr>
-                                        <th class="border-0 fw-bold">Title</th>
-                                        <th class="border-0 fw-bold">Status</th>
-                                        <th class="border-0 text-end fw-bold">Ends</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var item in Model.RecentlyCreatedItems)
-                                    {
-                                        <tr>
-                                            <td class="fw-semibold">
-                                                <a asp-controller="AdminAuctionItem" asp-action="Edit" asp-route-id="@item.Id" class="text-decoration-none text-dark hover-primary">
-                                                    @item.Title
-                                                </a>
-                                            </td>
-                                            <td>
-                                                @{
+        <!-- ══════════════════════════════════════════
+         4. MAIN SPLIT: BIDDING ACTIVITY & RECENT ASSETS
+         ══════════════════════════════════════════ -->
+        <div class="row g-4 mb-4">
+
+            <!-- Left: Live Bids Log -->
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm h-100 rounded-4 bg-white overflow-hidden">
+                    <div
+                        class="card-header bg-transparent border-0 pt-4 px-4 pb-2 d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="h5 mb-0 fw-bold text-dark d-flex align-items-center gap-2">
+                                <i class="bi bi-cash-stack text-success"></i> Bid Activity Today
+                            </h3>
+                            <p class="text-muted small mb-0">Sealed bids submitted in the last 24 hours</p>
+                        </div>
+                        <span
+                            class="badge border border-success bg-success-subtle bg-opacity-15 text-success px-3 py-2 rounded-pill fw-bold">
+                            @Model.TotalBidsToday Bids
+                        </span>
+                    </div>
+
+                    <div class="card-body px-4 pb-4 pt-2">
+                        <!-- Daily Value Banner -->
+                        <div class="p-3 rounded-4 mb-3 d-flex justify-content-between align-items-center"
+                             style="background: linear-gradient(135deg, rgba(255, 107, 87, 0.08) 0%, rgba(255, 107, 87, 0.02) 100%); border: 1px dashed rgba(255, 107, 87, 0.3);">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="p-2 rounded-3 bg-coral text-white">
+                                    <i class="bi bi-currency-exchange fs-5"></i>
+                                </div>
+                                <div>
+                                    <div class="small fw-bold text-muted text-uppercase tracking-wider"
+                                         style="font-size: 0.7rem;">Total Bid Volume Today</div>
+                                    <div class="fw-bold" style="font-size: 1.25rem; color: #c23d2c !important;">
+                                        Rs. @Model.TotalBidValueToday.ToString("N2")
+                                    </div>
+                                </div>
+                            </div>
+                            <span class="badge bg-light border text-muted px-2.5 py-1 rounded-pill small">NPR
+                                Currency</span>
+                            </div>
+
+                            @if (Model.RecentBids.Any())
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0">
+                                        <thead class="table-light text-uppercase small text-muted"
+                                               style="font-size: 0.72rem; letter-spacing: 0.05em;">
+                                            <tr>
+                                                <th class="border-0 rounded-start-3">Property / Item</th>
+                                                <th class="border-0">Bidder</th>
+                                                <th class="border-0 text-end">Offer Amount</th>
+                                                <th class="border-0 text-end rounded-end-3">Time</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var bid in Model.RecentBids)
+                                            {
+                                                <tr>
+                                                    <td class="fw-semibold text-truncate" style="max-width: 170px;">
+                                                        <a asp-controller="AdminAuctionItem" asp-action="Edit"
+                                                           asp-route-id="@bid.AuctionItemId"
+                                                           class="text-decoration-none text-dark hover-coral d-flex align-items-center gap-1.5"
+                                                           title="@bid.AuctionItemTitle">
+                                                            <i class="bi bi-box-arrow-up-right text-muted small"
+                                                               style="font-size: 0.75rem;"></i>
+                                                            <span class="text-truncate">@bid.AuctionItemTitle</span>
+                                                        </a>
+                                                    </td>
+                                                    <td>
+                                                        <div class="d-flex align-items-center gap-2">
+                                                            <div class="user-init-circle">
+                                                                @(string.IsNullOrWhiteSpace(bid.UserFullName) ? "U" :
+                                                        bid.UserFullName.Substring(0, 1).ToUpper())
+                                                            </div>
+                                                            <span class="small fw-medium text-dark text-truncate"
+                                                                  style="max-width: 100px;">
+                                                                @bid.UserFullName
+                                                            </span>
+                                                        </div>
+                                                    </td>
+                                                    <td class="text-end fw-bold text-success">
+                                                        Rs. @bid.OfferedAmount.ToString("N2")
+                                                    </td>
+                                                    <td class="text-end text-muted small" style="font-size: 0.75rem;">
+                                                        @bid.SubmittedAt.ToLocalTime().ToString("hh:mm tt")
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="text-center py-4 text-muted bg-light rounded-4">
+                                    <i class="bi bi-inbox-fill fs-2 d-block mb-1 opacity-40"></i>
+                                    <p class="mb-0 small fw-medium">No bids received yet today. Live offers will appear here
+                                        automatically.</p>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Recently Created Items -->
+                    <div class="col-lg-6">
+                        <div class="card border-0 shadow-sm h-100 rounded-4 bg-white overflow-hidden">
+                            <div
+                                class="card-header bg-transparent border-0 pt-4 px-4 pb-2 d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h3 class="h5 mb-0 fw-bold text-dark d-flex align-items-center gap-2">
+                                        <i class="bi bi-boxes text-primary"></i> Recently Created Assets
+                                    </h3>
+                                    <p class="text-muted small mb-0">Latest additions to the auction repository</p>
+                                </div>
+                                <a asp-controller="AdminAuctionItem" asp-action="Index"
+                                   class="btn btn-sm btn-light border rounded-pill px-3 fw-semibold small">
+                                    View All
+                                </a>
+                            </div>
+
+                            <div class="card-body px-4 pb-4 pt-2">
+                                @if (Model.RecentlyCreatedItems.Any())
+                                {
+                                    <div class="table-responsive">
+                                        <table class="table table-hover align-middle mb-0">
+                                            <thead class="table-light text-uppercase small text-muted"
+                                                   style="font-size: 0.72rem; letter-spacing: 0.05em;">
+                                                <tr>
+                                                    <th class="border-0 rounded-start-3">Asset Title</th>
+                                                    <th class="border-0">Status</th>
+                                                    <th class="border-0 text-end">Auction Ends</th>
+                                                    <th class="border-0 text-end rounded-end-3">Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var item in Model.RecentlyCreatedItems)
+                                                {
                                                     var badgeClass = item.Status switch
                                                     {
                                                         Auction_Portal_Clone.Models.AuctionStatus.Draft => "bg-secondary bg-opacity-15 text-secondary",
@@ -267,92 +420,441 @@
                                                         Auction_Portal_Clone.Models.AuctionStatus.Closed => "bg-dark bg-opacity-15 text-dark",
                                                         _ => "bg-light text-dark"
                                                     };
+
+                                                    <tr>
+                                                        <td class="fw-semibold text-truncate" style="max-width: 200px;">
+                                                            <a asp-controller="AdminAuctionItem" asp-action="Edit" asp-route-id="@item.Id"
+                                                               class="text-decoration-none text-dark hover-coral" title="@item.Title">
+                                                                @item.Title
+                                                            </a>
+                                                        </td>
+                                                        <td>
+                                                            <span class="badge @badgeClass px-2.5 py-1 rounded-pill fw-bold"
+                                                                  style="font-size: 0.72rem;">
+                                                                @item.Status
+                                                            </span>
+                                                        </td>
+                                                        <td class="text-end text-muted small" style="font-size: 0.78rem;">
+                                                            @item.AuctionEndDate.ToLocalTime().ToString("d MMM, HH:mm")
+                                                        </td>
+                                                        <td class="text-end">
+                                                            <a asp-controller="AdminAuctionItem" asp-action="Edit" asp-route-id="@item.Id"
+                                                               class="btn btn-sm btn-outline-secondary rounded-pill px-2.5 py-1 small"
+                                                               title="Edit Listing">
+                                                                <i class="bi bi-pencil-square"></i>
+                                                            </a>
+                                                        </td>
+                                                    </tr>
                                                 }
-                                                <span class="badge @badgeClass px-2 py-1 fw-semibold text-light">@item.Status</span>
-                                            </td>
-                                            <td class="text-end text-muted small">@item.AuctionEndDate.ToLocalTime().ToString("g")</td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="text-center py-5 text-muted">
-                            <i class="bi bi-folder2-open fs-1 d-block mb-2 opacity-50"></i>
-                            <p class="mb-0 fw-medium">No items created yet.</p>
-                        </div>
-                    }
-                </div>
-            </div>
-        </div>
-
-        <!-- User Stats -->
-        <div class="col-lg-4">
-            <div class="card border-0 shadow-sm h-100 rounded-4">
-                <div class="card-header bg-transparent border-0 pt-4 px-4">
-                    <h3 class="h5 mb-0 fw-bold text-dark">User Overview</h3>
-                </div>
-                <div class="card-body px-4 pb-4">
-                    <div class="d-flex justify-content-between align-items-center py-3 border-bottom">
-                        <span class="text-muted fw-medium"><i class="bi bi-people me-2 text-dark"></i>Total Users</span>
-                        <span class="fw-bold fs-4 text-dark">@Model.TotalUsers</span>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center py-3 border-bottom">
-                        <span class="text-muted fw-medium"><i class="bi bi-person-plus me-2 text-dark"></i>New This Week</span>
-                        <span class="fw-bold fs-4 text-primary">@Model.NewUsersThisWeek</span>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center pt-3">
-                        <span class="text-muted fw-medium"><i class="bi bi-shield-check me-2 text-dark"></i>Verified Bidders</span>
-                        <span class="fw-bold fs-4 text-success">@Model.VerifiedBidders</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Items by Category -->
-        <div class="col-lg-8">
-            <div class="card border-0 shadow-sm h-100 rounded-4">
-                <div class="card-header bg-transparent border-0 pt-4 px-4">
-                    <h3 class="h5 mb-0 fw-bold text-dark">Items by Category</h3>
-                </div>
-                <div class="card-body px-4 pb-4">
-                    @if (Model.ItemsByCategory.Any())
-                    {
-                        var maxCount = Model.ItemsByCategory.Max(c => c.ItemCount);
-                        <div class="d-flex flex-column gap-3">
-                            @foreach (var cat in Model.ItemsByCategory)
-                            {
-                                var pct = maxCount > 0 ? (cat.ItemCount * 100 / maxCount) : 0;
-                                <div>
-                                    <div class="d-flex justify-content-between mb-1 fw-semibold small">
-                                        <span class="text-dark">@cat.CategoryName</span>
-                                        <span class="text-muted">@cat.ItemCount items</span>
+                                            </tbody>
+                                        </table>
                                     </div>
-                                    <div class="progress" style="height: 8px; background-color: rgba(0,0,0,0.05);">
-                                        <div class="progress-bar bg-primary rounded-pill" role="progressbar" style="width:@pct%;"
-                                             aria-valuenow="@cat.ItemCount" aria-valuemin="0" aria-valuemax="@maxCount"></div>
+                                }
+                                else
+                                {
+                                    <div class="text-center py-4 text-muted bg-light rounded-4">
+                                        <i class="bi bi-folder-plus fs-2 d-block mb-1 opacity-40"></i>
+                                        <p class="mb-0 small fw-medium">No listings created yet. Click "Create Listing" above to begin.
+                                        </p>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- ══════════════════════════════════════════
+         5. BOTTOM SPLIT: USERS & CATEGORY SPREAD
+         ══════════════════════════════════════════ -->
+                <div class="row g-4">
+
+                    <!-- User Community Overview -->
+                    <div class="col-lg-4">
+                        <div class="card border-0 shadow-sm h-100 rounded-4 bg-white overflow-hidden">
+                            <div class="card-header bg-transparent border-0 pt-4 px-4 pb-2">
+                                <h3 class="h5 mb-0 fw-bold text-dark d-flex align-items-center gap-2">
+                                    <i class="bi bi-people-fill text-coral"></i> Platform User Stats
+                                </h3>
+                                <p class="text-muted small mb-0">Registered bidders and KYC engagement</p>
+                            </div>
+
+                            <div class="card-body px-4 pb-4 pt-2">
+                                <div
+                                    class="user-stat-box p-3 rounded-4 mb-3 d-flex justify-content-between align-items-center border">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="stat-icon-wrapper bg-dark text-white">
+                                            <i class="bi bi-person-lines-fill"></i>
+                                        </div>
+                                        <div>
+                                            <span class="d-block small text-muted text-uppercase fw-bold">Total Registered</span>
+                                            <span class="h4 mb-0 fw-bold text-dark">@Model.TotalUsers</span>
+                                        </div>
+                                    </div>
+                                    <span class="badge bg-light text-dark border px-2.5 py-1 rounded-pill small">Active Base</span>
+                                </div>
+
+                                <div
+                                    class="user-stat-box p-3 rounded-4 mb-3 d-flex justify-content-between align-items-center border">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="stat-icon-wrapper bg-primary text-white">
+                                            <i class="bi bi-person-plus-fill"></i>
+                                        </div>
+                                        <div>
+                                            <span class="d-block small text-muted text-uppercase fw-bold">New This Week</span>
+                                            <span class="h4 mb-0 fw-bold text-primary">+@Model.NewUsersThisWeek</span>
+                                        </div>
+                                    </div>
+                                    <span
+                                    class="badge bg-primary bg-opacity-10 text-primary px-2.5 py-1 rounded-pill small">Growth</span>
+                                </div>
+
+                                <div class="user-stat-box p-3 rounded-4 d-flex justify-content-between align-items-center border">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="stat-icon-wrapper bg-success text-white">
+                                            <i class="bi bi-patch-check-fill"></i>
+                                        </div>
+                                        <div>
+                                            <span class="d-block small text-muted text-uppercase fw-bold">Verified for
+                                                Bidding</span>
+                                                <span class="h4 mb-0 fw-bold text-success">@Model.VerifiedBidders</span>
+                                            </div>
+                                        </div>
+                                        <span class="badge bg-success bg-opacity-10 text-success px-2.5 py-1 rounded-pill small">KYC
+                                            Approved</span>
+                                        </div>
                                     </div>
                                 </div>
-                            }
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="text-center py-5 text-muted">
-                            <i class="bi bi-tags fs-1 d-block mb-2 opacity-50"></i>
-                            <p class="mb-0 fw-medium">No categories found.</p>
-                        </div>
-                    }
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+                            </div>
 
-<style>
-    .tracking-wider { letter-spacing: 0.05em; }
-    .fs-7 { font-size: 0.75rem; }
-    .hover-primary:hover { color: var(--bs-primary) !important; }
-</style>
+                            <!-- Category Distribution -->
+                            <div class="col-lg-8">
+                                <div class="card border-0 shadow-sm h-100 rounded-4 bg-white overflow-hidden">
+                                    <div
+                                        class="card-header bg-transparent border-0 pt-4 px-4 pb-2 d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h3 class="h5 mb-0 fw-bold text-dark d-flex align-items-center gap-2">
+                                                <i class="bi bi-pie-chart-fill text-coral"></i> Inventory by Category
+                                            </h3>
+                                            <p class="text-muted small mb-0">Distribution of repossessed collateral and bank auction lots
+                                            </p>
+                                        </div>
+                                        <span class="badge bg-light border text-muted px-3 py-1.5 rounded-pill small">
+                                            @Model.ItemsByCategory.Count Categories
+                                        </span>
+                                    </div>
+
+                                    <div class="card-body px-4 pb-4 pt-2">
+                                        @if (Model.ItemsByCategory.Any())
+                                        {
+                                            var maxCount = Model.ItemsByCategory.Max(c => c.ItemCount);
+                                            var totalCategoryItems = Model.ItemsByCategory.Sum(c => c.ItemCount);
+
+                                            <div class="d-flex flex-column gap-3 mt-1">
+                                                @foreach (var cat in Model.ItemsByCategory)
+                                                {
+                                                    var pct = maxCount > 0 ? (cat.ItemCount * 100 / maxCount) : 0;
+                                                    var overallPct = totalCategoryItems > 0 ? (cat.ItemCount * 100 / totalCategoryItems) : 0;
+
+                                                    <div>
+                                                        <div class="d-flex justify-content-between align-items-center mb-2 small">
+                                                            <div class="d-flex align-items-center gap-2">
+                                                                <span class="fw-bold text-dark">@cat.CategoryName</span>
+                                                                <span class="badge bg-light text-secondary border px-2 py-0.5 rounded-pill"
+                                                                      style="font-size: 0.68rem;">
+                                                                    @overallPct% of total
+                                                                </span>
+                                                            </div>
+                                                            <span class="fw-bold text-coral font-monospace">@cat.ItemCount Assets</span>
+                                                        </div>
+                                                        <div class="progress"
+                                                             style="height: 10px; background-color: #e8e4de; border-radius: 999px;">
+                                                            <div class="progress-bar rounded-pill" role="progressbar"
+                                                                 style="width: @pct%; background: linear-gradient(90deg, #ff6b57 0%, #ff8c7a 100%);"
+                                                                 aria-valuenow="@cat.ItemCount" aria-valuemin="0" aria-valuemax="@maxCount"></div>
+                                                        </div>
+                                                    </div>
+                                                }
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="text-center py-5 text-muted bg-light rounded-4">
+                                                <i class="bi bi-tags-fill fs-2 d-block mb-1 opacity-40"></i>
+                                                <p class="mb-0 small fw-medium">No category statistics available.</p>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <style>
+                        .tracking-tight {
+                            letter-spacing: -0.025em;
+                        }
+
+                        .tracking-wider {
+                            letter-spacing: 0.05em;
+                        }
+
+                        .admin-dashboard-container {
+                            max-width: 1440px;
+                            margin: 0 auto;
+                        }
+
+                        .admin-avatar-box {
+                            width: 52px;
+                            height: 52px;
+                            background: linear-gradient(135deg, #ff6b57 0%, #d94b37 100%);
+                            box-shadow: 0 4px 12px rgba(255, 107, 87, 0.35);
+                        }
+
+                        /* Solid coral for badges / icons that need white text */
+                        .bg-coral {
+                            background-color: #ff6b57 !important;
+                            color: #ffffff !important;
+                        }
+
+                        .bg-coral-subtle {
+                            background-color: #fff0ec !important;
+                        }
+
+                        .text-coral {
+                            color: #c23d2c !important;
+                        }
+
+                        .border-coral {
+                            border-color: #f0a89a !important;
+                        }
+
+                        .hover-coral:hover {
+                            color: #c23d2c !important;
+                        }
+
+                        /* Metric Cards */
+                        .metric-card {
+                            background: #ffffff;
+                            transition: transform 0.2s ease, box-shadow 0.2s ease;
+                            border: 1px solid rgba(0, 0, 0, 0.08) !important;
+                        }
+
+                        .metric-card:hover {
+                            transform: translateY(-2px);
+                            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08) !important;
+                        }
+
+                        .metric-label {
+                            font-size: 0.75rem;
+                            font-weight: 700;
+                            text-transform: uppercase;
+                            letter-spacing: 0.05em;
+                            color: #3d3d3d !important;
+                        }
+
+                        .metric-card .text-muted {
+                            color: #4a4a4a !important;
+                        }
+
+                        .metric-card .h1 {
+                            line-height: 1.15;
+                        }
+
+                        .metric-icon-box {
+                            width: 38px;
+                            height: 38px;
+                            border-radius: 10px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            font-size: 1.15rem;
+                        }
+
+                        .live-dot-pulse {
+                            margin-right: 8px;
+                            display: inline-block;
+                            width: 8px;
+                            height: 8px;
+                            border-radius: 50%;
+                            background-color: #198754;
+                            box-shadow: 0 0 0 0 rgba(25, 135, 84, 0.7);
+                            animation: pulseLive 1.8s infinite;
+                        }
+
+                        @@keyframes pulseLive {
+                            0% {
+                                box-shadow: 0 0 0 0 rgba(25, 135, 84, 0.7);
+                            }
+
+                            70% {
+                                box-shadow: 0 0 0 6px rgba(25, 135, 84, 0);
+                            }
+
+                            100% {
+                                box-shadow: 0 0 0 0 rgba(25, 135, 84, 0);
+                            }
+                        }
+
+                        /* Health Cards — stronger contrast & breathing room */
+                        .alert-action-card {
+                            border-width: 1.5px;
+                            border-style: solid;
+                            min-height: 132px;
+                            padding: 1rem 1.1rem !important;
+                            transition: transform 0.2s ease, box-shadow 0.2s ease;
+                        }
+
+                        .alert-action-card:hover {
+                            transform: translateY(-2px);
+                            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+                        }
+
+                        .alert-action-card .badge {
+                            font-size: 0.7rem;
+                            font-weight: 700;
+                            letter-spacing: 0.02em;
+                            padding: 0.28em 0.65em !important;
+                        }
+
+                        .alert-action-card .fw-bold.fs-4 {
+                            line-height: 1.15;
+                            margin-bottom: 0.35rem !important;
+                        }
+
+                        .alert-action-card .small.fw-semibold {
+                            font-size: 0.88rem;
+                            line-height: 1.35;
+                            color: #1a1a1a !important;
+                        }
+
+                        .alert-action-card p.text-muted {
+                            font-size: 0.8rem !important;
+                            line-height: 1.45;
+                            color: #4a4a4a !important;
+                            margin-top: 0.35rem !important;
+                        }
+
+                        /* User Stat Boxes */
+                        .user-stat-box {
+                            background: #fcfbfa;
+                            border-color: rgba(0, 0, 0, 0.09) !important;
+                            transition: all 0.2s ease;
+                        }
+
+                        .user-stat-box:hover {
+                            background: #ffffff;
+                            border-color: rgba(255, 107, 87, 0.35) !important;
+                            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+                        }
+
+                        .stat-icon-wrapper {
+                            width: 42px;
+                            height: 42px;
+                            border-radius: 12px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            font-size: 1.2rem;
+                        }
+
+                        .user-init-circle {
+                            width: 26px;
+                            height: 26px;
+                            border-radius: 50%;
+                            background: rgba(255, 107, 87, 0.15);
+                            color: #c23d2c;
+                            font-weight: 700;
+                            font-size: 0.72rem;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            flex-shrink: 0;
+                        }
+
+                        /* Contrast enhancements for readability */
+                        .card {
+                            border: 1px solid rgba(0, 0, 0, 0.08) !important;
+                        }
+
+                        .table-light {
+                            background-color: #f0ebe3 !important;
+                            color: #1a1a1a !important;
+                        }
+
+                        .text-muted {
+                            color: #4a4a4a !important;
+                        }
+
+                        /* Card headers — less congested */
+                        .admin-dashboard-container .card-header {
+                            padding-top: 1.35rem !important;
+                            padding-bottom: 0.85rem !important;
+                        }
+
+                        .admin-dashboard-container .card-header h3,
+                        .admin-dashboard-container .card-header .h5 {
+                            font-size: 1.15rem;
+                            line-height: 1.35;
+                            letter-spacing: -0.015em;
+                        }
+
+                        .admin-dashboard-container .card-header p.text-muted,
+                        .admin-dashboard-container .card-header .small {
+                            margin-top: 0.3rem !important;
+                            font-size: 0.82rem;
+                            line-height: 1.4;
+                            color: #4a4a4a !important;
+                        }
+
+                        /* Hero title spacing */
+                        .admin-dashboard-container h1.h3 {
+                            font-size: 1.4rem;
+                            line-height: 1.3;
+                        }
+
+                        .admin-dashboard-container .badge.bg-coral-subtle {
+                            background-color: #fff0ec !important;
+                            color: #b83a28 !important;
+                            border: 1px solid rgba(184, 58, 40, 0.2);
+                        }
+
+                        /* Status badges in tables — solid readable contrast */
+                        .admin-dashboard-container .table .badge {
+                            font-weight: 700;
+                            letter-spacing: 0.02em;
+                        }
+
+                        .admin-dashboard-container .table .badge.bg-success.bg-opacity-15,
+                        .admin-dashboard-container .table .badge.bg-success {
+                            background-color: #e6f4ea !important;
+                            color: #0d6b3a !important;
+                        }
+
+                        .admin-dashboard-container .table .badge.bg-info.bg-opacity-15 {
+                            background-color: #e7f5fb !important;
+                            color: #0a5a7a !important;
+                        }
+
+                        .admin-dashboard-container .table .badge.bg-secondary.bg-opacity-15 {
+                            background-color: #eef0f2 !important;
+                            color: #3d4450 !important;
+                        }
+
+                        .admin-dashboard-container .table .badge.bg-dark.bg-opacity-15 {
+                            background-color: #e9e9eb !important;
+                            color: #1a1a1a !important;
+                        }
+
+                        /* Category bars — darker coral text for count */
+                        .admin-dashboard-container .text-coral.font-monospace {
+                            color: #c23d2c !important;
+                            font-weight: 700;
+                        }
+
+                        .admin-dashboard-container .progress {
+                            background-color: #e8e4de !important;
+                        }
+                    </style>

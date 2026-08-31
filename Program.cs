@@ -82,6 +82,9 @@ using (var scope = app.Services.CreateScope())
     {
         await userManager.AddToRoleAsync(adminUser, "BankStaff");
     }
+
+    var dbContext = scope.ServiceProvider.GetRequiredService<AuctionDbContext>();
+    await DbSeeder.SeedInitialDataAsync(dbContext);
 }
 
 // Configure the HTTP request pipeline.
