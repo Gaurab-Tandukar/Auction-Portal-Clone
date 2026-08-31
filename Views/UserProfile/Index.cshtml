@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewData["Title"] = "User Profile";
     var verifiedResult = ViewData["VerifiedResult"] as string;
 }
@@ -24,12 +24,42 @@
         else if (verifiedResult == "invalid")
         {
             <div class="alert alert-danger alert-dismissible fade show rounded-4 border-0 shadow-sm mb-4" role="alert">
-                <i class="bi bi-exclamation-triangle-fill me-2"></i>This verification link is invalid or has expired. Please
-                request a new one.
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>This verification link is invalid or has expired. Please request a new one.
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+        else if (verifiedResult == "email-mismatch")
+        {
+            <div class="alert alert-danger alert-dismissible fade show rounded-4 border-0 shadow-sm mb-4" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i><strong>Verification Failed:</strong> The Google account email does not match your registered profile email.
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+        else if (verifiedResult == "no-email")
+        {
+            <div class="alert alert-danger alert-dismissible fade show rounded-4 border-0 shadow-sm mb-4" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i><strong>Verification Failed:</strong> Google did not provide an email address.
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+        else if (verifiedResult == "failed")
+        {
+            <div class="alert alert-danger alert-dismissible fade show rounded-4 border-0 shadow-sm mb-4" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>Verification could not be completed. Please try again.
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+        else if (verifiedResult == "unauthorized")
+        {
+            <div class="alert alert-warning alert-dismissible fade show rounded-4 border-0 shadow-sm mb-4" role="alert">
+                <i class="bi bi-shield-lock-fill me-2"></i>Please log in to verify your account for bidding.
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         }
     }
+
+    <!-- Client-side notification banner for dynamic query param updates -->
+    <div id="dynamicAlertContainer"></div>
 
     <!-- Loading Spinner -->
     <div id="loadingSpinner" class="text-center py-5">
@@ -50,9 +80,9 @@
             <p id="profEmail" class="text-muted small mb-3">--</p>
 
             <!-- Bidding Verification Badge -->
-            <div id="biddingBadgeContainer" class="mb-2"></div>
+            <div id="biddingBadgeContainer" class="mb-3"></div>
 
-            <!-- Verify for Bidding button (shown only if not verified) -->
+            <!-- Verify for Bidding actions (shown only if not verified) -->
             <div id="verifyActionContainer" class="mb-3"></div>
         </div>
 
@@ -87,6 +117,13 @@
             const card = document.getElementById("profileCard");
             const unauthCard = document.getElementById("unauthorizedCard");
 
+            // Optional: read ?verify= or ?verified= from client URL in case of SPA-like / hash nav
+            const urlParams = new URLSearchParams(window.location.search);
+            const verifyParam = urlParams.get("verify") || urlParams.get("verified");
+            if (verifyParam && !@((!string.IsNullOrEmpty(verifiedResult)).ToString().ToLower())) {
+                showDynamicAlert(verifyParam);
+            }
+
             try {
                 const res = await fetch('/api/user/profile/me');
                 spinner.classList.add("d-none");
@@ -94,8 +131,8 @@
                 if (res.ok) {
                     const user = await res.json();
 
-                    document.getElementById("profFullName").innerText = user.fullName;
-                    document.getElementById("profEmail").innerText = user.email;
+                    document.getElementById("profFullName").innerText = user.fullName || "User";
+                    document.getElementById("profEmail").innerText = user.email || "";
 
                     const initials = user.fullName
                         ? user.fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
@@ -106,15 +143,24 @@
                     const verifyContainer = document.getElementById("verifyActionContainer");
 
                     if (user.isVerifiedForBidding) {
-                        badgeContainer.innerHTML = `<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-2 fw-semibold">Verified Bidder</span>`;
+                        badgeContainer.innerHTML = `<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-2 fw-semibold"><i class="bi bi-check2-circle me-1"></i>Verified Bidder</span>`;
                         verifyContainer.innerHTML = '';
                     } else {
-                        badgeContainer.innerHTML = `<span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-3 py-2 fw-semibold">Unverified Bidder</span>`;
+                        badgeContainer.innerHTML = `<span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-3 py-2 fw-semibold"><i class="bi bi-shield-exclamation me-1"></i>Unverified Bidder</span>`;
                         verifyContainer.innerHTML = `
-                                <button id="verifyBiddingBtn" class="btn btn-coral btn-sm rounded-pill px-3 py-1 fw-semibold">
-                                    <i class="bi bi-envelope-check me-1"></i>Verify for Bidding
-                                </button>`;
-                        document.getElementById("verifyBiddingBtn").addEventListener("click", sendVerificationEmail);
+                            <div class="d-flex flex-column flex-sm-row justify-content-center align-items-center gap-2 mt-2">
+                                <a href="/api/user/profile/verify-with-google" class="btn btn-coral btn-sm rounded-pill px-3 py-2 fw-semibold shadow-sm">
+                                    <i class="bi bi-google me-1"></i>Verify with Google
+                                </a>
+                                <button id="verifyBiddingEmailBtn" class="btn btn-outline-secondary btn-sm rounded-pill px-3 py-2 fw-semibold">
+                                    <i class="bi bi-envelope me-1"></i>Verify via Email
+                                </button>
+                            </div>`;
+
+                        const emailBtn = document.getElementById("verifyBiddingEmailBtn");
+                        if (emailBtn) {
+                            emailBtn.addEventListener("click", sendVerificationEmail);
+                        }
                     }
 
                     card.classList.remove("d-none");
@@ -127,8 +173,45 @@
             }
         });
 
+        function showDynamicAlert(status) {
+            const container = document.getElementById("dynamicAlertContainer");
+            if (!container) return;
+
+            let alertClass = "alert-danger";
+            let icon = "bi-exclamation-triangle-fill";
+            let message = "Verification could not be completed. Please try again.";
+
+            if (status === "success") {
+                alertClass = "alert-success";
+                icon = "bi-check-circle-fill";
+                message = "Your account is now verified for bidding.";
+            } else if (status === "already") {
+                alertClass = "alert-info";
+                icon = "bi-info-circle-fill";
+                message = "This account was already verified for bidding.";
+            } else if (status === "invalid") {
+                message = "This verification link is invalid or has expired. Please request a new one.";
+            } else if (status === "email-mismatch") {
+                message = "<strong>Verification Failed:</strong> The Google account email does not match your registered profile email.";
+            } else if (status === "no-email") {
+                message = "<strong>Verification Failed:</strong> Google did not provide an email address.";
+            } else if (status === "unauthorized") {
+                alertClass = "alert-warning";
+                icon = "bi-shield-lock-fill";
+                message = "Please log in to verify your account for bidding.";
+            }
+
+            container.innerHTML = `
+                <div class="alert ${alertClass} alert-dismissible fade show rounded-4 border-0 shadow-sm mb-4" role="alert">
+                    <i class="bi ${icon} me-2"></i>${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>`;
+        }
+
         async function sendVerificationEmail() {
-            const btn = document.getElementById("verifyBiddingBtn");
+            const btn = document.getElementById("verifyBiddingEmailBtn");
+            if (!btn) return;
+
             const originalHtml = btn.innerHTML;
             btn.disabled = true;
             btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span>Sending...`;
@@ -139,7 +222,6 @@
 
                 if (res.ok) {
                     btn.innerHTML = `<i class="bi bi-check2 me-1"></i>Email Sent`;
-                    // Leave it disabled — no point spamming resend without a cooldown UI.
                 } else {
                     alert(data.message || "Could not send the verification email. Please try again.");
                     btn.disabled = false;

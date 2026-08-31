@@ -1,6 +1,8 @@
-﻿using Auction_Portal_Clone.DTO;
+using Auction_Portal_Clone.DTO;
 using Auction_Portal_Clone.Models;
 using Auction_Portal_Clone.Services.Interfaces;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -30,10 +32,77 @@ namespace Auction_Portal_Clone.Controllers
 
         // GET: /profile (Renders the Profile Razor View)
         [HttpGet("/profile")]
-        public IActionResult Index([FromQuery] string? verified)
+        public IActionResult Index([FromQuery] string? verified, [FromQuery] string? verify)
         {
-            ViewData["VerifiedResult"] = verified;
+            ViewData["VerifiedResult"] = verify ?? verified;
             return View("~/Views/UserProfile/Index.cshtml");
+        }
+
+        // GET: api/user/profile/verify-with-google
+        // Initiates Google OAuth challenge for the current logged-in user.
+        [HttpGet("verify-with-google")]
+        [Authorize]
+        public IActionResult VerifyWithGoogle()
+        {
+            var redirectUrl = Url.Action(nameof(GoogleVerifyCallback), "UserProfile");
+            var properties = new AuthenticationProperties { RedirectUri = redirectUrl };
+            return Challenge(properties, GoogleDefaults.AuthenticationScheme);
+        }
+
+        // GET: api/user/profile/google-verify-callback
+        // Handles Google OAuth callback, matches Google account email with profile email,
+        // and sets IsVerifiedForBidding = true if matched.
+        [HttpGet("google-verify-callback")]
+        [Authorize]
+        public async Task<IActionResult> GoogleVerifyCallback()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return RedirectToAction(nameof(Index), new { verify = "unauthorized" });
+            }
+
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return RedirectToAction(nameof(Index), new { verify = "failed" });
+            }
+
+            if (user.IsVerifiedForBidding)
+            {
+                return RedirectToAction(nameof(Index), new { verify = "already" });
+            }
+
+            var authResult = await HttpContext.AuthenticateAsync(IdentityConstants.ExternalScheme);
+            if (!authResult.Succeeded || authResult.Principal == null)
+            {
+                return RedirectToAction(nameof(Index), new { verify = "failed" });
+            }
+
+            // Remove temporary external cookie
+            await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
+
+            var googleEmail = authResult.Principal.FindFirstValue(ClaimTypes.Email)
+                              ?? authResult.Principal.FindFirst("email")?.Value;
+
+            if (string.IsNullOrWhiteSpace(googleEmail))
+            {
+                return RedirectToAction(nameof(Index), new { verify = "no-email" });
+            }
+
+            if (string.IsNullOrWhiteSpace(user.Email) || !string.Equals(user.Email.Trim(), googleEmail.Trim(), StringComparison.OrdinalIgnoreCase))
+            {
+                return RedirectToAction(nameof(Index), new { verify = "email-mismatch" });
+            }
+
+            user.IsVerifiedForBidding = true;
+            var updateResult = await _userManager.UpdateAsync(user);
+            if (!updateResult.Succeeded)
+            {
+                return RedirectToAction(nameof(Index), new { verify = "failed" });
+            }
+
+            return RedirectToAction(nameof(Index), new { verify = "success" });
         }
 
         // GET: api/user/profile/me

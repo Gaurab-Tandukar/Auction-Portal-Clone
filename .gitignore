@@ -372,6 +372,7 @@ wwwroot/uploads/
 # Local secrets / connection strings (if ever added to appsettings)
 appsettings.*.local.json
 appsettings.Local.json
+appsettings.json
 
 # EF Core migrations bundle output (if you ever generate one)
 *.migrations.sql
