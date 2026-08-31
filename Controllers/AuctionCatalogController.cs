@@ -1,4 +1,4 @@
-﻿using Auction_Portal_Clone.DTO;
+using Auction_Portal_Clone.DTO;
 using Auction_Portal_Clone.Models;
 using Auction_Portal_Clone.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
@@ -30,6 +30,37 @@ namespace Auction_Portal_Clone.Controllers
 
             // Keep current filter values for the search bar + advanced panel
             ViewData["Filter"] = filter;
+
+            // Fill Category dropdown
+            await _viewDataHelper.PopulateCategoriesAsync(ViewData, activeOnly: true);
+
+            // Fill Province / District / Municipality dropdowns
+            await _viewDataHelper.PopulateLocationViewDataAsync(ViewData);
+
+            return View(result);
+        }
+
+        // GET /AuctionCatalog/Collateral/Land
+        // GET /AuctionCatalog/Collateral/ResidentialProperty
+        // GET /AuctionCatalog/Collateral/Commercial
+        // GET /AuctionCatalog/Collateral/Vehicle
+        [HttpGet]
+        public async Task<IActionResult> Collateral(string id, [FromQuery] AuctionItemFilterDTO filter)
+        {
+            var collateralCategory = CollateralCategoryExtensions.ParseCollateralCategory(id);
+            if (!collateralCategory.HasValue)
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
+            filter.CollateralCategory = collateralCategory.Value;
+
+            var result = await _catalogService.GetCatalogAsync(filter);
+
+            // Keep current filter values for the search bar + advanced panel
+            ViewData["Filter"] = filter;
+            ViewData["SelectedCollateralCategory"] = collateralCategory.Value;
+            ViewData["SelectedCollateralName"] = collateralCategory.Value.ToDisplayName();
 
             // Fill Category dropdown
             await _viewDataHelper.PopulateCategoriesAsync(ViewData, activeOnly: true);

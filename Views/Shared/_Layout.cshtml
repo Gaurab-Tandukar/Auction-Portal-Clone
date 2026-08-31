@@ -58,18 +58,67 @@
                                        href="/AuctionCatalog">Auctions</a>
                                 </li>
                                 <li class="nav-item dropdown">
-                                    <a class="nav-link dropdown-toggle fw-semibold" href="#" role="button"
+                                    <a class="nav-link dropdown-toggle fw-semibold nav-categories-toggle d-flex align-items-center gap-1" href="#" role="button"
                                        data-bs-toggle="dropdown" aria-expanded="false">
-                                        Categories
+                                        <span>Categories</span>
                                     </a>
-                                    <ul class="dropdown-menu border-0 shadow-sm rounded-3">
-                                        <li><a class="dropdown-item" href="#">Vehicles</a></li>
-                                        <li><a class="dropdown-item" href="#">Real Estate</a></li>
-                                        <li><a class="dropdown-item" href="#">Collectibles</a></li>
-                                        <li>
-                                            <hr class="dropdown-divider">
+                                    <ul class="dropdown-menu dropdown-menu-categories border-0 shadow-lg rounded-4 p-2 mt-2">
+                                        <li class="dropdown-header text-uppercase fs-7 fw-bold text-muted px-3 pt-2 pb-1 tracking-wider">
+                                            Collateral Categories
                                         </li>
-                                        <li><a class="dropdown-item fw-semibold text-primary" href="#">Live Bids</a></li>
+                                        <li>
+                                            <a class="dropdown-item category-menu-item rounded-3 d-flex align-items-center gap-3 p-2.5" href="/AuctionCatalog/Collateral/Land">
+                                                <div class="category-icon-box rounded-circle d-flex align-items-center justify-content-center">
+                                                    <i class="bi bi-geo-alt-fill"></i>
+                                                </div>
+                                                <div>
+                                                    <div class="fw-bold text-dark item-title">Land</div>
+                                                    <div class="text-muted item-desc">Plots, agricultural & commercial parcels</div>
+                                                </div>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item category-menu-item rounded-3 d-flex align-items-center gap-3 p-2.5" href="/AuctionCatalog/Collateral/ResidentialProperty">
+                                                <div class="category-icon-box rounded-circle d-flex align-items-center justify-content-center">
+                                                    <i class="bi bi-house-door-fill"></i>
+                                                </div>
+                                                <div>
+                                                    <div class="fw-bold text-dark item-title">Residential Property</div>
+                                                    <div class="text-muted item-desc">Houses, luxury villas & apartments</div>
+                                                </div>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item category-menu-item rounded-3 d-flex align-items-center gap-3 p-2.5" href="/AuctionCatalog/Collateral/Commercial">
+                                                <div class="category-icon-box rounded-circle d-flex align-items-center justify-content-center">
+                                                    <i class="bi bi-building-fill"></i>
+                                                </div>
+                                                <div>
+                                                    <div class="fw-bold text-dark item-title">Commercial</div>
+                                                    <div class="text-muted item-desc">Office complexes & industrial units</div>
+                                                </div>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item category-menu-item rounded-3 d-flex align-items-center gap-3 p-2.5" href="/AuctionCatalog/Collateral/Vehicle">
+                                                <div class="category-icon-box rounded-circle d-flex align-items-center justify-content-center">
+                                                    <i class="bi bi-car-front-fill"></i>
+                                                </div>
+                                                <div>
+                                                    <div class="fw-bold text-dark item-title">Vehicle</div>
+                                                    <div class="text-muted item-desc">Automobiles & commercial fleets</div>
+                                                </div>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <hr class="dropdown-divider my-2 border-light-subtle">
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item category-all-btn rounded-3 d-flex align-items-center justify-content-between p-2.5 px-3 fw-bold" href="/AuctionCatalog">
+                                                <span>Browse All Auctions</span>
+                                                <i class="bi bi-arrow-right"></i>
+                                            </a>
+                                        </li>
                                     </ul>
                                 </li>
                             }
@@ -189,13 +238,13 @@
 
                         <!-- Col 2: Categories -->
                         <div class="col-lg-2 col-md-6 col-6">
-                            <h6 class="footer-heading">Auctions</h6>
+                            <h6 class="footer-heading">Collateral</h6>
                             <ul class="footer-links list-unstyled">
                                 <li><a asp-controller="AuctionCatalog" asp-action="Index">All Auctions</a></li>
-                                <li><a href="/AuctionCatalog?CategoryId=1">Vehicles & Autos</a></li>
-                                <li><a href="/AuctionCatalog?CategoryId=2">Real Estate & Land</a></li>
-                                <li><a href="/AuctionCatalog?CategoryId=3">Commercial Assets</a></li>
-                                <li><a href="/AuctionCatalog?Status=2">Live Bidding</a></li>
+                                <li><a href="/AuctionCatalog/Collateral/Land">Land</a></li>
+                                <li><a href="/AuctionCatalog/Collateral/ResidentialProperty">Residential Property</a></li>
+                                <li><a href="/AuctionCatalog/Collateral/Commercial">Commercial</a></li>
+                                <li><a href="/AuctionCatalog/Collateral/Vehicle">Vehicle</a></li>
                             </ul>
                         </div>
 

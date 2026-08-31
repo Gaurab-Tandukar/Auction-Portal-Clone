@@ -70,7 +70,7 @@
                            name="SearchTerm"
                            value="@filter.SearchTerm"
                            class="form-control border-start-0 rounded-end-3"
-                           placeholder="Search by ID, title, description, category, location, or status..." />
+                            placeholder="Search by ID, title, description, auction category, collateral, location, or status..." />
                 </div>
                 <button type="submit" class="btn btn-coral rounded-pill px-4 fw-semibold text-nowrap">
                     Search
@@ -115,7 +115,8 @@
                             <tr class="text-uppercase fs-7 text-muted tracking-wider">
                                 <th class="border-0 ps-4 py-3 fw-bold">ID</th>
                                 <th class="border-0 py-3 fw-bold">Title</th>
-                                <th class="border-0 py-3 fw-bold">Category</th>
+                                <th class="border-0 py-3 fw-bold">Auction Category</th>
+                                <th class="border-0 py-3 fw-bold">Collateral</th>
                                 <th class="border-0 py-3 fw-bold">Location</th>
                                 <th class="border-0 text-end py-3 fw-bold">Reserve</th>
                                 <th class="border-0 py-3 fw-bold">Status</th>
@@ -136,6 +137,11 @@
                                         </a>
                                     </td>
                                     <td class="text-muted">@item.CategoryName</td>
+                                    <td>
+                                        <span class="badge bg-light text-dark border px-2.5 py-1 fw-semibold rounded-pill" style="font-size: 0.72rem;">
+                                            @item.CollateralCategoryName
+                                        </span>
+                                    </td>
                                     <td class="text-muted">@item.MunicipalityName, @item.DistrictName</td>
                                     <td class="text-end fw-bold text-dark">Rs. @item.ReservePrice.ToString("N2")</td>
                                     <td>
@@ -174,7 +180,7 @@
                                                     <form asp-action="Delete" asp-route-id="@item.Id" method="post">
                                                         @Html.AntiForgeryToken()
                                                         <div class="modal-header border-0 pb-0">
-                                                            <h5 class="modal-title fw-bold text-dark">
+                                                             <h5 class="modal-title fw-bold text-dark">
                                                                 <i class="bi bi-exclamation-triangle text-danger me-2"></i>
                                                                 Delete Auction Item
                                                             </h5>
@@ -230,6 +236,7 @@
                            asp-action="Index"
                            asp-route-SearchTerm="@filter.SearchTerm"
                            asp-route-CategoryId="@filter.CategoryId"
+                           asp-route-CollateralCategory="@filter.CollateralCategory"
                            asp-route-ProvinceId="@filter.ProvinceId"
                            asp-route-DistrictId="@filter.DistrictId"
                            asp-route-MunicipalityId="@filter.MunicipalityId"

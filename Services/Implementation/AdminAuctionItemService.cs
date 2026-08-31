@@ -1,4 +1,4 @@
-﻿using Auction_Portal_Clone.Data;
+using Auction_Portal_Clone.Data;
 using Auction_Portal_Clone.DTO;
 using Auction_Portal_Clone.Models;
 using Auction_Portal_Clone.Services.Interfaces;
@@ -47,6 +47,7 @@ namespace Auction_Portal_Clone.Services.Implementation
                     AuctionStartDate = a.AuctionStartDate,
                     AuctionEndDate = a.AuctionEndDate,
                     Status = a.Status,
+                    CollateralCategory = a.CollateralCategory,
                     CategoryName = a.Category.Name,
                     ThumbnailUrl = a.Attachments
                         .Where(att => att.FileType == FileType.Image)
@@ -58,6 +59,7 @@ namespace Auction_Portal_Clone.Services.Implementation
             foreach (var item in items)
             {
                 item.Status = AuctionStatusResolver.Resolve(item.Status, item.AuctionStartDate, item.AuctionEndDate);
+                item.CollateralCategoryName = item.CollateralCategory.ToDisplayName();
             }
 
             return new PagedResultDTO<AuctionItemListItemDTO>
@@ -93,6 +95,8 @@ namespace Auction_Portal_Clone.Services.Implementation
                 AuctionStartDate = item.AuctionStartDate,
                 AuctionEndDate = item.AuctionEndDate,
                 Status = resolvedStatus,
+                CollateralCategory = item.CollateralCategory,
+                CollateralCategoryName = item.CollateralCategory.ToDisplayName(),
                 CategoryId = item.CategoryId,
                 CategoryName = item.Category.Name,
                 MunicipalityId = item.MunicipalityId,
@@ -140,6 +144,7 @@ namespace Auction_Portal_Clone.Services.Implementation
                 // Draft always wins as-is; Active is resolved against the dates
                 // so it correctly becomes Upcoming/Active/Closed as appropriate.
                 Status = AuctionStatusResolver.Resolve(dto.Status, dto.AuctionStartDate, dto.AuctionEndDate),
+                CollateralCategory = dto.CollateralCategory,
                 CategoryId = dto.CategoryId
             };
 
@@ -171,6 +176,7 @@ namespace Auction_Portal_Clone.Services.Implementation
             item.AuctionStartDate = dto.AuctionStartDate;
             item.AuctionEndDate = dto.AuctionEndDate;
             item.Status = AuctionStatusResolver.Resolve(dto.Status, dto.AuctionStartDate, dto.AuctionEndDate);
+            item.CollateralCategory = dto.CollateralCategory;
             item.CategoryId = dto.CategoryId;
 
             await _db.SaveChangesAsync();

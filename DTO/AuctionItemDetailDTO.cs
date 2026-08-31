@@ -13,6 +13,8 @@ namespace Auction_Portal_Clone.DTO
         public DateTime AuctionStartDate { get; set; }
         public DateTime AuctionEndDate { get; set; }
         public AuctionStatus Status { get; set; }
+        public CollateralCategory CollateralCategory { get; set; }
+        public string CollateralCategoryName { get; set; } = string.Empty;
 
         public int CategoryId { get; set; }
         public string CategoryName { get; set; } = string.Empty;

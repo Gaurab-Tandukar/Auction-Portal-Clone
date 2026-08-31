@@ -73,6 +73,10 @@ namespace Auction_Portal_Clone.Data
                         .HasConversion<int>()
                         .IsRequired();
 
+                        entity.Property(a => a.CollateralCategory)
+                        .HasConversion<int>()
+                        .IsRequired();
+
                         // Relationship: Category -> AuctionItems (Restrict Delete)
                         entity.HasOne(a => a.Category)
                         .WithMany(c => c.AuctionItems)
@@ -87,6 +91,7 @@ namespace Auction_Portal_Clone.Data
 
                         // Indexing for search & filtering performance
                         entity.HasIndex(a => new { a.CategoryId, a.Status, a.AuctionEndDate });
+                        entity.HasIndex(a => new { a.CollateralCategory, a.Status, a.AuctionEndDate });
                         entity.HasIndex(a => a.MunicipalityId);
                   });
 

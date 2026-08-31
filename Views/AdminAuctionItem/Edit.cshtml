@@ -70,8 +70,8 @@
                             <span asp-validation-for="Title" class="aai-error"></span>
                         </div>
 
-                        <!-- Price + Category (inline) -->
-                        <div class="aai-row-2">
+                        <!-- Price + Auction Category + Collateral Category (inline) -->
+                        <div class="aai-row-3">
                             <div class="aai-field">
                                 <label asp-for="ReservePrice" class="aai-label"></label>
                                 <div class="input-group input-group-sm">
@@ -82,7 +82,7 @@
                                 <span asp-validation-for="ReservePrice" class="aai-error"></span>
                             </div>
                             <div class="aai-field">
-                                <label asp-for="CategoryId" class="aai-label">Category</label>
+                                <label asp-for="CategoryId" class="aai-label">Auction Category</label>
                                 <select asp-for="CategoryId" class="form-select form-select-sm rounded-3">
                                     @if (ViewData["Categories"] is IEnumerable<Auction_Portal_Clone.Models.Category> categories)
                                     {
@@ -93,6 +93,16 @@
                                     }
                                 </select>
                                 <span asp-validation-for="CategoryId" class="aai-error"></span>
+                            </div>
+                            <div class="aai-field">
+                                <label asp-for="CollateralCategory" class="aai-label">Collateral Category</label>
+                                <select asp-for="CollateralCategory" class="form-select form-select-sm rounded-3">
+                                    <option value="@((int)Auction_Portal_Clone.Models.CollateralCategory.Land)">Land</option>
+                                    <option value="@((int)Auction_Portal_Clone.Models.CollateralCategory.ResidentialProperty)">Residential Property</option>
+                                    <option value="@((int)Auction_Portal_Clone.Models.CollateralCategory.Commercial)">Commercial</option>
+                                    <option value="@((int)Auction_Portal_Clone.Models.CollateralCategory.Vehicle)">Vehicle</option>
+                                </select>
+                                <span asp-validation-for="CollateralCategory" class="aai-error"></span>
                             </div>
                         </div>
 

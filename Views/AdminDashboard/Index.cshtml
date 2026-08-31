@@ -1,4 +1,4 @@
-﻿@model Auction_Portal_Clone.DTO.AdminDashboardSummaryDTO
+@model Auction_Portal_Clone.DTO.AdminDashboardSummaryDTO
 @{
     ViewData["Title"] = "Admin Dashboard";
 }
@@ -311,11 +311,11 @@
             </div>
         </div>
 
-        <!-- Items by Category -->
+        <!-- Items by Auction Category -->
         <div class="col-lg-8">
             <div class="card border-0 shadow-sm h-100 rounded-4">
                 <div class="card-header bg-transparent border-0 pt-4 px-4">
-                    <h3 class="h5 mb-0 fw-bold text-dark">Items by Category</h3>
+                    <h3 class="h5 mb-0 fw-bold text-dark">Items by Auction Category</h3>
                 </div>
                 <div class="card-body px-4 pb-4">
                     @if (Model.ItemsByCategory.Any())
@@ -342,7 +342,7 @@
                     {
                         <div class="text-center py-5 text-muted">
                             <i class="bi bi-tags fs-1 d-block mb-2 opacity-50"></i>
-                            <p class="mb-0 fw-medium">No categories found.</p>
+                            <p class="mb-0 fw-medium">No auction categories found.</p>
                         </div>
                     }
                 </div>

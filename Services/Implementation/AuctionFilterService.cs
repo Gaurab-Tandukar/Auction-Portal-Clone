@@ -18,6 +18,9 @@ namespace Auction_Portal_Clone.Services.Implementation
             if (filter.CategoryId.HasValue)
                 query = query.Where(a => a.CategoryId == filter.CategoryId.Value);
 
+            if (filter.CollateralCategory.HasValue)
+                query = query.Where(a => a.CollateralCategory == filter.CollateralCategory.Value);
+
             if (filter.ProvinceId.HasValue)
                 query = query.Where(a => a.Municipality.District.ProvinceId == filter.ProvinceId.Value);
 
@@ -46,9 +49,11 @@ namespace Auction_Portal_Clone.Services.Implementation
                 // Purely numeric terms also get checked as an exact Id match,
                 // in addition to the text search below.
                 bool isNumeric = int.TryParse(term, out var idTerm);
+                var matchedCollateralCategory = CollateralCategoryExtensions.ParseCollateralCategory(term);
 
                 query = query.Where(a =>
                     (isNumeric && a.Id == idTerm) ||
+                    (matchedCollateralCategory.HasValue && a.CollateralCategory == matchedCollateralCategory.Value) ||
                     EF.Functions.Like(a.Title, $"%{term}%") ||
                     (a.Description != null && EF.Functions.Like(a.Description, $"%{term}%")) ||
                     EF.Functions.Like(a.Category.Name, $"%{term}%") ||

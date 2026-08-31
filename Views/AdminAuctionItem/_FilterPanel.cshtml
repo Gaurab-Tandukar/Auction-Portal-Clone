@@ -12,10 +12,11 @@
     <input type="hidden" name="SearchTerm" value="@Model.SearchTerm" />
     <div class="card-body p-4">
         <div class="row g-3 align-items-end">
+            <!-- Auction Category -->
             <div class="col-md-3">
-                <label class="form-label small text-uppercase fw-bold text-muted tracking-wider">Category</label>
+                <label class="form-label small text-uppercase fw-bold text-muted tracking-wider">Auction Category</label>
                 <select name="CategoryId" class="form-select rounded-3">
-                    <option value="">All categories</option>
+                    <option value="">All auction categories</option>
                     @if (ViewData["Categories"] is IEnumerable<Auction_Portal_Clone.Models.Category> categories)
                     {
                         @foreach (var cat in categories)
@@ -23,6 +24,17 @@
                             <option value="@cat.Id" selected="@(Model.CategoryId == cat.Id)">@cat.Name</option>
                         }
                     }
+                </select>
+            </div>
+            <!-- Collateral Category -->
+            <div class="col-md-3">
+                <label class="form-label small text-uppercase fw-bold text-muted tracking-wider">Collateral Category</label>
+                <select name="CollateralCategory" class="form-select rounded-3">
+                    <option value="">All collateral</option>
+                    <option value="@((int)Auction_Portal_Clone.Models.CollateralCategory.Land)" selected="@(Model.CollateralCategory == Auction_Portal_Clone.Models.CollateralCategory.Land)">Land</option>
+                    <option value="@((int)Auction_Portal_Clone.Models.CollateralCategory.ResidentialProperty)" selected="@(Model.CollateralCategory == Auction_Portal_Clone.Models.CollateralCategory.ResidentialProperty)">Residential Property</option>
+                    <option value="@((int)Auction_Portal_Clone.Models.CollateralCategory.Commercial)" selected="@(Model.CollateralCategory == Auction_Portal_Clone.Models.CollateralCategory.Commercial)">Commercial</option>
+                    <option value="@((int)Auction_Portal_Clone.Models.CollateralCategory.Vehicle)" selected="@(Model.CollateralCategory == Auction_Portal_Clone.Models.CollateralCategory.Vehicle)">Vehicle</option>
                 </select>
             </div>
             <div class="col-md-2">
@@ -50,14 +62,14 @@
                     <option value="">All municipalities</option>
                 </select>
             </div>
-            <div class="col-md-2">
+            <div class="col-md-3">
                 <label class="form-label small text-uppercase fw-bold text-muted tracking-wider">Min Price</label>
                 <div class="input-group">
                     <span class="input-group-text bg-light rounded-start-3 text-muted border-end-0">Rs.</span>
                     <input type="number" name="MinPrice" value="@Model.MinPrice" class="form-control rounded-end-3 border-start-0" step="0.01" min="0" placeholder="0.00" />
                 </div>
             </div>
-            <div class="col-md-2">
+            <div class="col-md-3">
                 <label class="form-label small text-uppercase fw-bold text-muted tracking-wider">Max Price</label>
                 <div class="input-group">
                     <span class="input-group-text bg-light rounded-start-3 text-muted border-end-0">Rs.</span>
@@ -72,7 +84,7 @@
                 <label class="form-label small text-uppercase fw-bold text-muted tracking-wider">Auction To</label>
                 <input type="date" name="AuctionDateTo" value="@Model.AuctionDateTo?.ToString("yyyy-MM-dd")" class="form-control rounded-3" />
             </div>
-            <div class="col-md-9 d-flex gap-2 justify-content-md-end">
+            <div class="col-12 d-flex gap-2 justify-content-md-end mt-2 pt-2 border-top">
                 <button type="submit" class="btn btn-coral rounded-pill px-4 py-2 fw-semibold flex-grow-1 flex-md-grow-0">
                     <i class="bi bi-funnel me-1"></i>Apply Filters
                 </button>

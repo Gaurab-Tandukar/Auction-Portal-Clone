@@ -21,6 +21,7 @@ namespace Auction_Portal_Clone.Models
         public DateTime AuctionStartDate { get; set; }
         public DateTime AuctionEndDate { get; set; }
         public AuctionStatus Status { get; set; } = AuctionStatus.Draft;
+        public CollateralCategory CollateralCategory { get; set; } = CollateralCategory.Land;
 
         // Foreign Keys
         public int CategoryId { get; set; }

@@ -1,4 +1,4 @@
-﻿using Auction_Portal_Clone.Models;
+using Auction_Portal_Clone.Models;
 
 namespace Auction_Portal_Clone.DTO
 {
@@ -12,6 +12,7 @@ namespace Auction_Portal_Clone.DTO
         public DateTime AuctionStartDate { get; set; }
         public DateTime AuctionEndDate { get; set; }
         public AuctionStatus Status { get; set; } = AuctionStatus.Draft;
+        public CollateralCategory CollateralCategory { get; set; } = CollateralCategory.Land;
         public int CategoryId { get; set; }
         public int MunicipalityId { get; set; }
     }

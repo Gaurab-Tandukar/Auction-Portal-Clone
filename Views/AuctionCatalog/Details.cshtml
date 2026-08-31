@@ -18,9 +18,12 @@
         <a asp-action="Index" class="btn btn-sm btn-light border rounded-pill px-3 py-2 text-secondary shadow-sm">
             <i class="bi bi-arrow-left me-1"></i>Back to Auctions
         </a>
-        <div class="d-flex align-items-center gap-2">
+        <div class="d-flex align-items-center gap-2 flex-wrap">
             <span class="badge bg-light text-dark border px-3 py-2 rounded-pill fw-semibold">
                 <i class="bi bi-tag-fill text-primary me-1"></i>@Model.CategoryName
+            </span>
+            <span class="badge bg-light text-dark border px-3 py-2 rounded-pill fw-semibold">
+                <i class="bi bi-layers-fill text-primary me-1"></i>@Model.CollateralCategoryName
             </span>
             @{
                 var badgeClass = Model.Status switch

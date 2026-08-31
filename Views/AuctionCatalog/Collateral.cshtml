@@ -1,0 +1,392 @@
+@model Auction_Portal_Clone.DTO.PagedResultDTO<Auction_Portal_Clone.DTO.AuctionItemListItemDTO>
+@using System.Globalization
+@using Auction_Portal_Clone.Models
+
+@{
+    var selectedCat = (CollateralCategory?)ViewData["SelectedCollateralCategory"] ?? CollateralCategory.Land;
+    var selectedName = (string?)ViewData["SelectedCollateralName"] ?? selectedCat.ToDisplayName();
+
+    ViewData["Title"] = $"{selectedName} Auctions";
+
+    var filter = ViewData["Filter"] as Auction_Portal_Clone.DTO.AuctionItemFilterDTO
+                 ?? new Auction_Portal_Clone.DTO.AuctionItemFilterDTO();
+
+    bool hasAdvancedFilters = filter.CategoryId.HasValue || filter.ProvinceId.HasValue
+        || filter.DistrictId.HasValue || filter.MunicipalityId.HasValue
+        || filter.MinPrice.HasValue || filter.MaxPrice.HasValue
+        || filter.AuctionDateFrom.HasValue || filter.AuctionDateTo.HasValue;
+
+    int totalPages = Model.TotalPages > 0
+        ? Model.TotalPages
+        : (int)Math.Ceiling((double)Model.TotalCount / Math.Max(Model.PageSize, 1));
+    if (totalPages < 1) totalPages = 1;
+
+    var (iconClass, bannerDesc, bannerTagline) = selectedCat switch
+    {
+        CollateralCategory.Land => ("bi-geo-alt-fill", "Bank-verified residential, commercial & agricultural land parcels across Nepal.", "Verified Land Parcels"),
+        CollateralCategory.ResidentialProperty => ("bi-house-door-fill", "Houses, luxury villas, modern apartments and family residences.", "Residential Estates"),
+        CollateralCategory.Commercial => ("bi-building-fill", "Office complexes, retail spaces, commercial land & industrial properties.", "Commercial & Industrial"),
+        CollateralCategory.Vehicle => ("bi-car-front-fill", "Automobiles, commercial vehicles, construction equipment & utility fleets.", "Vehicles & Fleets"),
+        _ => ("bi-layers-fill", "Browse all bank collateral assets in this category.", "Collateral Assets")
+    };
+}
+
+<!-- Bootstrap Icons -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<div class="container-fluid py-4 px-4 px-lg-5">
+
+    <!-- Category Showcase Hero Banner (Light Warm Theme) -->
+    <div class="card border-0 rounded-4 shadow-sm p-4 p-md-5 mb-4 collateral-hero bg-white"
+         style="position: relative; overflow: hidden; border: 1px solid rgba(0, 0, 0, 0.05) !important;">
+        <div class="collateral-hero-glow"></div>
+        <div class="position-relative" style="z-index: 2;">
+            <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+                <span class="badge rounded-pill px-3 py-1.5 fw-bold"
+                      style="background-color: var(--bs-pill-bg); color: var(--bs-pill-text); border: 1px solid rgba(255, 107, 87, 0.2); font-size: 0.78rem;">
+                    <i class="bi @iconClass me-1"></i>@bannerTagline
+                </span>
+                <span class="text-muted small">• Siddhartha Bank Verified Collateral</span>
+            </div>
+
+            <h1 class="display-5 fw-bold mb-2 text-dark" style="letter-spacing: -0.03em;">
+                @selectedName <span style="color: #ff6b57;">Auctions</span>
+            </h1>
+            <p class="text-muted fs-6 mb-4" style="max-width: 680px; line-height: 1.6;">
+                @bannerDesc
+            </p>
+
+            <!-- Collateral Category Switcher Tabs -->
+            <div class="d-flex flex-wrap gap-2 pt-1">
+                <a href="/AuctionCatalog/Collateral/Land"
+                   class="btn rounded-pill px-3.5 py-2 fw-semibold cat-pill-btn @(selectedCat == CollateralCategory.Land ? "active" : "")">
+                    <i class="bi bi-geo me-1.5"></i>Land
+                </a>
+                <a href="/AuctionCatalog/Collateral/ResidentialProperty"
+                   class="btn rounded-pill px-3.5 py-2 fw-semibold cat-pill-btn @(selectedCat == CollateralCategory.ResidentialProperty ? "active" : "")">
+                    <i class="bi bi-house-door me-1.5"></i>Residential Property
+                </a>
+                <a href="/AuctionCatalog/Collateral/Commercial"
+                   class="btn rounded-pill px-3.5 py-2 fw-semibold cat-pill-btn @(selectedCat == CollateralCategory.Commercial ? "active" : "")">
+                    <i class="bi bi-building me-1.5"></i>Commercial
+                </a>
+                <a href="/AuctionCatalog/Collateral/Vehicle"
+                   class="btn rounded-pill px-3.5 py-2 fw-semibold cat-pill-btn @(selectedCat == CollateralCategory.Vehicle ? "active" : "")">
+                    <i class="bi bi-car-front me-1.5"></i>Vehicle
+                </a>
+                <a href="/AuctionCatalog"
+                   class="btn rounded-pill px-3.5 py-2 fw-semibold cat-pill-btn all-cat-btn">
+                    <i class="bi bi-grid me-1.5"></i>View All Auctions
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Master Search Bar -->
+    <form method="get" asp-controller="AuctionCatalog" asp-action="Collateral" asp-route-id="@selectedCat.ToString()"
+          class="card border-0 shadow-sm mb-4 rounded-4 search-panel-card">
+        <div class="card-body p-3">
+            <div class="d-flex gap-2 flex-wrap flex-md-nowrap">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0 rounded-start-pill ps-3 border-light-subtle">
+                        <i class="bi bi-search text-muted"></i>
+                    </span>
+                    <input type="text" name="SearchTerm" value="@filter.SearchTerm"
+                           class="form-control border-start-0 shadow-none ps-0 border-light-subtle bg-white"
+                           placeholder="Search within @selectedName (ID, location, keyword...)" />
+                </div>
+
+                <button type="submit"
+                        class="btn btn-coral px-4 fw-semibold text-nowrap d-inline-flex align-items-center justify-content-center">
+                    Search
+                </button>
+
+                <button type="button"
+                        class="btn btn-light border border-light-subtle rounded-pill px-3 text-nowrap position-relative bg-white"
+                        data-bs-toggle="collapse" data-bs-target="#advancedFilters"
+                        aria-expanded="@(hasAdvancedFilters ? "true" : "false")" aria-controls="advancedFilters">
+                    <i class="bi bi-sliders me-1 text-muted"></i> Filters
+                    @if (hasAdvancedFilters)
+                    {
+                        <span class="position-absolute top-0 start-100 translate-middle p-1.5 bg-primary border border-light rounded-circle">
+                            <span class="visually-hidden">Active filters</span>
+                        </span>
+                    }
+                </button>
+
+                @if (!string.IsNullOrWhiteSpace(filter.SearchTerm) || hasAdvancedFilters)
+                {
+                    <a asp-controller="AuctionCatalog" asp-action="Collateral" asp-route-id="@selectedCat.ToString()"
+                       class="btn btn-light border border-light-subtle rounded-pill px-3 text-nowrap d-flex align-items-center justify-content-center bg-white text-muted"
+                       title="Clear all filters">
+                        <i class="bi bi-x-lg"></i>
+                    </a>
+                }
+            </div>
+        </div>
+    </form>
+
+    <!-- Advanced Filters Collapse -->
+    <div class="collapse @(hasAdvancedFilters ? "show" : "") mb-4" id="advancedFilters">
+        <partial name="_FilterPanel" model="filter" />
+    </div>
+
+    <!-- Results Subheading -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div class="text-muted fs-6">
+            Showing <strong class="text-dark">@Model.Items.Count of @Model.TotalCount</strong> listing@(Model.TotalCount == 1 ? "" : "s") in <span class="badge bg-light text-dark border px-2.5 py-1 rounded-pill">@selectedName</span>
+        </div>
+    </div>
+
+    <!-- Results Grid -->
+    @if (Model.Items.Any())
+    {
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-5">
+            @foreach (var item in Model.Items)
+            {
+                <div class="col">
+                    <div class="card h-100 border-0 shadow-sm rounded-4 auction-card overflow-hidden bg-white">
+
+                        <!-- Thumbnail Wrapper with aspect-ratio protection -->
+                        <div class="position-relative overflow-hidden image-container bg-light">
+                            @if (!string.IsNullOrEmpty(item.ThumbnailUrl))
+                            {
+                                <img src="@item.ThumbnailUrl" class="w-100 h-100 auction-img" alt="@item.Title" />
+                            }
+                            else
+                            {
+                                <div class="d-flex align-items-center justify-content-center h-100">
+                                    <i class="bi bi-image text-muted fs-1 opacity-25"></i>
+                                </div>
+                            }
+
+                            @{
+                                var badgeClass = item.Status switch
+                                {
+                                    Auction_Portal_Clone.Models.AuctionStatus.Draft => "bg-secondary text-white",
+                                    Auction_Portal_Clone.Models.AuctionStatus.Upcoming => "bg-info text-dark",
+                                    Auction_Portal_Clone.Models.AuctionStatus.Active => "bg-success text-white",
+                                    Auction_Portal_Clone.Models.AuctionStatus.Closed => "bg-dark text-white",
+                                    _ => "bg-primary text-white"
+                                };
+                            }
+                            <div class="position-absolute top-0 end-0 m-3">
+                                <span class="badge @badgeClass rounded-pill px-3 py-2 fw-semibold shadow-sm">
+                                    @item.Status
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Card Body -->
+                        <div class="card-body d-flex flex-column p-4">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <span class="text-uppercase fs-7 text-muted fw-bold tracking-wider">
+                                    @item.CategoryName
+                                </span>
+                                <span class="badge bg-light text-dark border px-2.5 py-1 rounded-pill fw-semibold" style="font-size: 0.7rem;">
+                                    <i class="bi @iconClass me-1 text-primary"></i>@item.CollateralCategoryName
+                                </span>
+                            </div>
+
+                            <h5 class="card-title fw-bold text-dark mb-2 text-truncate-2" title="@item.Title">
+                                @item.Title
+                            </h5>
+
+                            <p class="card-text text-muted small mb-3 d-flex align-items-center">
+                                <i class="bi bi-geo-alt-fill text-primary me-1 opacity-75"></i>
+                                <span class="text-truncate">@item.MunicipalityName, @item.DistrictName</span>
+                            </p>
+
+                            <div class="mt-auto pt-3 border-top border-light-subtle">
+                                <div class="d-flex justify-content-between align-items-end mb-3">
+                                    <div>
+                                        <span class="d-block text-muted fs-7">Reserve Price</span>
+                                        <span class="fw-bold text-dark fs-5">
+                                            Rs. @item.ReservePrice.ToString("N0", CultureInfo.InvariantCulture)
+                                        </span>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="d-block text-muted fs-7">Ends</span>
+                                        <span class="small fw-semibold text-dark">
+                                            @item.AuctionEndDate.ToLocalTime().ToString("d MMM yyyy")
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <a asp-controller="AuctionCatalog" asp-action="Details" asp-route-id="@item.Id"
+                                   class="btn btn-outline-coral w-100 rounded-pill py-2.5 fw-semibold transition-btn">
+                                    View Details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Pagination -->
+        @if (totalPages > 1)
+        {
+            <nav aria-label="Collateral catalog pagination" class="mt-4 mb-5">
+                <ul class="pagination justify-content-center gap-1">
+                    @for (int i = 1; i <= totalPages; i++)
+                    {
+                        <li class="page-item @(i == Model.Page ? "active" : "")">
+                            <a class="page-link rounded-3 border-0 shadow-sm px-3 py-2 fw-medium @(i == Model.Page ? "bg-primary text-white" : "text-dark bg-white")"
+                               asp-controller="AuctionCatalog" asp-action="Collateral" asp-route-id="@selectedCat.ToString()"
+                               asp-route-SearchTerm="@filter.SearchTerm"
+                               asp-route-CategoryId="@filter.CategoryId"
+                               asp-route-ProvinceId="@filter.ProvinceId"
+                               asp-route-DistrictId="@filter.DistrictId"
+                               asp-route-MunicipalityId="@filter.MunicipalityId"
+                               asp-route-MinPrice="@filter.MinPrice"
+                               asp-route-MaxPrice="@filter.MaxPrice"
+                               asp-route-AuctionDateFrom="@filter.AuctionDateFrom?.ToString("yyyy-MM-dd")"
+                               asp-route-AuctionDateTo="@filter.AuctionDateTo?.ToString("yyyy-MM-dd")"
+                               asp-route-Page="@i"
+                               asp-route-PageSize="@filter.PageSize">
+                                @i
+                            </a>
+                        </li>
+                    }
+                </ul>
+            </nav>
+        }
+    }
+    else
+    {
+        <div class="text-center py-5 px-4 my-5 bg-white rounded-4 shadow-sm border border-light-subtle">
+            <div class="d-inline-flex align-items-center justify-content-center bg-light rounded-circle mb-3"
+                 style="width:80px;height:80px;">
+                <i class="bi @iconClass fs-1 text-muted opacity-50"></i>
+            </div>
+            <h4 class="mb-1 fw-bold text-dark">No @selectedName auctions found</h4>
+            <p class="text-muted mb-4 small">Try clearing your search query or removing location/price filters.</p>
+            <a asp-controller="AuctionCatalog" asp-action="Collateral" asp-route-id="@selectedCat.ToString()"
+               class="btn btn-coral rounded-pill px-4 fw-semibold shadow-sm">
+                Clear Filters
+            </a>
+        </div>
+    }
+</div>
+
+<style>
+    /* Collateral Hero Styling (Light Theme) */
+    .collateral-hero {
+        position: relative;
+        background-color: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.05) !important;
+    }
+    .collateral-hero-glow {
+        position: absolute;
+        width: 380px;
+        height: 380px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(255, 107, 87, 0.12) 0%, rgba(250, 247, 242, 0) 70%);
+        top: -80px;
+        right: -60px;
+        filter: blur(35px);
+        pointer-events: none;
+    }
+
+    .cat-pill-btn {
+        background: #ffffff;
+        color: #444444;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        font-size: 0.85rem;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);
+        transition: all 0.2s ease;
+    }
+    .cat-pill-btn:hover {
+        background: #fff5f2;
+        color: #ff6b57;
+        border-color: rgba(255, 107, 87, 0.35);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(255, 107, 87, 0.12);
+    }
+    .cat-pill-btn.active {
+        background: #ff6b57;
+        color: #ffffff;
+        border-color: #ff6b57;
+        box-shadow: 0 4px 14px rgba(255, 107, 87, 0.35);
+    }
+    .all-cat-btn {
+        background: #faf7f2;
+        color: #666666;
+        border: 1.5px dashed rgba(0, 0, 0, 0.15);
+    }
+    .all-cat-btn:hover {
+        background: #ffffff;
+        color: #ff6b57;
+        border-color: #ff6b57;
+    }
+
+    .tracking-wider { letter-spacing: 0.08em; }
+    .tracking-tight { letter-spacing: -0.025em; }
+    .fs-7 { font-size: 0.75rem; }
+
+    .text-truncate-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        height: 2.8rem;
+    }
+
+    .search-panel-card {
+        background-color: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.04) !important;
+    }
+
+    .form-control:focus {
+        border-color: var(--bs-primary) !important;
+        box-shadow: 0 0 0 3px rgba(255, 107, 87, 0.15) !important;
+    }
+
+    .auction-card {
+        border: 1px solid rgba(0, 0, 0, 0.04) !important;
+        transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+    }
+    .auction-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.06) !important;
+    }
+
+    .image-container {
+        height: 220px;
+        width: 100%;
+    }
+
+    .auction-img {
+        object-fit: cover;
+        object-position: center;
+        transition: transform 0.5s ease;
+    }
+    .auction-card:hover .auction-img {
+        transform: scale(1.05);
+    }
+
+    .btn-outline-coral {
+        color: var(--bs-primary);
+        border: 1.5px solid var(--bs-primary);
+        background-color: transparent;
+        transition: all 0.2s ease-in-out;
+    }
+    .btn-outline-coral:hover {
+        background-color: var(--bs-primary);
+        color: #fff;
+        border-color: var(--bs-primary);
+        box-shadow: 0 4px 12px rgba(255, 107, 87, 0.25);
+    }
+
+    .pagination .page-item.active .page-link {
+        background-color: var(--bs-primary) !important;
+        color: #fff !important;
+        box-shadow: 0 4px 12px rgba(255, 107, 87, 0.25);
+    }
+    .pagination .page-link:hover {
+        background-color: #ffe5d9;
+        color: var(--bs-primary);
+    }
+</style>

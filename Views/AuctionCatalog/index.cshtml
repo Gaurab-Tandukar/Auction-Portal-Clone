@@ -7,7 +7,7 @@
     var filter = ViewData["Filter"] as Auction_Portal_Clone.DTO.AuctionItemFilterDTO
                  ?? new Auction_Portal_Clone.DTO.AuctionItemFilterDTO();
 
-    bool hasAdvancedFilters = filter.CategoryId.HasValue || filter.ProvinceId.HasValue
+    bool hasAdvancedFilters = filter.CategoryId.HasValue || filter.CollateralCategory.HasValue || filter.ProvinceId.HasValue
         || filter.DistrictId.HasValue || filter.MunicipalityId.HasValue
         || filter.MinPrice.HasValue || filter.MaxPrice.HasValue
         || filter.AuctionDateFrom.HasValue || filter.AuctionDateTo.HasValue;
@@ -46,7 +46,7 @@
                         </span>
                         <input type="text" name="SearchTerm" value="@filter.SearchTerm"
                                class="form-control border-start-0 shadow-none ps-0 border-light-subtle bg-white"
-                               placeholder="Search by ID, title, description, category, location..." />
+                               placeholder="Search by ID, title, description, auction category, collateral, location..." />
                     </div>
 
                     <button type="submit"
@@ -126,9 +126,14 @@
 
                             <!-- Card Body -->
                             <div class="card-body d-flex flex-column p-4">
-                                <span class="text-uppercase fs-7 text-muted fw-bold tracking-wider mb-2">
-                                    @item.CategoryName
-                                </span>
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <span class="text-uppercase fs-7 text-muted fw-bold tracking-wider">
+                                        @item.CategoryName
+                                    </span>
+                                    <span class="badge bg-light text-dark border px-2.5 py-1 rounded-pill fw-semibold" style="font-size: 0.7rem;">
+                                        <i class="bi bi-layers me-1 text-primary"></i>@item.CollateralCategoryName
+                                    </span>
+                                </div>
 
                                 <h5 class="card-title fw-bold text-dark mb-2 text-truncate-2" title="@item.Title">
                                     @item.Title
@@ -176,7 +181,9 @@
                             <li class="page-item @(i == Model.Page ? "active" : "")">
                                 <a class="page-link rounded-3 border-0 shadow-sm px-3 py-2 fw-medium @(i == Model.Page ? "bg-primary text-white" : "text-dark bg-white")"
                                    asp-controller="AuctionCatalog" asp-action="Index" asp-route-SearchTerm="@filter.SearchTerm"
-                                   asp-route-CategoryId="@filter.CategoryId" asp-route-ProvinceId="@filter.ProvinceId"
+                                   asp-route-CategoryId="@filter.CategoryId"
+                                   asp-route-CollateralCategory="@filter.CollateralCategory"
+                                   asp-route-ProvinceId="@filter.ProvinceId"
                                    asp-route-DistrictId="@filter.DistrictId" asp-route-MunicipalityId="@filter.MunicipalityId"
                                    asp-route-MinPrice="@filter.MinPrice" asp-route-MaxPrice="@filter.MaxPrice"
                                    asp-route-AuctionDateFrom="@filter.AuctionDateFrom?.ToString("yyyy-MM-dd")"

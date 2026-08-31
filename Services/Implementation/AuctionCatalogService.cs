@@ -1,4 +1,4 @@
-﻿using Auction_Portal_Clone.Data;
+using Auction_Portal_Clone.Data;
 using Auction_Portal_Clone.DTO;
 using Auction_Portal_Clone.Models;
 using Auction_Portal_Clone.Services.Interfaces;
@@ -50,6 +50,7 @@ namespace Auction_Portal_Clone.Services.Implementation
                     a.AuctionStartDate,
                     a.AuctionEndDate,
                     a.Status,
+                    a.CollateralCategory,
                     CategoryName = a.Category.Name,
                     ThumbnailUrl = a.Attachments
                         .Where(att => att.FileType == FileType.Image)
@@ -68,6 +69,8 @@ namespace Auction_Portal_Clone.Services.Implementation
                 AuctionStartDate = a.AuctionStartDate,
                 AuctionEndDate = a.AuctionEndDate,
                 Status = AuctionStatusResolver.Resolve(a.Status, a.AuctionStartDate, a.AuctionEndDate),
+                CollateralCategory = a.CollateralCategory,
+                CollateralCategoryName = a.CollateralCategory.ToDisplayName(),
                 CategoryName = a.CategoryName,
                 ThumbnailUrl = a.ThumbnailUrl
             }).ToList();
@@ -115,6 +118,8 @@ namespace Auction_Portal_Clone.Services.Implementation
                 AuctionStartDate = item.AuctionStartDate,
                 AuctionEndDate = item.AuctionEndDate,
                 Status = AuctionStatusResolver.Resolve(item.Status, item.AuctionStartDate, item.AuctionEndDate),
+                CollateralCategory = item.CollateralCategory,
+                CollateralCategoryName = item.CollateralCategory.ToDisplayName(),
                 CategoryId = item.CategoryId,
                 CategoryName = item.Category.Name,
                 MunicipalityId = item.MunicipalityId,
