@@ -2,6 +2,7 @@
 @{
     ViewData["Title"] = Model.Title;
     bool isAuthenticated = User.Identity?.IsAuthenticated == true;
+    bool isBankAdmin = User.IsInRole("BankStaff");
     bool canBid = Model.Status == Auction_Portal_Clone.Models.AuctionStatus.Active;
 
     var startUtc = DateTime.SpecifyKind(Model.AuctionStartDate, DateTimeKind.Utc).ToString("o");
@@ -12,7 +13,7 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
 <div class="container-fluid py-4 px-3 px-lg-5" style="max-width: 1400px; margin: 0 auto;">
-    
+
     <!-- Top Navigation Breadcrumb / Back -->
     <div class="d-flex align-items-center justify-content-between mb-4">
         <a asp-action="Index" class="btn btn-sm btn-light border rounded-pill px-3 py-2 text-secondary shadow-sm">
@@ -70,6 +71,16 @@
         <div class="col-lg-8">
 
             <!-- ─── 1. Enhanced Image Gallery (Supports Landscape & Portrait flawlessly) ─── -->
+            <div class="gallery-stage">
+            <div class="gallery-mode-bar" role="group" aria-label="Image zoom mode">
+                <span class="gallery-mode-label">Image view</span>
+                <button type="button" class="gallery-mode-btn active" data-gallery-mode="modal">
+                    <i class="bi bi-arrows-fullscreen"></i> Default zoom
+                </button>
+                <button type="button" class="gallery-mode-btn" data-gallery-mode="hover">
+                    <i class="bi bi-search"></i> Hover zoom
+                </button>
+            </div>
             <div class="card border-0 shadow-sm mb-4 rounded-4 overflow-hidden gallery-card">
                 @if (Model.ImageUrls.Any())
                 {
@@ -82,12 +93,12 @@
                                     <div class="gallery-viewport">
                                         <!-- Ambient Backdrop Blur (Eliminates harsh white cutoffs for portrait images) -->
                                         <div class="gallery-ambient-bg" style="background-image: url('@imgUrl');"></div>
-                                        
+
                                         <!-- Main Sharp Image (Contained & fully visible regardless of aspect ratio) -->
-                                        <img src="@imgUrl" class="gallery-main-img" alt="@Model.Title"
-                                             data-bs-toggle="modal" data-bs-target="#imageZoomModal"
-                                             data-zoom-src="@imgUrl" title="Click to view full size" />
-                                        
+                                        <img src="@imgUrl" class="gallery-main-img" alt="@Model.Title" data-bs-toggle="modal"
+                                             data-bs-target="#imageZoomModal" data-zoom-src="@imgUrl"
+                                             title="Click to view full size" />
+
                                         <button type="button" class="gallery-zoom-btn" data-bs-toggle="modal"
                                                 data-bs-target="#imageZoomModal" data-zoom-src="@imgUrl"
                                                 title="View full resolution">
@@ -100,10 +111,12 @@
 
                         @if (Model.ImageUrls.Count > 1)
                         {
-                            <button class="carousel-control-prev gallery-arrow" type="button" data-bs-target="#itemCarousel" data-bs-slide="prev">
+                            <button class="carousel-control-prev gallery-arrow" type="button" data-bs-target="#itemCarousel"
+                                    data-bs-slide="prev">
                                 <span class="carousel-control-prev-icon"></span>
                             </button>
-                            <button class="carousel-control-next gallery-arrow" type="button" data-bs-target="#itemCarousel" data-bs-slide="next">
+                            <button class="carousel-control-next gallery-arrow" type="button" data-bs-target="#itemCarousel"
+                                    data-bs-slide="next">
                                 <span class="carousel-control-next-icon"></span>
                             </button>
                         }
@@ -116,8 +129,7 @@
                             @for (int i = 0; i < Model.ImageUrls.Count; i++)
                             {
                                 <button type="button" class="gallery-thumb-btn @(i == 0 ? "active" : "")"
-                                        data-bs-target="#itemCarousel" data-bs-slide-to="@i"
-                                        aria-label="Slide @(i + 1)">
+                                        data-bs-target="#itemCarousel" data-bs-slide-to="@i" aria-label="Slide @(i + 1)">
                                     <img src="@Model.ImageUrls[i]" alt="Thumbnail @(i + 1)" />
                                 </button>
                             }
@@ -133,6 +145,10 @@
                         </div>
                     </div>
                 }
+            </div>
+            <div class="hover-zoom-panel" id="hoverZoomPanel" aria-hidden="true">
+                <span class="hover-zoom-caption">Zoomed view</span>
+            </div>
             </div>
 
             <!-- ─── 2. Title & Meta Summary ─── -->
@@ -160,569 +176,734 @@
                     </h2>
                 </div>
                 <div class="card-body px-4 pb-4 pt-3">
-                    <p class="text-dark mb-0 lh-lg" style="white-space: pre-line; font-size: 0.95rem;">@Model.Description</p>
-                </div>
-            </div>
-
-            <!-- ─── 4. Document Vault (Replaced ugly nested iframe with Clean Modern Vault Cards) ─── -->
-            @if (Model.DocumentUrls.Any())
-            {
-                <div class="card border-0 shadow-sm mb-4 rounded-4 overflow-hidden doc-vault-card">
-                    <div class="card-header bg-transparent border-0 pt-4 px-4 pb-1 d-flex align-items-center justify-content-between">
-                        <div>
-                            <h2 class="h5 mb-1 fw-bold text-dark d-flex align-items-center">
-                                <i class="bi bi-shield-lock-fill me-2 text-primary"></i>Official Document Vault
-                            </h2>
-                            <p class="text-muted small mb-0">Verified legal notices, valuation reports & auction disclosures.</p>
-                        </div>
-                        <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-1.5 rounded-pill fw-bold small">
-                            @Model.DocumentUrls.Count Available
-                        </span>
+                    <p class="text-dark mb-0 lh-lg" style="white-space: pre-line; font-size: 0.95rem;">
+                        @Model.Description</p>
                     </div>
-                    
-                    <div class="card-body px-4 pb-4 pt-3">
-                        <div class="row g-3">
-                            @for (int i = 0; i < Model.DocumentUrls.Count; i++)
+                </div>
+
+                <!-- ─── 4. Document Vault (Replaced ugly nested iframe with Clean Modern Vault Cards) ─── -->
+                @if (Model.DocumentUrls.Any())
+                {
+                    <div class="card border-0 shadow-sm mb-4 rounded-4 overflow-hidden doc-vault-card">
+                        <div
+                            class="card-header bg-transparent border-0 pt-4 px-4 pb-1 d-flex align-items-center justify-content-between">
+                            <div>
+                                <h2 class="h5 mb-1 fw-bold text-dark d-flex align-items-center">
+                                    <i class="bi bi-shield-lock-fill me-2 text-primary"></i>Official Document Vault
+                                </h2>
+                                <p class="text-muted small mb-0">Verified legal notices, valuation reports & auction
+                                    disclosures.</p>
+                                </div>
+                                <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-1.5 rounded-pill fw-bold small">
+                                    @Model.DocumentUrls.Count Available
+                                </span>
+                            </div>
+
+                            <div class="card-body px-4 pb-4 pt-3">
+                                <div class="row g-3">
+                                    @for (int i = 0; i < Model.DocumentUrls.Count; i++)
+                                    {
+                                        var doc = Model.DocumentUrls[i];
+                                        <div class="col-md-6">
+                                            <div class="doc-card h-100 p-3 rounded-4 border d-flex flex-column justify-content-between">
+                                                <div class="d-flex align-items-start gap-3 mb-3">
+                                                    <div class="doc-icon-wrapper">
+                                                        <i class="bi bi-file-earmark-pdf-fill"></i>
+                                                    </div>
+                                                    <div class="flex-grow-1 min-w-0">
+                                                        <div class="doc-name text-truncate fw-bold text-dark" title="@doc.FileName">
+                                                            @doc.FileName
+                                                        </div>
+                                                        <div class="d-flex align-items-center gap-2 mt-1">
+                                                            <span class="badge bg-light text-secondary border px-2 py-0.5 rounded-pill"
+                                                                  style="font-size: 0.68rem;">PDF Document</span>
+                                                            <span class="text-success small fw-semibold" style="font-size: 0.72rem;">
+                                                                <i class="bi bi-check2-circle me-1"></i>Verified
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="d-flex gap-2 pt-2 border-top">
+                                                    <button type="button"
+                                                            class="btn btn-sm btn-outline-primary rounded-pill flex-grow-1 doc-preview-trigger"
+                                                            data-doc-url="@doc.FileUrl" data-doc-name="@doc.FileName">
+                                                        <i class="bi bi-eye me-1"></i>Preview
+                                                    </button>
+                                                    <a href="@doc.FileUrl" target="_blank" download
+                                                       class="btn btn-sm btn-light border rounded-pill px-3"
+                                                       title="Open / Download in new tab">
+                                                        <i class="bi bi-box-arrow-up-right"></i>
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- ─── 5. Location Map ─── -->
+                    <div class="card border-0 shadow-sm mb-4 rounded-4">
+                        <div class="card-header bg-transparent border-0 pt-4 px-4 pb-0">
+                            <h2 class="h5 mb-0 fw-bold text-dark d-flex align-items-center">
+                                <i class="bi bi-geo-alt me-2 text-primary"></i>Asset Location
+                            </h2>
+                        </div>
+                        <div class="card-body px-4 pb-4 pt-3">
+                            <div id="itemMap" style="height: 320px; width: 100%; border-radius: 0.75rem; overflow: hidden;">
+                            </div>
+                            <div class="text-muted small mt-2">
+                                <i class="bi bi-pin-map-fill me-1 text-primary"></i>
+                                Coordinates: <strong>@Model.Latitude.ToString("F4"), @Model.Longitude.ToString("F4")</strong>
+                                (@Model.MunicipalityName)
+                            </div>
+                        </div>
+                    </div>
+
+                </div><!-- /col-lg-8 -->
+
+
+                <!-- ══════════════════════════════════════════
+             RIGHT COLUMN: Bidding Box & Countdown
+             ══════════════════════════════════════════ -->
+                <div class="col-lg-4">
+                    <div class="card border-0 shadow-sm mb-4 rounded-4 sticky-top" style="top: 1.5rem; z-index: 10;">
+                        <div class="card-body px-4 py-4">
+
+                            <!-- Reserve Price Header -->
+                            <div class="d-flex align-items-baseline justify-content-between mb-1">
+                                <span class="small text-uppercase fw-bold text-muted tracking-wider">Reserve Price</span>
+                                <span class="badge bg-light text-muted border px-2 py-1 rounded-pill"
+                                      style="font-size: 0.7rem;">Starting Bid</span>
+                            </div>
+                            <h2 class="h2 fw-bold text-dark mb-3" style="color: #ff6b57 !important;">
+                                Rs. @Model.ReservePrice.ToString("N2")
+                            </h2>
+
+                            <!-- Live Countdown -->
+                            @if (Model.Status == Auction_Portal_Clone.Models.AuctionStatus.Upcoming ||
+                                 Model.Status == Auction_Portal_Clone.Models.AuctionStatus.Active)
                             {
-                                var doc = Model.DocumentUrls[i];
-                                <div class="col-md-6">
-                                    <div class="doc-card h-100 p-3 rounded-4 border d-flex flex-column justify-content-between">
-                                        <div class="d-flex align-items-start gap-3 mb-3">
-                                            <div class="doc-icon-wrapper">
-                                                <i class="bi bi-file-earmark-pdf-fill"></i>
-                                            </div>
-                                            <div class="flex-grow-1 min-w-0">
-                                                <div class="doc-name text-truncate fw-bold text-dark" title="@doc.FileName">
-                                                    @doc.FileName
-                                                </div>
-                                                <div class="d-flex align-items-center gap-2 mt-1">
-                                                    <span class="badge bg-light text-secondary border px-2 py-0.5 rounded-pill" style="font-size: 0.68rem;">PDF Document</span>
-                                                    <span class="text-success small fw-semibold" style="font-size: 0.72rem;">
-                                                        <i class="bi bi-check2-circle me-1"></i>Verified
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="d-flex gap-2 pt-2 border-top">
-                                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill flex-grow-1 doc-preview-trigger"
-                                                    data-doc-url="@doc.FileUrl" data-doc-name="@doc.FileName">
-                                                <i class="bi bi-eye me-1"></i>Preview
-                                            </button>
-                                            <a href="@doc.FileUrl" target="_blank" download class="btn btn-sm btn-light border rounded-pill px-3" title="Open / Download in new tab">
-                                                <i class="bi bi-box-arrow-up-right"></i>
-                                            </a>
-                                        </div>
+                                <div class="rounded-4 p-3 mb-3 text-center"
+                                     style="background: rgba(255, 107, 87, 0.08); border: 1.5px solid rgba(255, 107, 87, 0.25);">
+                                    <p class="small fw-bold text-uppercase mb-1" style="color:#FF6B57; letter-spacing:0.06em;">
+                                        <i
+                                        class="bi @(Model.Status == Auction_Portal_Clone.Models.AuctionStatus.Upcoming ? "bi-hourglass-split" : "bi-broadcast") me-1"></i>
+                                        @(Model.Status == Auction_Portal_Clone.Models.AuctionStatus.Upcoming ? "Auction Starts In" :
+                            "Live Bidding Ends In")
+                                    </p>
+                                    <div id="countdownTimer" class="fw-bold"
+                                         style="font-size: 1.65rem; letter-spacing: 0.05em; color: #111;">
+                                        --:--:--
                                     </div>
                                 </div>
                             }
-                        </div>
-                    </div>
-                </div>
-            }
+                            else if (Model.Status == Auction_Portal_Clone.Models.AuctionStatus.Closed)
+                            {
+                                <div class="rounded-4 p-3 mb-3 text-center bg-dark bg-opacity-10">
+                                    <p class="small fw-bold text-uppercase mb-0 text-dark">
+                                        <i class="bi bi-flag-fill me-1"></i>Auction Has Closed
+                                    </p>
+                                </div>
+                            }
 
-            <!-- ─── 5. Location Map ─── -->
-            <div class="card border-0 shadow-sm mb-4 rounded-4">
-                <div class="card-header bg-transparent border-0 pt-4 px-4 pb-0">
-                    <h2 class="h5 mb-0 fw-bold text-dark d-flex align-items-center">
-                        <i class="bi bi-geo-alt me-2 text-primary"></i>Asset Location
-                    </h2>
-                </div>
-                <div class="card-body px-4 pb-4 pt-3">
-                    <div id="itemMap" style="height: 320px; width: 100%; border-radius: 0.75rem; overflow: hidden;"></div>
-                    <div class="text-muted small mt-2">
-                        <i class="bi bi-pin-map-fill me-1 text-primary"></i>
-                        Coordinates: <strong>@Model.Latitude.ToString("F4"), @Model.Longitude.ToString("F4")</strong> (@Model.MunicipalityName)
-                    </div>
-                </div>
+                            <!-- Schedule Details -->
+                            <div class="p-3 bg-light rounded-3 mb-3">
+                                <div class="d-flex justify-content-between small text-muted mb-2">
+                                    <span><i class="bi bi-calendar-check me-1 text-primary"></i>Opens</span>
+                                    <span class="text-dark fw-semibold">@Model.AuctionStartDate.ToLocalTime().ToString("d MMM yyyy, HH:mm")</span>
+                                </div>
+                                <div class="d-flex justify-content-between small text-muted">
+                                    <span><i class="bi bi-calendar-x me-1 text-danger"></i>Closes</span>
+                                    <span class="text-dark fw-semibold">@Model.AuctionEndDate.ToLocalTime().ToString("d MMM yyyy, HH:mm")</span>
+                                </div>
+                            </div>
+
+                            @if (!isBankAdmin)
+                            {
+                                <!-- Save / Wishlist Button -->
+                                <div class="mb-3">
+                                    @if (isAuthenticated)
+                                    {
+                                        <button type="button" id="saveBtn"
+                                                class="btn @(Model.IsSavedByCurrentUser ? "btn-coral" : "btn-outline-secondary") w-100 rounded-pill py-2.5 fw-semibold transition">
+                                            <i class="bi @(Model.IsSavedByCurrentUser ? "bi-heart-fill" : "bi-heart") me-1"></i>
+                                            <span id="saveBtnLabel">@(Model.IsSavedByCurrentUser ? "Saved to Wishlist" : "Add to Wishlist")</span>
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <a asp-controller="Login" asp-action="Index"
+                                           asp-route-returnUrl="@Url.Action("Details", "AuctionCatalog", new { id = Model.Id })"
+                                           class="btn btn-outline-secondary w-100 rounded-pill py-2.5 fw-semibold">
+                                            <i class="bi bi-heart me-1"></i>Log in to Save
+                                        </a>
+                                    }
+                                </div>
+
+                                <hr class="my-3 opacity-10" />
+
+                                <!-- Bidding Interaction Form -->
+                                @if (!canBid)
+                                {
+                                    <div class="alert alert-secondary rounded-3 small mb-0 py-2.5 text-center">
+                                        <i class="bi bi-info-circle me-1"></i>
+                                        @(Model.Status == Auction_Portal_Clone.Models.AuctionStatus.Upcoming
+                                            ? "Bidding will open automatically when countdown finishes."
+                                            : Model.Status == Auction_Portal_Clone.Models.AuctionStatus.Closed
+                                                ? "This auction has ended. No further bids are accepted."
+                                                : "Bidding is not open for this item.")
+                                    </div>
+                                }
+                                else if (!isAuthenticated)
+                                {
+                                    <div class="alert alert-light border rounded-3 small mb-2 text-center">
+                                        <i class="bi bi-lock me-1"></i>Identity verification required to place bids.
+                                    </div>
+                                    <a asp-controller="Login" asp-action="Index"
+                                       asp-route-returnUrl="@Url.Action("Details", "AuctionCatalog", new { id = Model.Id })"
+                                       class="btn btn-coral w-100 rounded-pill py-2.5 fw-bold shadow-sm">
+                                        <i class="bi bi-box-arrow-in-right me-1"></i>Log in to Place Bid
+                                    </a>
+                                }
+                                else
+                                {
+                                    @if (Model.HasCurrentUserBid)
+                                    {
+                                        <div
+                                            class="alert alert-success bg-success bg-opacity-10 border-0 rounded-3 small mb-2 text-center text-success fw-semibold">
+                                            <i class="bi bi-check2-circle me-1"></i>You have placed an active bid on this item.
+                                        </div>
+                                    }
+                                    <form asp-controller="Bid" asp-action="Place" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="AuctionItemId" value="@Model.Id" />
+                                        <label class="form-label small text-uppercase fw-bold text-muted tracking-wider">Your Bid Offer
+                                            (NPR)</label>
+                                        <div class="input-group mb-2">
+                                            <span
+                                                class="input-group-text bg-light border-end-0 rounded-start-3 text-muted fw-semibold">Rs.</span>
+                                            <input type="number" name="OfferedAmount"
+                                                   class="form-control rounded-end-3 border-start-0 fw-bold" step="0.01"
+                                                   min="@Model.ReservePrice" value="@Model.ReservePrice" required />
+                                        </div>
+                                        <div class="form-text text-muted small mb-3" style="font-size: 0.75rem;">
+                                            <i class="bi bi-info-circle me-1"></i>Minimum allowable bid is Rs.
+                                            @Model.ReservePrice.ToString("N2").
+                                        </div>
+                                        <button type="submit" class="btn btn-coral w-100 rounded-pill py-2.5 fw-bold shadow-sm">
+                                            <i class="bi bi-hammer me-1"></i>Submit Sealed Bid
+                                        </button>
+                                    </form>
+                                }
+                            }
+
+                            @if (!isBankAdmin)
+                            {
+                                <div class="mt-4 pt-3 border-top text-center">
+                                    <span class="badge bg-light text-muted border px-3 py-1.5 rounded-pill"
+                                          style="font-size: 0.72rem;">
+                                        <i class="bi bi-lock-fill text-success me-1"></i>Bank Escrow Protected Bidding
+                                    </span>
+                                </div>
+                            }
+                        </div>
+                    </div><!-- /col-lg-4 -->
+
+                </div><!-- /row -->
             </div>
 
-        </div><!-- /col-lg-8 -->
-
-
-        <!-- ══════════════════════════════════════════
-             RIGHT COLUMN: Bidding Box & Countdown
-             ══════════════════════════════════════════ -->
-        <div class="col-lg-4">
-            <div class="card border-0 shadow-sm mb-4 rounded-4 sticky-top" style="top: 1.5rem; z-index: 10;">
-                <div class="card-body px-4 py-4">
-                    
-                    <!-- Reserve Price Header -->
-                    <div class="d-flex align-items-baseline justify-content-between mb-1">
-                        <span class="small text-uppercase fw-bold text-muted tracking-wider">Reserve Price</span>
-                        <span class="badge bg-light text-muted border px-2 py-1 rounded-pill" style="font-size: 0.7rem;">Starting Bid</span>
-                    </div>
-                    <h2 class="h2 fw-bold text-dark mb-3" style="color: #ff6b57 !important;">
-                        Rs. @Model.ReservePrice.ToString("N2")
-                    </h2>
-
-                    <!-- Live Countdown -->
-                    @if (Model.Status == Auction_Portal_Clone.Models.AuctionStatus.Upcoming ||
-                         Model.Status == Auction_Portal_Clone.Models.AuctionStatus.Active)
-                    {
-                        <div class="rounded-4 p-3 mb-3 text-center"
-                             style="background: rgba(255, 107, 87, 0.08); border: 1.5px solid rgba(255, 107, 87, 0.25);">
-                            <p class="small fw-bold text-uppercase mb-1" style="color:#FF6B57; letter-spacing:0.06em;">
-                                <i class="bi @(Model.Status == Auction_Portal_Clone.Models.AuctionStatus.Upcoming ? "bi-hourglass-split" : "bi-broadcast") me-1"></i>
-                                @(Model.Status == Auction_Portal_Clone.Models.AuctionStatus.Upcoming ? "Auction Starts In" : "Live Bidding Ends In")
-                            </p>
-                            <div id="countdownTimer" class="fw-bold"
-                                 style="font-size: 1.65rem; letter-spacing: 0.05em; color: #111;">
-                                --:--:--
-                            </div>
-                        </div>
-                    }
-                    else if (Model.Status == Auction_Portal_Clone.Models.AuctionStatus.Closed)
-                    {
-                        <div class="rounded-4 p-3 mb-3 text-center bg-dark bg-opacity-10">
-                            <p class="small fw-bold text-uppercase mb-0 text-dark">
-                                <i class="bi bi-flag-fill me-1"></i>Auction Has Closed
-                            </p>
-                        </div>
-                    }
-
-                    <!-- Schedule Details -->
-                    <div class="p-3 bg-light rounded-3 mb-3">
-                        <div class="d-flex justify-content-between small text-muted mb-2">
-                            <span><i class="bi bi-calendar-check me-1 text-primary"></i>Opens</span>
-                            <span class="text-dark fw-semibold">@Model.AuctionStartDate.ToLocalTime().ToString("d MMM yyyy, HH:mm")</span>
-                        </div>
-                        <div class="d-flex justify-content-between small text-muted">
-                            <span><i class="bi bi-calendar-x me-1 text-danger"></i>Closes</span>
-                            <span class="text-dark fw-semibold">@Model.AuctionEndDate.ToLocalTime().ToString("d MMM yyyy, HH:mm")</span>
-                        </div>
-                    </div>
-
-                    <!-- Save / Wishlist Button -->
-                    <div class="mb-3">
-                        @if (isAuthenticated)
-                        {
-                            <button type="button" id="saveBtn"
-                                    class="btn @(Model.IsSavedByCurrentUser ? "btn-coral" : "btn-outline-secondary") w-100 rounded-pill py-2.5 fw-semibold transition">
-                                <i class="bi @(Model.IsSavedByCurrentUser ? "bi-heart-fill" : "bi-heart") me-1"></i>
-                                <span id="saveBtnLabel">@(Model.IsSavedByCurrentUser ? "Saved to Wishlist" : "Add to Wishlist")</span>
-                            </button>
-                        }
-                        else
-                        {
-                            <a asp-controller="Login" asp-action="Index"
-                               asp-route-returnUrl="@Url.Action("Details", "AuctionCatalog", new { id = Model.Id })"
-                               class="btn btn-outline-secondary w-100 rounded-pill py-2.5 fw-semibold">
-                                <i class="bi bi-heart me-1"></i>Log in to Save
-                            </a>
-                        }
-                    </div>
-
-                    <hr class="my-3 opacity-10" />
-
-                    <!-- Bidding Interaction Form -->
-                    @if (!canBid)
-                    {
-                        <div class="alert alert-secondary rounded-3 small mb-0 py-2.5 text-center">
-                            <i class="bi bi-info-circle me-1"></i>
-                            @(Model.Status == Auction_Portal_Clone.Models.AuctionStatus.Upcoming
-                                ? "Bidding will open automatically when countdown finishes."
-                                : Model.Status == Auction_Portal_Clone.Models.AuctionStatus.Closed
-                                    ? "This auction has ended. No further bids are accepted."
-                                    : "Bidding is not open for this item.")
-                        </div>
-                    }
-                    else if (!isAuthenticated)
-                    {
-                        <div class="alert alert-light border rounded-3 small mb-2 text-center">
-                            <i class="bi bi-lock me-1"></i>Identity verification required to place bids.
-                        </div>
-                        <a asp-controller="Login" asp-action="Index"
-                           asp-route-returnUrl="@Url.Action("Details", "AuctionCatalog", new { id = Model.Id })"
-                           class="btn btn-coral w-100 rounded-pill py-2.5 fw-bold shadow-sm">
-                            <i class="bi bi-box-arrow-in-right me-1"></i>Log in to Place Bid
-                        </a>
-                    }
-                    else
-                    {
-                        @if (Model.HasCurrentUserBid)
-                        {
-                            <div class="alert alert-success bg-success bg-opacity-10 border-0 rounded-3 small mb-2 text-center text-success fw-semibold">
-                                <i class="bi bi-check2-circle me-1"></i>You have placed an active bid on this item.
-                            </div>
-                        }
-                        <form asp-controller="Bid" asp-action="Place" method="post">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="AuctionItemId" value="@Model.Id" />
-                            <label class="form-label small text-uppercase fw-bold text-muted tracking-wider">Your Bid Offer (NPR)</label>
-                            <div class="input-group mb-2">
-                                <span class="input-group-text bg-light border-end-0 rounded-start-3 text-muted fw-semibold">Rs.</span>
-                                <input type="number" name="OfferedAmount" class="form-control rounded-end-3 border-start-0 fw-bold"
-                                       step="0.01" min="@Model.ReservePrice" value="@Model.ReservePrice" required />
-                            </div>
-                            <div class="form-text text-muted small mb-3" style="font-size: 0.75rem;">
-                                <i class="bi bi-info-circle me-1"></i>Minimum allowable bid is Rs. @Model.ReservePrice.ToString("N2").
-                            </div>
-                            <button type="submit" class="btn btn-coral w-100 rounded-pill py-2.5 fw-bold shadow-sm">
-                                <i class="bi bi-hammer me-1"></i>Submit Sealed Bid
-                            </button>
-                        </form>
-                    }
-
-                    <div class="mt-4 pt-3 border-top text-center">
-                        <span class="badge bg-light text-muted border px-3 py-1.5 rounded-pill" style="font-size: 0.72rem;">
-                            <i class="bi bi-lock-fill text-success me-1"></i>Bank Escrow Protected Bidding
-                        </span>
-                    </div>
-
-                </div>
-            </div>
-        </div><!-- /col-lg-4 -->
-
-    </div><!-- /row -->
-</div>
-
-<!-- ══════════════════════════════════════════
+            <!-- ══════════════════════════════════════════
      MODAL 1: Clean Document Viewer Modal
      ══════════════════════════════════════════ -->
-<div class="modal fade" id="docViewerModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered" style="height: 90vh;">
-        <div class="modal-content rounded-4 border-0 shadow-lg h-100 d-flex flex-column">
-            <div class="modal-header border-bottom py-3 px-4 bg-light rounded-top-4 justify-content-between">
-                <div class="d-flex align-items-center gap-2">
-                    <i class="bi bi-file-earmark-pdf-fill text-danger fs-4"></i>
-                    <div>
-                        <h5 class="modal-title fw-bold text-dark mb-0" id="docViewerTitle">Document Preview</h5>
-                        <div class="text-muted small" style="font-size: 0.75rem;">Siddhartha Bank Verified Legal Archive</div>
+            <div class="modal fade" id="docViewerModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-xl modal-dialog-centered" style="height: 90vh;">
+                    <div class="modal-content rounded-4 border-0 shadow-lg h-100 d-flex flex-column">
+                        <div class="modal-header border-bottom py-3 px-4 bg-light rounded-top-4 justify-content-between">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-file-earmark-pdf-fill text-danger fs-4"></i>
+                                <div>
+                                    <h5 class="modal-title fw-bold text-dark mb-0" id="docViewerTitle">Document Preview</h5>
+                                    <div class="text-muted small" style="font-size: 0.75rem;">Siddhartha Bank Verified Legal Archive
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <a id="docViewerDownloadBtn" href="#" target="_blank" download
+                                   class="btn btn-sm btn-outline-dark rounded-pill px-3">
+                                    <i class="bi bi-download me-1"></i>Download
+                                </a>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                        </div>
+                        <div class="modal-body p-0 flex-grow-1 bg-dark bg-opacity-10 position-relative">
+                            <iframe id="docViewerFrame" src="" style="width:100%; height:100%; border:0;"
+                                    title="Document Viewer"></iframe>
+                        </div>
                     </div>
                 </div>
-                <div class="d-flex align-items-center gap-2">
-                    <a id="docViewerDownloadBtn" href="#" target="_blank" download class="btn btn-sm btn-outline-dark rounded-pill px-3">
-                        <i class="bi bi-download me-1"></i>Download
-                    </a>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
             </div>
-            <div class="modal-body p-0 flex-grow-1 bg-dark bg-opacity-10 position-relative">
-                <iframe id="docViewerFrame" src="" style="width:100%; height:100%; border:0;" title="Document Viewer"></iframe>
-            </div>
-        </div>
-    </div>
-</div>
 
-<!-- ══════════════════════════════════════════
+            <!-- ══════════════════════════════════════════
      MODAL 2: Image Fullscreen Zoom Modal
      ══════════════════════════════════════════ -->
-<div class="modal fade" id="imageZoomModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-xl">
-        <div class="modal-content bg-transparent border-0">
-            <div class="modal-header border-0 pb-0 justify-content-end">
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body text-center p-2">
-                <img id="zoomModalImg" src="" alt="Fullscreen Preview" class="img-fluid rounded-4 shadow-lg"
-                     style="max-height: 85vh; object-fit: contain;" />
-            </div>
-        </div>
-    </div>
-</div>
+            <div class="modal fade" id="imageZoomModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-xl">
+                    <div class="modal-content bg-transparent border-0">
+                        <div class="modal-header border-0 pb-0 justify-content-end">
+                            <div class="image-zoom-controls me-2">
+                                <button type="button" class="btn btn-sm btn-dark" id="zoomOutBtn" title="Zoom out"><i
+                                    class="bi bi-dash-lg"></i><span class="visually-hidden">Zoom out</span></button>
+                                    <button type="button" class="btn btn-sm btn-dark" id="zoomResetBtn" title="Reset zoom"><i
+                                        class="bi bi-arrow-counterclockwise"></i><span class="visually-hidden">Reset
+                                        zoom</span></button>
+                                        <button type="button" class="btn btn-sm btn-dark" id="zoomInBtn" title="Zoom in"><i
+                                            class="bi bi-plus-lg"></i><span class="visually-hidden">Zoom in</span></button>
+                                        </div>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                                                aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body text-center p-2">
+                                        <img id="zoomModalImg" src="" alt="Fullscreen Preview" class="img-fluid rounded-4 shadow-lg"
+                                             style="max-height: 85vh; object-fit: contain;" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-@section Scripts {
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script>
-        // Leaflet Map Initialization
-        const map = L.map('itemMap', { scrollWheelZoom: false }).setView([@Model.Latitude, @Model.Longitude], 15);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(map);
-        L.marker([@Model.Latitude, @Model.Longitude]).addTo(map);
-        setTimeout(() => map.invalidateSize(), 250);
+                        @section Scripts {
+                            <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+                            <script>
+                                // Leaflet Map Initialization
+                                const map = L.map('itemMap', { scrollWheelZoom: false }).setView([@Model.Latitude, @Model.Longitude], 15);
+                                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                                attribution: '&copy; OpenStreetMap contributors'
+                                }).addTo(map);
+                                L.marker([@Model.Latitude, @Model.Longitude]).addTo(map);
+                                setTimeout(() => map.invalidateSize(), 250);
 
-        // Document Viewer Modal Controller
-        const docViewerModal = new bootstrap.Modal(document.getElementById('docViewerModal'));
-        const docFrame = document.getElementById('docViewerFrame');
-        const docTitle = document.getElementById('docViewerTitle');
-        const docDownload = document.getElementById('docViewerDownloadBtn');
+                                // Document Viewer Modal Controller
+                                const docViewerModal = new bootstrap.Modal(document.getElementById('docViewerModal'));
+                                const docFrame = document.getElementById('docViewerFrame');
+                                const docTitle = document.getElementById('docViewerTitle');
+                                const docDownload = document.getElementById('docViewerDownloadBtn');
 
-        document.querySelectorAll('.doc-preview-trigger').forEach(btn => {
-            btn.addEventListener('click', function () {
-                const url = this.dataset.docUrl;
-                const name = this.dataset.docName;
-                docTitle.textContent = name || 'Document Preview';
-                docFrame.src = url;
-                docDownload.href = url;
-                docViewerModal.show();
-            });
-        });
+                                document.querySelectorAll('.doc-preview-trigger').forEach(btn => {
+                                btn.addEventListener('click', function () {
+                                const url = this.dataset.docUrl;
+                                const name = this.dataset.docName;
+                                docTitle.textContent = name || 'Document Preview';
+                                docFrame.src = url;
+                                docDownload.href = url;
+                                docViewerModal.show();
+                                });
+                                });
 
-        // Image Zoom Modal Controller
-        const imageZoomModal = document.getElementById('imageZoomModal');
-        const zoomImg = document.getElementById('zoomModalImg');
-        imageZoomModal.addEventListener('show.bs.modal', function (e) {
-            const trigger = e.relatedTarget;
-            if (trigger) {
-                zoomImg.src = trigger.dataset.zoomSrc || trigger.src;
-            }
-        });
+                                // Image Zoom Modal Controller
+                                const imageZoomModal = document.getElementById('imageZoomModal');
+                                const zoomImg = document.getElementById('zoomModalImg');
+                                let zoomScale = 1;
+                                function applyZoom() { zoomImg.style.transform = `scale(${zoomScale})`; zoomImg.style.cursor = zoomScale > 1 ? 'zoom-out' : 'zoom-in'; }
+                                document.getElementById('zoomInBtn').addEventListener('click', () => { zoomScale = Math.min(3, zoomScale + 0.25); applyZoom(); });
+                                document.getElementById('zoomOutBtn').addEventListener('click', () => { zoomScale = Math.max(1, zoomScale - 0.25); applyZoom(); });
+                                document.getElementById('zoomResetBtn').addEventListener('click', () => { zoomScale = 1; applyZoom(); });
+                                zoomImg.addEventListener('click', () => { zoomScale = zoomScale > 1 ? 1 : 2; applyZoom(); });
+                                zoomImg.addEventListener('wheel', e => { e.preventDefault(); zoomScale = Math.max(1, Math.min(3, zoomScale + (e.deltaY < 0 ? 0.15 : -0.15))); applyZoom(); }, { passive: false });
+                                imageZoomModal.addEventListener('show.bs.modal', function (e) {
+                                const trigger = e.relatedTarget;
+                                if (trigger) {
+                                zoomImg.src = trigger.dataset.zoomSrc || trigger.src;
+                                zoomScale = 1;
+                                applyZoom();
+                                }
+                                });
 
-        // Thumbnail strip sync with carousel
-        const carouselEl = document.getElementById('itemCarousel');
-        if (carouselEl) {
-            carouselEl.addEventListener('slid.bs.carousel', function (e) {
-                const idx = e.to;
-                document.querySelectorAll('.gallery-thumb-btn').forEach((btn, i) => {
-                    btn.classList.toggle('active', i === idx);
-                });
-            });
-        }
-    </script>
+                                // Thumbnail strip sync with carousel
+                                const carouselEl = document.getElementById('itemCarousel');
+                                if (carouselEl) {
+                                carouselEl.addEventListener('slid.bs.carousel', function (e) {
+                                const idx = e.to;
+                                document.querySelectorAll('.gallery-thumb-btn').forEach((btn, i) => {
+                                btn.classList.toggle('active', i === idx);
+                                });
+                                });
+                                }
 
-    @if (isAuthenticated)
-    {
-        <script>
-            document.getElementById('saveBtn').addEventListener('click', async function () {
-                const btn = this;
-                const label = document.getElementById('saveBtnLabel');
-                const icon = btn.querySelector('i');
-                btn.disabled = true;
+                                const galleryCard = document.querySelector('.gallery-card');
+                                const galleryStage = document.querySelector('.gallery-stage');
+                                const hoverZoomPanel = document.getElementById('hoverZoomPanel');
+                                const modeButtons = document.querySelectorAll('[data-gallery-mode]');
+                                const galleryImages = document.querySelectorAll('.gallery-main-img');
+                                function setGalleryMode(mode) {
+                                galleryStage.classList.toggle('hover-zoom-mode', mode === 'hover');
+                                modeButtons.forEach(button => button.classList.toggle('active', button.dataset.galleryMode === mode));
+                                galleryImages.forEach(image => image.setAttribute('data-bs-toggle', mode === 'modal' ? 'modal' : ''));
+                                localStorage.setItem('auction-gallery-mode', mode);
+                                }
+                                modeButtons.forEach(button => button.addEventListener('click', () => setGalleryMode(button.dataset.galleryMode)));
+                                galleryImages.forEach(image => {
+                                image.addEventListener('mouseenter', () => {
+                                if (galleryStage.classList.contains('hover-zoom-mode')) hoverZoomPanel.classList.add('is-visible');
+                                });
+                                image.addEventListener('mouseleave', () => hoverZoomPanel.classList.remove('is-visible'));
+                                image.addEventListener('mousemove', event => {
+                                if (!galleryStage.classList.contains('hover-zoom-mode')) return;
+                                const bounds = image.getBoundingClientRect();
+                                const x = Math.max(0, Math.min(1, (event.clientX - bounds.left) / bounds.width));
+                                const y = Math.max(0, Math.min(1, (event.clientY - bounds.top) / bounds.height));
+                                hoverZoomPanel.style.backgroundImage = `url("${image.currentSrc || image.src}")`;
+                                hoverZoomPanel.style.backgroundPosition = `${x * 100}% ${y * 100}%`;
+                                });
+                                });
+                                if (localStorage.getItem('auction-gallery-mode') === 'hover') setGalleryMode('hover');
+                            </script>
 
-                try {
-                    const formData = new FormData();
-                    formData.append('auctionItemId', '@Model.Id');
-                    formData.append('__RequestVerificationToken', document.querySelector('input[name="__RequestVerificationToken"]').value);
+                            @if (isAuthenticated && !isBankAdmin)
+                            {
+                                <script>
+                                    document.getElementById('saveBtn').addEventListener('click', async function () {
+                                    const btn = this;
+                                    const label = document.getElementById('saveBtnLabel');
+                                    const icon = btn.querySelector('i');
+                                    btn.disabled = true;
 
-                    const res = await fetch('/SavedListing/Toggle', {
-                        method: 'POST',
-                        body: formData
-                    });
+                                    try {
+                                    const formData = new FormData();
+                                    formData.append('auctionItemId', '@Model.Id');
+                                    formData.append('__RequestVerificationToken', document.querySelector('input[name="__RequestVerificationToken"]').value);
 
-                    if (!res.ok) throw new Error('Request failed');
+                                    const res = await fetch('/SavedListing/Toggle', {
+                                    method: 'POST',
+                                    body: formData
+                                    });
 
-                    const data = await res.json();
-                    if (data.saved) {
-                        btn.classList.remove('btn-outline-secondary');
-                        btn.classList.add('btn-coral');
-                        icon.classList.remove('bi-heart');
-                        icon.classList.add('bi-heart-fill');
-                        label.textContent = 'Saved to Wishlist';
-                    } else {
-                        btn.classList.remove('btn-coral');
-                        btn.classList.add('btn-outline-secondary');
-                        icon.classList.remove('bi-heart-fill');
-                        icon.classList.add('bi-heart');
-                        label.textContent = 'Add to Wishlist';
-                    }
-                } catch (err) {
-                    alert('Something went wrong while saving this listing. Please try again.');
-                } finally {
-                    btn.disabled = false;
-                }
-            });
-        </script>
-    }
+                                    if (!res.ok) throw new Error('Request failed');
 
-    @if (Model.Status == Auction_Portal_Clone.Models.AuctionStatus.Upcoming ||
-         Model.Status == Auction_Portal_Clone.Models.AuctionStatus.Active)
-    {
-        var targetUtc = Model.Status == Auction_Portal_Clone.Models.AuctionStatus.Upcoming ? startUtc : endUtc;
-        <script>
-            (function () {
-                const target = new Date('@targetUtc').getTime();
-                const el = document.getElementById('countdownTimer');
-                let reloaded = false;
+                                    const data = await res.json();
+                                    if (data.saved) {
+                                    btn.classList.remove('btn-outline-secondary');
+                                    btn.classList.add('btn-coral');
+                                    icon.classList.remove('bi-heart');
+                                    icon.classList.add('bi-heart-fill');
+                                    label.textContent = 'Saved to Wishlist';
+                                    } else {
+                                    btn.classList.remove('btn-coral');
+                                    btn.classList.add('btn-outline-secondary');
+                                    icon.classList.remove('bi-heart-fill');
+                                    icon.classList.add('bi-heart');
+                                    label.textContent = 'Add to Wishlist';
+                                    }
+                                    } catch (err) {
+                                    alert('Something went wrong while saving this listing. Please try again.');
+                                    } finally {
+                                    btn.disabled = false;
+                                    }
+                                    });
+                                </script>
+                            }
 
-                function pad(n) { return n.toString().padStart(2, '0'); }
+                            @if (Model.Status == Auction_Portal_Clone.Models.AuctionStatus.Upcoming ||
+                                 Model.Status == Auction_Portal_Clone.Models.AuctionStatus.Active)
+                            {
+                                var targetUtc = Model.Status == Auction_Portal_Clone.Models.AuctionStatus.Upcoming ? startUtc : endUtc;
+                                <script>
+                                    (function () {
+                                    const target = new Date('@targetUtc').getTime();
+                                    const el = document.getElementById('countdownTimer');
+                                    let reloaded = false;
 
-                function tick() {
-                    const now = Date.now();
-                    const diff = target - now;
+                                    function pad(n) { return n.toString().padStart(2, '0'); }
 
-                    if (diff <= 0) {
-                        el.textContent = '00:00:00';
-                        if (!reloaded) {
-                            reloaded = true;
-                            setTimeout(() => window.location.reload(), 1500);
+                                    function tick() {
+                                    const now = Date.now();
+                                    const diff = target - now;
+
+                                    if (diff <= 0) {
+                                    el.textContent = '00:00:00';
+                                    if (!reloaded) {
+                                    reloaded = true;
+                                    setTimeout(() => window.location.reload(), 1500);
+                                    }
+                                    return;
+                                    }
+
+                                    const totalSeconds = Math.floor(diff / 1000);
+                                    const days = Math.floor(totalSeconds / 86400);
+                                    const hours = Math.floor((totalSeconds % 86400) / 3600);
+                                    const minutes = Math.floor((totalSeconds % 3600) / 60);
+                                    const seconds = totalSeconds % 60;
+
+                                    el.textContent = (days > 0 ? days + 'd ' : '') + pad(hours) + ':' + pad(minutes) + ':' + pad(seconds);
+                                    }
+
+                                    tick();
+                                    setInterval(tick, 1000);
+                                    })();
+                                </script>
+                            }
                         }
-                        return;
-                    }
 
-                    const totalSeconds = Math.floor(diff / 1000);
-                    const days = Math.floor(totalSeconds / 86400);
-                    const hours = Math.floor((totalSeconds % 86400) / 3600);
-                    const minutes = Math.floor((totalSeconds % 3600) / 60);
-                    const seconds = totalSeconds % 60;
+                        <style>
+                            .tracking-wider {
+                            letter-spacing: 0.06em;
+                            }
 
-                    el.textContent = (days > 0 ? days + 'd ' : '') + pad(hours) + ':' + pad(minutes) + ':' + pad(seconds);
-                }
+                            /* ─── Gallery Showcase Styles ─── */
+                            .gallery-card {
+                            background: #111;
+                            border: 1px solid rgba(0, 0, 0, 0.08);
+                            }
 
-                tick();
-                setInterval(tick, 1000);
-            })();
-        </script>
-    }
-}
+                            .gallery-viewport {
+                            position: relative;
+                            height: 460px;
+                            width: 100%;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            overflow: hidden;
+                            background: #18181b;
+                            }
 
-<style>
-    .tracking-wider { letter-spacing: 0.06em; }
+                            /* Ambient glow behind image */
+                            .gallery-ambient-bg {
+                            position: absolute;
+                            inset: -20px;
+                            background-size: cover;
+                            background-position: center;
+                            filter: blur(28px);
+                            opacity: 0.45;
+                            transform: scale(1.1);
+                            z-index: 1;
+                            }
 
-    /* ─── Gallery Showcase Styles ─── */
-    .gallery-card {
-        background: #111;
-        border: 1px solid rgba(0, 0, 0, 0.08);
-    }
+                            /* Foreground sharp image (Preserves full portrait and landscape aspect ratios without cropping) */
+                            .gallery-main-img {
+                            position: relative;
+                            z-index: 2;
+                            max-height: 440px;
+                            max-width: 100%;
+                            width: auto;
+                            height: auto;
+                            object-fit: contain;
+                            cursor: zoom-in;
+                            transition: transform 0.3s ease;
+                            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+                            border-radius: 8px;
+                            }
 
-    .gallery-viewport {
-        position: relative;
-        height: 460px;
-        width: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow: hidden;
-        background: #18181b;
-    }
+                            .gallery-main-img:hover { filter: saturate(1.05); }
 
-    /* Ambient glow behind image */
-    .gallery-ambient-bg {
-        position: absolute;
-        inset: -20px;
-        background-size: cover;
-        background-position: center;
-        filter: blur(28px);
-        opacity: 0.45;
-        transform: scale(1.1);
-        z-index: 1;
-    }
+                            .gallery-mode-bar {
+                            display: flex;
+                            align-items: center;
+                            gap: 8px;
+                            margin: 0 0 10px;
+                            flex-wrap: wrap;
+                            }
+                            .gallery-stage {
+                            position: relative;
+                            z-index: 20;
+                            overflow: visible;
+                            }
+                            .gallery-stage.hover-zoom-mode {
+                            z-index: 30;
+                            }
+                            .gallery-stage .gallery-card {
+                            overflow: visible !important;
+                            }
+                            .gallery-mode-label {
+                            color: #666;
+                            font-size: 0.78rem;
+                            font-weight: 700;
+                            margin-right: 4px;
+                            }
+                            .gallery-mode-btn {
+                            border: 1px solid #ddd;
+                            background: #fff;
+                            color: #555;
+                            border-radius: 999px;
+                            padding: 7px 12px;
+                            font-size: 0.76rem;
+                            cursor: pointer;
+                            transition: all 0.2s ease;
+                            }
+                            .gallery-mode-btn.active,
+                            .gallery-mode-btn:hover {
+                            background: var(--bs-primary);
+                            border-color: var(--bs-primary);
+                            color: #fff;
+                            }
+                            .hover-zoom-panel {
+                            display: none;
+                            position: absolute;
+                            z-index: 5;
+                            top: 58px;
+                            left: calc(100% + 16px);
+                            width: 360px;
+                            height: 360px;
+                            border: 3px solid #fff;
+                            border-radius: 14px;
+                            background-color: #18181b;
+                            background-repeat: no-repeat;
+                            background-size: 220% 220%;
+                            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+                            pointer-events: none;
+                            overflow: hidden;
+                            }
+                            .hover-zoom-caption {
+                            position: absolute;
+                            left: 10px;
+                            bottom: 8px;
+                            padding: 4px 8px;
+                            border-radius: 999px;
+                            background: rgba(0, 0, 0, 0.62);
+                            color: #fff;
+                            font-size: 0.68rem;
+                            }
+                            .gallery-stage.hover-zoom-mode .hover-zoom-panel.is-visible { display: block; }
+                            .hover-zoom-mode .gallery-main-img { cursor: crosshair; }
 
-    /* Foreground sharp image (Preserves full portrait and landscape aspect ratios without cropping) */
-    .gallery-main-img {
-        position: relative;
-        z-index: 2;
-        max-height: 440px;
-        max-width: 100%;
-        width: auto;
-        height: auto;
-        object-fit: contain;
-        cursor: zoom-in;
-        transition: transform 0.3s ease;
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
-        border-radius: 8px;
-    }
+                            .image-zoom-controls {
+                            display: flex;
+                            gap: 4px;
+                            }
 
-    .gallery-main-img:hover {
-        transform: scale(1.015);
-    }
+                            #zoomModalImg {
+                            transition: transform 0.18s ease;
+                            transform-origin: center;
+                            }
 
-    .gallery-zoom-btn {
-        position: absolute;
-        bottom: 14px;
-        right: 14px;
-        z-index: 3;
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        background: rgba(0, 0, 0, 0.6);
-        backdrop-filter: blur(4px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        color: #fff;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
+                            .gallery-zoom-btn {
+                            position: absolute;
+                            bottom: 14px;
+                            right: 14px;
+                            z-index: 3;
+                            width: 36px;
+                            height: 36px;
+                            border-radius: 50%;
+                            background: rgba(0, 0, 0, 0.6);
+                            backdrop-filter: blur(4px);
+                            border: 1px solid rgba(255, 255, 255, 0.2);
+                            color: #fff;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            cursor: pointer;
+                            transition: all 0.2s ease;
+                            }
 
-    .gallery-zoom-btn:hover {
-        background: var(--bs-primary);
-        transform: scale(1.1);
-    }
+                            .gallery-zoom-btn:hover {
+                            background: var(--bs-primary);
+                            transform: scale(1.1);
+                            }
 
-    .gallery-arrow {
-        width: 44px;
-        height: 44px;
-        top: 50%;
-        transform: translateY(-50%);
-        background-color: rgba(0, 0, 0, 0.5);
-        backdrop-filter: blur(4px);
-        border-radius: 50%;
-        opacity: 0.9;
-        margin: 0 12px;
-        z-index: 4;
-        transition: all 0.2s ease;
-    }
+                            .gallery-arrow {
+                            width: 44px;
+                            height: 44px;
+                            top: 50%;
+                            transform: translateY(-50%);
+                            background-color: rgba(0, 0, 0, 0.5);
+                            backdrop-filter: blur(4px);
+                            border-radius: 50%;
+                            opacity: 0.9;
+                            margin: 0 12px;
+                            z-index: 4;
+                            transition: all 0.2s ease;
+                            }
 
-    .gallery-arrow:hover {
-        background-color: var(--bs-primary);
-        opacity: 1;
-        transform: translateY(-50%) scale(1.08);
-    }
+                            .gallery-arrow:hover {
+                            background-color: var(--bs-primary);
+                            opacity: 1;
+                            transform: translateY(-50%) scale(1.08);
+                            }
 
-    .gallery-thumb-strip {
-        display: flex;
-        gap: 8px;
-        overflow-x: auto;
-        background: #faf8f5;
-        scrollbar-width: thin;
-    }
+                            .gallery-thumb-strip {
+                            display: flex;
+                            gap: 8px;
+                            overflow-x: auto;
+                            background: #faf8f5;
+                            scrollbar-width: thin;
+                            }
 
-    .gallery-thumb-btn {
-        width: 64px;
-        height: 48px;
-        flex-shrink: 0;
-        border-radius: 8px;
-        overflow: hidden;
-        border: 2px solid transparent;
-        padding: 0;
-        background: #e5e5e5;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
+                            .gallery-thumb-btn {
+                            width: 64px;
+                            height: 48px;
+                            flex-shrink: 0;
+                            border-radius: 8px;
+                            overflow: hidden;
+                            border: 2px solid transparent;
+                            padding: 0;
+                            background: #e5e5e5;
+                            cursor: pointer;
+                            transition: all 0.2s ease;
+                            }
 
-    .gallery-thumb-btn img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
+                            .gallery-thumb-btn img {
+                            width: 100%;
+                            height: 100%;
+                            object-fit: cover;
+                            }
 
-    .gallery-thumb-btn.active {
-        border-color: #ff6b57;
-        box-shadow: 0 0 0 2px rgba(255, 107, 87, 0.35);
-        transform: translateY(-2px);
-    }
+                            .gallery-thumb-btn.active {
+                            border-color: #ff6b57;
+                            box-shadow: 0 0 0 2px rgba(255, 107, 87, 0.35);
+                            transform: translateY(-2px);
+                            }
 
-    /* ─── Document Vault Modern Styles ─── */
-    .doc-vault-card {
-        background: #fff;
-    }
+                            /* ─── Document Vault Modern Styles ─── */
+                            .doc-vault-card {
+                            background: #fff;
+                            }
 
-    .doc-card {
-        background: #faf9f7;
-        border-color: rgba(0, 0, 0, 0.08) !important;
-        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    }
+                            .doc-card {
+                            background: #faf9f7;
+                            border-color: rgba(0, 0, 0, 0.08) !important;
+                            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+                            }
 
-    .doc-card:hover {
-        background: #fff;
-        border-color: rgba(255, 107, 87, 0.35) !important;
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
-        transform: translateY(-2px);
-    }
+                            .doc-card:hover {
+                            background: #fff;
+                            border-color: rgba(255, 107, 87, 0.35) !important;
+                            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+                            transform: translateY(-2px);
+                            }
 
-    .doc-icon-wrapper {
-        width: 44px;
-        height: 44px;
-        border-radius: 12px;
-        background: #ffebe8;
-        color: #ff6b57;
-        font-size: 1.35rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-    }
+                            .doc-icon-wrapper {
+                            width: 44px;
+                            height: 44px;
+                            border-radius: 12px;
+                            background: #ffebe8;
+                            color: #ff6b57;
+                            font-size: 1.35rem;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            flex-shrink: 0;
+                            }
 
-    .doc-name {
-        font-size: 0.88rem;
-        color: #222;
-    }
+                            .doc-name {
+                            font-size: 0.88rem;
+                            color: #222;
+                            }
 
-    @@media (max-width: 768px) {
-        .gallery-viewport { height: 320px; }
-        .gallery-main-img { max-height: 300px; }
-    }
-</style>
+                            @@media (max-width: 768px) {
+                            .hover-zoom-panel {
+                            top: auto;
+                            left: 50%;
+                            bottom: 14px;
+                            transform: translateX(-50%);
+                            width: min(320px, calc(100% - 28px));
+                            height: 260px;
+                            }
+                            .gallery-viewport {
+                            height: 320px;
+                            }
+
+                            .gallery-main-img {
+                            max-height: 300px;
+                            }
+                            }
+                        </style>

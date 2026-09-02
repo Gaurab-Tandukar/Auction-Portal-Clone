@@ -17,18 +17,28 @@ namespace Auction_Portal_Clone.Services.Implementation
         {
             if (filter.CategoryId.HasValue)
                 query = query.Where(a => a.CategoryId == filter.CategoryId.Value);
+            if (filter.CategoryIds.Count > 0)
+                query = query.Where(a => filter.CategoryIds.Contains(a.CategoryId));
 
             if (filter.CollateralCategory.HasValue)
                 query = query.Where(a => a.CollateralCategory == filter.CollateralCategory.Value);
+            if (filter.CollateralCategories.Count > 0)
+                query = query.Where(a => filter.CollateralCategories.Contains(a.CollateralCategory));
 
             if (filter.ProvinceId.HasValue)
                 query = query.Where(a => a.Municipality.District.ProvinceId == filter.ProvinceId.Value);
+            if (filter.ProvinceIds.Count > 0)
+                query = query.Where(a => filter.ProvinceIds.Contains(a.Municipality.District.ProvinceId));
 
             if (filter.DistrictId.HasValue)
                 query = query.Where(a => a.Municipality.DistrictId == filter.DistrictId.Value);
+            if (filter.DistrictIds.Count > 0)
+                query = query.Where(a => filter.DistrictIds.Contains(a.Municipality.DistrictId));
 
             if (filter.MunicipalityId.HasValue)
                 query = query.Where(a => a.MunicipalityId == filter.MunicipalityId.Value);
+            if (filter.MunicipalityIds.Count > 0)
+                query = query.Where(a => filter.MunicipalityIds.Contains(a.MunicipalityId));
 
             if (filter.MinPrice.HasValue)
                 query = query.Where(a => a.ReservePrice >= filter.MinPrice.Value);
