@@ -44,7 +44,19 @@ namespace Auction_Portal_Clone.Controllers.Admin
             await _viewDataHelper.PopulateCategoriesAsync(ViewData, activeOnly: true);
             await _viewDataHelper.PopulateLocationViewDataAsync(ViewData);
 
-            return View(new AdminAuctionItemCreateDTO());
+            var currentTime = DateTime.Now;
+            var now = new DateTime(
+                currentTime.Year,
+                currentTime.Month,
+                currentTime.Day,
+                currentTime.Hour,
+                currentTime.Minute,
+                0);
+            return View(new AdminAuctionItemCreateDTO
+            {
+                AuctionStartDate = now,
+                AuctionEndDate = now.AddDays(1)
+            });
         }
 
         // POST /Admin/AuctionItem/Create

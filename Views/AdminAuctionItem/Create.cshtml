@@ -232,14 +232,14 @@
                                         <div class="aai-field">
                                             <label asp-for="AuctionStartDate" class="aai-label"></label>
                                             <input asp-for="AuctionStartDate" class="form-control form-control-sm rounded-3"
-                                                   type="datetime-local" />
+                                                   type="datetime-local" step="60" id="auctionStartDate" />
                                             <span asp-validation-for="AuctionStartDate" class="aai-error"></span>
                                         </div>
 
                                         <div class="aai-field">
                                             <label asp-for="AuctionEndDate" class="aai-label"></label>
                                             <input asp-for="AuctionEndDate" class="form-control form-control-sm rounded-3"
-                                                   type="datetime-local" />
+                                                   type="datetime-local" step="60" id="auctionEndDate" />
                                             <span asp-validation-for="AuctionEndDate" class="aai-error"></span>
                                         </div>
 
@@ -368,6 +368,31 @@
                                 });
                             }
                             imageInput.addEventListener('change', renderImagePreviews);
+                        }
+
+                        const startDateInput = document.getElementById('auctionStartDate');
+                        const endDateInput = document.getElementById('auctionEndDate');
+                        if (startDateInput && endDateInput) {
+                            const toLocalDateTimeValue = date => {
+                                const pad = value => String(value).padStart(2, '0');
+                                return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+                            };
+                            const nowValue = toLocalDateTimeValue(new Date());
+
+                            startDateInput.min = nowValue;
+                            endDateInput.min = nowValue;
+
+                            const updateEndDateMinimum = (enforceValue = false) => {
+                                endDateInput.min = startDateInput.value && startDateInput.value > nowValue
+                                    ? startDateInput.value
+                                    : nowValue;
+                                if (enforceValue && endDateInput.value && endDateInput.value < endDateInput.min) {
+                                    endDateInput.value = endDateInput.min;
+                                }
+                            };
+
+                            startDateInput.addEventListener('change', () => updateEndDateMinimum(true));
+                            updateEndDateMinimum();
                         }
                     </script>
                 }
