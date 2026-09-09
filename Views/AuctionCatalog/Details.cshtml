@@ -97,7 +97,7 @@
                                         <!-- Main Sharp Image (Contained & fully visible regardless of aspect ratio) -->
                                         <img src="@imgUrl" class="gallery-main-img" alt="@Model.Title" data-bs-toggle="modal"
                                              data-bs-target="#imageZoomModal" data-zoom-src="@imgUrl"
-                                             title="Click to view full size" />
+                                             title="Click to view full size" loading="@(i == 0 ? "eager" : "lazy")" decoding="async" />
 
                                         <button type="button" class="gallery-zoom-btn" data-bs-toggle="modal"
                                                 data-bs-target="#imageZoomModal" data-zoom-src="@imgUrl"
@@ -130,7 +130,7 @@
                             {
                                 <button type="button" class="gallery-thumb-btn @(i == 0 ? "active" : "")"
                                         data-bs-target="#itemCarousel" data-bs-slide-to="@i" aria-label="Slide @(i + 1)">
-                                    <img src="@Model.ImageUrls[i]" alt="Thumbnail @(i + 1)" />
+                                    <img src="@Model.ImageUrls[i]" alt="Thumbnail @(i + 1)" loading="lazy" decoding="async" />
                                 </button>
                             }
                         </div>

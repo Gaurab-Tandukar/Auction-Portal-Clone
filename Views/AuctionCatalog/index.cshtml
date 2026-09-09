@@ -253,7 +253,8 @@
                                         <div class="position-relative overflow-hidden image-container bg-light">
                                             @if (!string.IsNullOrEmpty(item.ThumbnailUrl))
                                             {
-                                                <img src="@item.ThumbnailUrl" class="w-100 h-100 auction-img" alt="@item.Title" />
+                                                <img src="@item.ThumbnailUrl" class="w-100 h-100 auction-img" alt="@item.Title"
+                                                     loading="lazy" decoding="async" />
                                             }
                                             else
                                             {

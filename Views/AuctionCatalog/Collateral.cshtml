@@ -74,8 +74,7 @@
                    class="btn rounded-pill px-3.5 py-2 fw-semibold cat-pill-btn @(selectedCat == CollateralCategory.Vehicle ? "active" : "")">
                     <i class="bi bi-car-front me-1.5"></i>Vehicle
                 </a>
-                <a href="/AuctionCatalog"
-                   class="btn rounded-pill px-3.5 py-2 fw-semibold cat-pill-btn all-cat-btn">
+                <a href="/AuctionCatalog" class="btn rounded-pill px-3.5 py-2 fw-semibold cat-pill-btn all-cat-btn">
                     <i class="bi bi-grid me-1.5"></i>View All Auctions
                 </a>
             </div>
@@ -108,7 +107,8 @@
                     <i class="bi bi-sliders me-1 text-muted"></i> Filters
                     @if (hasAdvancedFilters)
                     {
-                        <span class="position-absolute top-0 start-100 translate-middle p-1.5 bg-primary border border-light rounded-circle">
+                        <span
+                            class="position-absolute top-0 start-100 translate-middle p-1.5 bg-primary border border-light rounded-circle">
                             <span class="visually-hidden">Active filters</span>
                         </span>
                     }
@@ -134,7 +134,9 @@
     <!-- Results Subheading -->
     <div class="d-flex align-items-center justify-content-between mb-4">
         <div class="text-muted fs-6">
-            Showing <strong class="text-dark">@Model.Items.Count of @Model.TotalCount</strong> listing@(Model.TotalCount == 1 ? "" : "s") in <span class="badge bg-light text-dark border px-2.5 py-1 rounded-pill">@selectedName</span>
+            Showing <strong class="text-dark">@Model.Items.Count of @Model.TotalCount</strong> listing@(Model.TotalCount
+                        == 1 ? "" : "s") in <span
+            class="badge bg-light text-dark border px-2.5 py-1 rounded-pill">@selectedName</span>
         </div>
     </div>
 
@@ -151,7 +153,8 @@
                         <div class="position-relative overflow-hidden image-container bg-light">
                             @if (!string.IsNullOrEmpty(item.ThumbnailUrl))
                             {
-                                <img src="@item.ThumbnailUrl" class="w-100 h-100 auction-img" alt="@item.Title" />
+                                <img src="@item.ThumbnailUrl" class="w-100 h-100 auction-img" alt="@item.Title" loading="lazy"
+                                     decoding="async" />
                             }
                             else
                             {
@@ -183,7 +186,8 @@
                                 <span class="text-uppercase fs-7 text-muted fw-bold tracking-wider">
                                     @item.CategoryName
                                 </span>
-                                <span class="badge bg-light text-dark border px-2.5 py-1 rounded-pill fw-semibold" style="font-size: 0.7rem;">
+                                <span class="badge bg-light text-dark border px-2.5 py-1 rounded-pill fw-semibold"
+                                      style="font-size: 0.7rem;">
                                     <i class="bi @iconClass me-1 text-primary"></i>@item.CollateralCategoryName
                                 </span>
                             </div>
@@ -234,16 +238,12 @@
                         <li class="page-item @(i == Model.Page ? "active" : "")">
                             <a class="page-link rounded-3 border-0 shadow-sm px-3 py-2 fw-medium @(i == Model.Page ? "bg-primary text-white" : "text-dark bg-white")"
                                asp-controller="AuctionCatalog" asp-action="Collateral" asp-route-id="@selectedCat.ToString()"
-                               asp-route-SearchTerm="@filter.SearchTerm"
-                               asp-route-CategoryId="@filter.CategoryId"
-                               asp-route-ProvinceId="@filter.ProvinceId"
-                               asp-route-DistrictId="@filter.DistrictId"
-                               asp-route-MunicipalityId="@filter.MunicipalityId"
-                               asp-route-MinPrice="@filter.MinPrice"
+                               asp-route-SearchTerm="@filter.SearchTerm" asp-route-CategoryId="@filter.CategoryId"
+                               asp-route-ProvinceId="@filter.ProvinceId" asp-route-DistrictId="@filter.DistrictId"
+                               asp-route-MunicipalityId="@filter.MunicipalityId" asp-route-MinPrice="@filter.MinPrice"
                                asp-route-MaxPrice="@filter.MaxPrice"
                                asp-route-AuctionDateFrom="@filter.AuctionDateFrom?.ToString("yyyy-MM-dd")"
-                               asp-route-AuctionDateTo="@filter.AuctionDateTo?.ToString("yyyy-MM-dd")"
-                               asp-route-Page="@i"
+                               asp-route-AuctionDateTo="@filter.AuctionDateTo?.ToString("yyyy-MM-dd")" asp-route-Page="@i"
                                asp-route-PageSize="@filter.PageSize">
                                 @i
                             </a>
@@ -277,6 +277,7 @@
         background-color: #ffffff;
         border: 1px solid rgba(0, 0, 0, 0.05) !important;
     }
+
     .collateral-hero-glow {
         position: absolute;
         width: 380px;
@@ -297,6 +298,7 @@
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);
         transition: all 0.2s ease;
     }
+
     .cat-pill-btn:hover {
         background: #fff5f2;
         color: #ff6b57;
@@ -304,26 +306,37 @@
         transform: translateY(-2px);
         box-shadow: 0 4px 10px rgba(255, 107, 87, 0.12);
     }
+
     .cat-pill-btn.active {
         background: #ff6b57;
         color: #ffffff;
         border-color: #ff6b57;
         box-shadow: 0 4px 14px rgba(255, 107, 87, 0.35);
     }
+
     .all-cat-btn {
         background: #faf7f2;
         color: #666666;
         border: 1.5px dashed rgba(0, 0, 0, 0.15);
     }
+
     .all-cat-btn:hover {
         background: #ffffff;
         color: #ff6b57;
         border-color: #ff6b57;
     }
 
-    .tracking-wider { letter-spacing: 0.08em; }
-    .tracking-tight { letter-spacing: -0.025em; }
-    .fs-7 { font-size: 0.75rem; }
+    .tracking-wider {
+        letter-spacing: 0.08em;
+    }
+
+    .tracking-tight {
+        letter-spacing: -0.025em;
+    }
+
+    .fs-7 {
+        font-size: 0.75rem;
+    }
 
     .text-truncate-2 {
         display: -webkit-box;
@@ -348,6 +361,7 @@
         border: 1px solid rgba(0, 0, 0, 0.04) !important;
         transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
     }
+
     .auction-card:hover {
         transform: translateY(-6px);
         box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.06) !important;
@@ -363,6 +377,7 @@
         object-position: center;
         transition: transform 0.5s ease;
     }
+
     .auction-card:hover .auction-img {
         transform: scale(1.05);
     }
@@ -373,6 +388,7 @@
         background-color: transparent;
         transition: all 0.2s ease-in-out;
     }
+
     .btn-outline-coral:hover {
         background-color: var(--bs-primary);
         color: #fff;
@@ -385,6 +401,7 @@
         color: #fff !important;
         box-shadow: 0 4px 12px rgba(255, 107, 87, 0.25);
     }
+
     .pagination .page-link:hover {
         background-color: #ffe5d9;
         color: var(--bs-primary);
