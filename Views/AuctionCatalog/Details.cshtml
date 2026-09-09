@@ -71,84 +71,109 @@
         <div class="col-lg-8">
 
             <!-- ─── 1. Enhanced Image Gallery (Supports Landscape & Portrait flawlessly) ─── -->
-            <div class="gallery-stage">
-            <div class="gallery-mode-bar" role="group" aria-label="Image zoom mode">
-                <span class="gallery-mode-label">Image view</span>
-                <button type="button" class="gallery-mode-btn active" data-gallery-mode="modal">
-                    <i class="bi bi-arrows-fullscreen"></i> Default zoom
-                </button>
-                <button type="button" class="gallery-mode-btn" data-gallery-mode="hover">
-                    <i class="bi bi-search"></i> Hover zoom
-                </button>
-            </div>
-            <div class="card border-0 shadow-sm mb-4 rounded-4 overflow-hidden gallery-card">
-                @if (Model.ImageUrls.Any())
-                {
-                    <div id="itemCarousel" class="carousel slide" data-bs-ride="false">
-                        <div class="carousel-inner">
-                            @for (int i = 0; i < Model.ImageUrls.Count; i++)
-                            {
-                                var imgUrl = Model.ImageUrls[i];
-                                <div class="carousel-item @(i == 0 ? "active" : "")">
-                                    <div class="gallery-viewport">
-                                        <!-- Ambient Backdrop Blur (Eliminates harsh white cutoffs for portrait images) -->
-                                        <div class="gallery-ambient-bg" style="background-image: url('@imgUrl');"></div>
+            <div class="gallery-stage" id="galleryStage">
+                <div class="gallery-mode-bar" role="group" aria-label="Image zoom mode">
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <span class="gallery-mode-label"><i class="bi bi-eye me-1"></i>View:</span>
+                        <button type="button" class="gallery-mode-btn" data-gallery-mode="modal" title="Fullscreen modal viewer">
+                            <i class="bi bi-arrows-fullscreen"></i> Default zoom
+                        </button>
+                        <button type="button" class="gallery-mode-btn active" data-gallery-mode="hover" title="Daraz / AliExpress hover magnifier">
+                            <i class="bi bi-search"></i> Hover zoom
+                        </button>
+                    </div>
+                    <div class="gallery-zoom-level-group d-flex align-items-center ms-auto gap-1" id="zoomLevelSelector" title="Adjust magnification factor">
+                        <span class="gallery-zoom-level-label"><i class="bi bi-zoom-in me-1"></i>Zoom:</span>
+                        <button type="button" class="zoom-factor-btn" data-zoom-factor="2.5">2.5×</button>
+                        <button type="button" class="zoom-factor-btn active" data-zoom-factor="3.0">3.0×</button>
+                        <button type="button" class="zoom-factor-btn" data-zoom-factor="3.5">3.5×</button>
+                    </div>
+                </div>
+                <div class="card border-0 shadow-sm mb-4 rounded-4 overflow-hidden gallery-card position-relative" id="galleryCard">
+                    <!-- Precision Zoom Lens (Daraz / AliExpress tracking box) -->
+                    <div class="gallery-zoom-lens" id="galleryZoomLens" aria-hidden="true"></div>
 
-                                        <!-- Main Sharp Image (Contained & fully visible regardless of aspect ratio) -->
-                                        <img src="@imgUrl" class="gallery-main-img" alt="@Model.Title" data-bs-toggle="modal"
-                                             data-bs-target="#imageZoomModal" data-zoom-src="@imgUrl"
-                                             title="Click to view full size" loading="@(i == 0 ? "eager" : "lazy")" decoding="async" />
+                    @if (Model.ImageUrls.Any())
+                    {
+                        <div id="itemCarousel" class="carousel slide" data-bs-ride="false">
+                            <div class="carousel-inner">
+                                @for (int i = 0; i < Model.ImageUrls.Count; i++)
+                                {
+                                    var imgUrl = Model.ImageUrls[i];
+                                    <div class="carousel-item @(i == 0 ? "active" : "")">
+                                        <div class="gallery-viewport">
+                                            <!-- Ambient Backdrop Blur (Eliminates harsh white cutoffs for portrait images) -->
+                                            <div class="gallery-ambient-bg" style="background-image: url('@imgUrl');"></div>
 
-                                        <button type="button" class="gallery-zoom-btn" data-bs-toggle="modal"
-                                                data-bs-target="#imageZoomModal" data-zoom-src="@imgUrl"
-                                                title="View full resolution">
-                                            <i class="bi bi-arrows-fullscreen"></i>
-                                        </button>
+                                            <!-- Main Product Image (Exact same image used for zoom & modal) -->
+                                            <img src="@imgUrl" class="gallery-main-img" alt="@Model.Title" data-bs-toggle="modal"
+                                                 data-bs-target="#imageZoomModal" data-zoom-src="@imgUrl"
+                                                 title="Click to view full size" loading="@(i == 0 ? "eager" : "lazy")" decoding="async" />
+
+                                            <button type="button" class="gallery-zoom-btn" data-bs-toggle="modal"
+                                                    data-bs-target="#imageZoomModal" data-zoom-src="@imgUrl"
+                                                    title="View full resolution">
+                                                <i class="bi bi-arrows-fullscreen"></i>
+                                            </button>
+                                        </div>
                                     </div>
-                                </div>
+                                }
+                            </div>
+
+                            @if (Model.ImageUrls.Count > 1)
+                            {
+                                <button class="carousel-control-prev gallery-arrow" type="button" data-bs-target="#itemCarousel"
+                                        data-bs-slide="prev">
+                                    <span class="carousel-control-prev-icon"></span>
+                                </button>
+                                <button class="carousel-control-next gallery-arrow" type="button" data-bs-target="#itemCarousel"
+                                        data-bs-slide="next">
+                                    <span class="carousel-control-next-icon"></span>
+                                </button>
                             }
                         </div>
 
                         @if (Model.ImageUrls.Count > 1)
                         {
-                            <button class="carousel-control-prev gallery-arrow" type="button" data-bs-target="#itemCarousel"
-                                    data-bs-slide="prev">
-                                <span class="carousel-control-prev-icon"></span>
-                            </button>
-                            <button class="carousel-control-next gallery-arrow" type="button" data-bs-target="#itemCarousel"
-                                    data-bs-slide="next">
-                                <span class="carousel-control-next-icon"></span>
-                            </button>
+                            <!-- Interactive Thumbnail Strip -->
+                            <div class="gallery-thumb-strip p-2 border-top">
+                                @for (int i = 0; i < Model.ImageUrls.Count; i++)
+                                {
+                                    <button type="button" class="gallery-thumb-btn @(i == 0 ? "active" : "")"
+                                            data-bs-target="#itemCarousel" data-bs-slide-to="@i" aria-label="Slide @(i + 1)">
+                                        <img src="@Model.ImageUrls[i]" alt="Thumbnail @(i + 1)" loading="lazy" decoding="async" />
+                                    </button>
+                                }
+                            </div>
                         }
-                    </div>
-
-                    @if (Model.ImageUrls.Count > 1)
+                    }
+                    else
                     {
-                        <!-- Interactive Thumbnail Strip -->
-                        <div class="gallery-thumb-strip p-2 border-top">
-                            @for (int i = 0; i < Model.ImageUrls.Count; i++)
-                            {
-                                <button type="button" class="gallery-thumb-btn @(i == 0 ? "active" : "")"
-                                        data-bs-target="#itemCarousel" data-bs-slide-to="@i" aria-label="Slide @(i + 1)">
-                                    <img src="@Model.ImageUrls[i]" alt="Thumbnail @(i + 1)" loading="lazy" decoding="async" />
-                                </button>
-                            }
+                        <div class="d-flex align-items-center justify-content-center bg-light" style="height: 420px;">
+                            <div class="text-center text-muted">
+                                <i class="bi bi-image fs-1 opacity-40"></i>
+                                <p class="mb-0 mt-2 fw-medium">No images uploaded for this listing</p>
+                            </div>
                         </div>
                     }
-                }
-                else
-                {
-                    <div class="d-flex align-items-center justify-content-center bg-light" style="height: 420px;">
-                        <div class="text-center text-muted">
-                            <i class="bi bi-image fs-1 opacity-40"></i>
-                            <p class="mb-0 mt-2 fw-medium">No images uploaded for this listing</p>
-                        </div>
+                </div>
+
+                <!-- Daraz / AliExpress High-Definition Floating Zoom Panel -->
+                <div class="hover-zoom-panel" id="hoverZoomPanel" aria-hidden="true">
+                    <div class="hover-zoom-canvas-wrap">
+                        <img id="hoverZoomImg" class="hover-zoom-img" src="" alt="High resolution zoom preview" decoding="async" />
                     </div>
-                }
-            </div>
-            <div class="hover-zoom-panel" id="hoverZoomPanel" aria-hidden="true">
-                <span class="hover-zoom-caption">Zoomed view</span>
-            </div>
+                    <div class="hover-zoom-topbar">
+                        <span class="hover-zoom-badge" id="hoverZoomBadge">3.0× Detail</span>
+                        <span class="hover-zoom-hint"><i class="bi bi-arrows-move me-1"></i>Move cursor to pan • Scroll to zoom</span>
+                    </div>
+                    <div class="hover-zoom-loader" id="hoverZoomLoader">
+                        <div class="spinner-border spinner-border-sm text-primary" role="status">
+                            <span class="visually-hidden">Loading high resolution...</span>
+                        </div>
+                        <span class="small ms-2 text-dark fw-medium">Loading high-res...</span>
+                    </div>
+                </div>
             </div>
 
             <!-- ─── 2. Title & Meta Summary ─── -->
@@ -523,41 +548,255 @@
                                 // Thumbnail strip sync with carousel
                                 const carouselEl = document.getElementById('itemCarousel');
                                 if (carouselEl) {
-                                carouselEl.addEventListener('slid.bs.carousel', function (e) {
-                                const idx = e.to;
-                                document.querySelectorAll('.gallery-thumb-btn').forEach((btn, i) => {
-                                btn.classList.toggle('active', i === idx);
-                                });
-                                });
+                                    carouselEl.addEventListener('slid.bs.carousel', function (e) {
+                                        const idx = e.to;
+                                        document.querySelectorAll('.gallery-thumb-btn').forEach((btn, i) => {
+                                            btn.classList.toggle('active', i === idx);
+                                        });
+                                    });
                                 }
 
-                                const galleryCard = document.querySelector('.gallery-card');
-                                const galleryStage = document.querySelector('.gallery-stage');
+                                // ─── Daraz / AliExpress-Style Precision Zoom Controller ───
+                                const DARAZ_ZOOM_CONFIG = {
+                                    zoomFactor: 3.0,          // Configurable zoom factor (2.5x to 3.5x presets)
+                                    minZoomFactor: 2.0,
+                                    maxZoomFactor: 4.5,
+                                    panelWidth: 540,          // Configurable panel width in px
+                                    panelHeight: 540,         // Configurable panel height in px
+                                    panelOffset: 20           // Offset from gallery in px
+                                };
+
+                                const galleryStage = document.getElementById('galleryStage') || document.querySelector('.gallery-stage');
+                                const galleryCard = document.getElementById('galleryCard') || document.querySelector('.gallery-card');
+                                const galleryLens = document.getElementById('galleryZoomLens');
                                 const hoverZoomPanel = document.getElementById('hoverZoomPanel');
+                                const hoverZoomImg = document.getElementById('hoverZoomImg');
+                                const hoverZoomBadge = document.getElementById('hoverZoomBadge');
+                                const hoverZoomLoader = document.getElementById('hoverZoomLoader');
                                 const modeButtons = document.querySelectorAll('[data-gallery-mode]');
-                                const galleryImages = document.querySelectorAll('.gallery-main-img');
+                                const zoomFactorButtons = document.querySelectorAll('[data-zoom-factor]');
+
+                                let currentGalleryMode = localStorage.getItem('auction-gallery-mode') || 'hover';
+                                let isHoveringActive = false;
+                                let rafId = null;
+                                let lastMouseEvent = null;
+
                                 function setGalleryMode(mode) {
-                                galleryStage.classList.toggle('hover-zoom-mode', mode === 'hover');
-                                modeButtons.forEach(button => button.classList.toggle('active', button.dataset.galleryMode === mode));
-                                galleryImages.forEach(image => image.setAttribute('data-bs-toggle', mode === 'modal' ? 'modal' : ''));
-                                localStorage.setItem('auction-gallery-mode', mode);
+                                    currentGalleryMode = mode;
+                                    if (galleryStage) galleryStage.classList.toggle('hover-zoom-mode', mode === 'hover');
+                                    modeButtons.forEach(button => button.classList.toggle('active', button.dataset.galleryMode === mode));
+
+                                    const galleryImages = document.querySelectorAll('.gallery-main-img');
+                                    galleryImages.forEach(image => {
+                                        image.setAttribute('data-bs-toggle', mode === 'modal' ? 'modal' : '');
+                                    });
+
+                                    if (mode !== 'hover') {
+                                        hideZoom();
+                                    }
+                                    localStorage.setItem('auction-gallery-mode', mode);
                                 }
-                                modeButtons.forEach(button => button.addEventListener('click', () => setGalleryMode(button.dataset.galleryMode)));
-                                galleryImages.forEach(image => {
-                                image.addEventListener('mouseenter', () => {
-                                if (galleryStage.classList.contains('hover-zoom-mode')) hoverZoomPanel.classList.add('is-visible');
+
+                                function setZoomFactor(factor) {
+                                    DARAZ_ZOOM_CONFIG.zoomFactor = Math.max(DARAZ_ZOOM_CONFIG.minZoomFactor, Math.min(DARAZ_ZOOM_CONFIG.maxZoomFactor, factor));
+                                    if (hoverZoomBadge) {
+                                        hoverZoomBadge.textContent = `${DARAZ_ZOOM_CONFIG.zoomFactor.toFixed(1)}× Magnification`;
+                                    }
+                                    zoomFactorButtons.forEach(btn => {
+                                        const val = parseFloat(btn.dataset.zoomFactor);
+                                        btn.classList.toggle('active', Math.abs(val - DARAZ_ZOOM_CONFIG.zoomFactor) < 0.05);
+                                    });
+                                    if (isHoveringActive && lastMouseEvent) {
+                                        updateZoomPosition(lastMouseEvent);
+                                    }
+                                }
+
+                                function getActiveImage() {
+                                    const activeItem = document.querySelector('#itemCarousel .carousel-item.active') || document.querySelector('.carousel-item');
+                                    return activeItem ? activeItem.querySelector('.gallery-main-img') : document.querySelector('.gallery-main-img');
+                                }
+
+                                function updatePanelPlacement() {
+                                    if (!hoverZoomPanel || !galleryStage) return;
+                                    if (window.innerWidth < 992) {
+                                        hoverZoomPanel.style.left = '50%';
+                                        hoverZoomPanel.style.transform = 'translateX(-50%)';
+                                        hoverZoomPanel.style.top = 'auto';
+                                        hoverZoomPanel.style.bottom = '16px';
+                                        hoverZoomPanel.style.width = 'min(360px, calc(100vw - 32px))';
+                                        hoverZoomPanel.style.height = '280px';
+                                        return;
+                                    }
+
+                                    const stageRect = galleryStage.getBoundingClientRect();
+                                    const spaceRight = window.innerWidth - stageRect.right - 28;
+                                    const effectiveWidth = Math.min(DARAZ_ZOOM_CONFIG.panelWidth, Math.max(380, spaceRight));
+
+                                    hoverZoomPanel.style.top = '0px';
+                                    hoverZoomPanel.style.left = `calc(100% + ${DARAZ_ZOOM_CONFIG.panelOffset}px)`;
+                                    hoverZoomPanel.style.width = `${effectiveWidth}px`;
+                                    hoverZoomPanel.style.height = `${DARAZ_ZOOM_CONFIG.panelHeight}px`;
+                                    hoverZoomPanel.style.transform = '';
+                                }
+
+                                // Uses the exact same image currently displayed in the main hover view
+                                function loadZoomImage(activeImg) {
+                                    if (!activeImg || !hoverZoomImg) return;
+
+                                    const sameImageHiRes = activeImg.getAttribute('data-zoom-src');
+                                    const exactImgSrc = sameImageHiRes || activeImg.currentSrc || activeImg.src || activeImg.getAttribute('src');
+
+                                    if (!exactImgSrc) return;
+
+                                    if (hoverZoomImg.getAttribute('src') !== exactImgSrc) {
+                                        hoverZoomImg.src = exactImgSrc;
+                                    }
+                                    if (hoverZoomBadge) {
+                                        hoverZoomBadge.textContent = `${DARAZ_ZOOM_CONFIG.zoomFactor.toFixed(1)}× Magnification`;
+                                    }
+                                    if (hoverZoomLoader) {
+                                        hoverZoomLoader.classList.remove('is-loading');
+                                    }
+                                }
+
+                                function showZoom(e) {
+                                    if (currentGalleryMode !== 'hover' || window.innerWidth < 768) return;
+                                    const activeImg = getActiveImage();
+                                    if (!activeImg) return;
+
+                                    isHoveringActive = true;
+                                    updatePanelPlacement();
+                                    loadZoomImage(activeImg);
+                                    if (hoverZoomPanel) hoverZoomPanel.classList.add('is-visible');
+                                    if (galleryLens) galleryLens.style.display = 'block';
+                                    updateZoomPosition(e);
+                                }
+
+                                function hideZoom() {
+                                    isHoveringActive = false;
+                                    if (hoverZoomPanel) hoverZoomPanel.classList.remove('is-visible');
+                                    if (galleryLens) galleryLens.style.display = 'none';
+                                    if (rafId) {
+                                        cancelAnimationFrame(rafId);
+                                        rafId = null;
+                                    }
+                                }
+
+                                function updateZoomPosition(e) {
+                                    if (!isHoveringActive) return;
+                                    const activeImg = getActiveImage();
+                                    if (!activeImg || !galleryCard || !galleryLens || !hoverZoomPanel || !hoverZoomImg) return;
+
+                                    const cardRect = galleryCard.getBoundingClientRect();
+                                    const imgRect = activeImg.getBoundingClientRect();
+
+                                    if (e.clientX < imgRect.left || e.clientX > imgRect.right ||
+                                        e.clientY < imgRect.top || e.clientY > imgRect.bottom) {
+                                        hideZoom();
+                                        return;
+                                    }
+
+                                    const panelRect = hoverZoomPanel.getBoundingClientRect();
+                                    const panelW = panelRect.width || DARAZ_ZOOM_CONFIG.panelWidth;
+                                    const panelH = panelRect.height || DARAZ_ZOOM_CONFIG.panelHeight;
+                                    const zoomM = DARAZ_ZOOM_CONFIG.zoomFactor;
+
+                                    const imgW = imgRect.width;
+                                    const imgH = imgRect.height;
+
+                                    const lensW = Math.max(24, Math.min(imgW, Math.round(panelW / zoomM)));
+                                    const lensH = Math.max(24, Math.min(imgH, Math.round(panelH / zoomM)));
+
+                                    const cursorX = e.clientX - imgRect.left;
+                                    const cursorY = e.clientY - imgRect.top;
+
+                                    let lensX = cursorX - (lensW / 2);
+                                    let lensY = cursorY - (lensH / 2);
+                                    lensX = Math.max(0, Math.min(imgW - lensW, lensX));
+                                    lensY = Math.max(0, Math.min(imgH - lensH, lensY));
+
+                                    const imgOffsetLeft = imgRect.left - cardRect.left;
+                                    const imgOffsetTop = imgRect.top - cardRect.top;
+
+                                    galleryLens.style.width = `${lensW}px`;
+                                    galleryLens.style.height = `${lensH}px`;
+                                    galleryLens.style.left = `${imgOffsetLeft + lensX}px`;
+                                    galleryLens.style.top = `${imgOffsetTop + lensY}px`;
+
+                                    const zoomedW = imgW * zoomM;
+                                    const zoomedH = imgH * zoomM;
+                                    const zoomTranslateX = -lensX * zoomM;
+                                    const zoomTranslateY = -lensY * zoomM;
+
+                                    hoverZoomImg.style.width = `${zoomedW}px`;
+                                    hoverZoomImg.style.height = `${zoomedH}px`;
+                                    hoverZoomImg.style.transform = `translate3d(${zoomTranslateX}px, ${zoomTranslateY}px, 0)`;
+                                }
+
+                                document.querySelectorAll('.gallery-viewport').forEach(viewport => {
+                                    const img = viewport.querySelector('.gallery-main-img');
+                                    if (!img) return;
+
+                                    viewport.addEventListener('mouseenter', (e) => {
+                                        if (currentGalleryMode === 'hover') {
+                                            lastMouseEvent = e;
+                                            showZoom(e);
+                                        }
+                                    });
+
+                                    viewport.addEventListener('mouseleave', () => {
+                                        hideZoom();
+                                    });
+
+                                    viewport.addEventListener('mousemove', (e) => {
+                                        lastMouseEvent = e;
+                                        if (currentGalleryMode !== 'hover') return;
+                                        if (!isHoveringActive) {
+                                            showZoom(e);
+                                        } else {
+                                            if (rafId) cancelAnimationFrame(rafId);
+                                            rafId = requestAnimationFrame(() => updateZoomPosition(e));
+                                        }
+                                    });
+
+                                    viewport.addEventListener('wheel', (e) => {
+                                        if (currentGalleryMode !== 'hover' || !isHoveringActive) return;
+                                        e.preventDefault();
+                                        const delta = e.deltaY < 0 ? 0.25 : -0.25;
+                                        const newFactor = Math.round((DARAZ_ZOOM_CONFIG.zoomFactor + delta) * 10) / 10;
+                                        setZoomFactor(newFactor);
+                                    }, { passive: false });
                                 });
-                                image.addEventListener('mouseleave', () => hoverZoomPanel.classList.remove('is-visible'));
-                                image.addEventListener('mousemove', event => {
-                                if (!galleryStage.classList.contains('hover-zoom-mode')) return;
-                                const bounds = image.getBoundingClientRect();
-                                const x = Math.max(0, Math.min(1, (event.clientX - bounds.left) / bounds.width));
-                                const y = Math.max(0, Math.min(1, (event.clientY - bounds.top) / bounds.height));
-                                hoverZoomPanel.style.backgroundImage = `url("${image.currentSrc || image.src}")`;
-                                hoverZoomPanel.style.backgroundPosition = `${x * 100}% ${y * 100}%`;
+
+                                if (carouselEl) {
+                                    carouselEl.addEventListener('slid.bs.carousel', function (e) {
+                                        const newActiveImg = getActiveImage();
+                                        if (newActiveImg) {
+                                            loadZoomImage(newActiveImg);
+                                        }
+                                        if (isHoveringActive && lastMouseEvent) {
+                                            updateZoomPosition(lastMouseEvent);
+                                        }
+                                    });
+                                }
+
+                                modeButtons.forEach(btn => {
+                                    btn.addEventListener('click', () => setGalleryMode(btn.dataset.galleryMode));
                                 });
+
+                                zoomFactorButtons.forEach(btn => {
+                                    btn.addEventListener('click', () => {
+                                        const factor = parseFloat(btn.dataset.zoomFactor);
+                                        setZoomFactor(factor);
+                                    });
                                 });
-                                if (localStorage.getItem('auction-gallery-mode') === 'hover') setGalleryMode('hover');
+
+                                window.addEventListener('resize', () => {
+                                    if (isHoveringActive) updatePanelPlacement();
+                                });
+
+                                setGalleryMode(currentGalleryMode);
+                                setZoomFactor(DARAZ_ZOOM_CONFIG.zoomFactor);
                             </script>
 
                             @if (isAuthenticated && !isBankAdmin)
@@ -696,75 +935,195 @@
 
                             .gallery-main-img:hover { filter: saturate(1.05); }
 
-                            .gallery-mode-bar {
-                            display: flex;
-                            align-items: center;
-                            gap: 8px;
-                            margin: 0 0 10px;
-                            flex-wrap: wrap;
+                            :root {
+                                --zoom-panel-w: 540px;
+                                --zoom-panel-h: 540px;
+                                --zoom-offset: 20px;
                             }
                             .gallery-stage {
-                            position: relative;
-                            z-index: 20;
-                            overflow: visible;
+                                position: relative;
+                                z-index: 20;
+                                overflow: visible;
                             }
                             .gallery-stage.hover-zoom-mode {
-                            z-index: 30;
+                                z-index: 1040;
                             }
                             .gallery-stage .gallery-card {
-                            overflow: visible !important;
+                                overflow: visible !important;
+                                z-index: 10;
+                            }
+                            .gallery-mode-bar {
+                                display: flex;
+                                align-items: center;
+                                justify-content: space-between;
+                                gap: 10px;
+                                margin: 0 0 12px;
+                                flex-wrap: wrap;
                             }
                             .gallery-mode-label {
-                            color: #666;
-                            font-size: 0.78rem;
-                            font-weight: 700;
-                            margin-right: 4px;
+                                color: #495057;
+                                font-size: 0.78rem;
+                                font-weight: 700;
                             }
                             .gallery-mode-btn {
-                            border: 1px solid #ddd;
-                            background: #fff;
-                            color: #555;
-                            border-radius: 999px;
-                            padding: 7px 12px;
-                            font-size: 0.76rem;
-                            cursor: pointer;
-                            transition: all 0.2s ease;
+                                border: 1px solid #dee2e6;
+                                background: #fff;
+                                color: #495057;
+                                border-radius: 999px;
+                                padding: 6px 14px;
+                                font-size: 0.76rem;
+                                font-weight: 600;
+                                cursor: pointer;
+                                transition: all 0.2s ease;
+                                display: inline-flex;
+                                align-items: center;
+                                gap: 5px;
                             }
                             .gallery-mode-btn.active,
                             .gallery-mode-btn:hover {
-                            background: var(--bs-primary);
-                            border-color: var(--bs-primary);
-                            color: #fff;
+                                background: var(--bs-primary);
+                                border-color: var(--bs-primary);
+                                color: #fff;
+                                box-shadow: 0 3px 10px rgba(255, 107, 87, 0.25);
                             }
+                            .gallery-zoom-level-group {
+                                background: #f1f3f5;
+                                padding: 3px 6px;
+                                border-radius: 999px;
+                                border: 1px solid #e9ecef;
+                            }
+                            .gallery-zoom-level-label {
+                                font-size: 0.74rem;
+                                font-weight: 700;
+                                color: #6c757d;
+                                padding: 0 4px;
+                            }
+                            .zoom-factor-btn {
+                                border: none;
+                                background: transparent;
+                                color: #495057;
+                                border-radius: 999px;
+                                padding: 3px 9px;
+                                font-size: 0.72rem;
+                                font-weight: 700;
+                                cursor: pointer;
+                                transition: all 0.18s ease;
+                            }
+                            .zoom-factor-btn:hover {
+                                color: var(--bs-primary);
+                                background: rgba(255, 107, 87, 0.12);
+                            }
+                            .zoom-factor-btn.active {
+                                background: var(--bs-primary);
+                                color: #fff;
+                                box-shadow: 0 2px 6px rgba(255, 107, 87, 0.35);
+                            }
+
+                            /* Daraz / AliExpress Precision Rectangular Lens */
+                            .gallery-zoom-lens {
+                                position: absolute;
+                                display: none;
+                                pointer-events: none;
+                                z-index: 25;
+                                border: 1.5px solid rgba(255, 107, 87, 0.85);
+                                background: rgba(255, 107, 87, 0.18);
+                                box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.6) inset, 0 8px 24px rgba(0, 0, 0, 0.3);
+                                border-radius: 4px;
+                                cursor: crosshair;
+                                will-change: transform, left, top, width, height;
+                            }
+                            .gallery-stage.hover-zoom-mode .gallery-main-img {
+                                cursor: crosshair;
+                            }
+
+                            /* Large High-Definition Zoom Preview Panel */
                             .hover-zoom-panel {
-                            display: none;
-                            position: absolute;
-                            z-index: 5;
-                            top: 58px;
-                            left: calc(100% + 16px);
-                            width: 360px;
-                            height: 360px;
-                            border: 3px solid #fff;
-                            border-radius: 14px;
-                            background-color: #18181b;
-                            background-repeat: no-repeat;
-                            background-size: 220% 220%;
-                            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
-                            pointer-events: none;
-                            overflow: hidden;
+                                display: none;
+                                position: absolute;
+                                z-index: 1050;
+                                top: 0;
+                                left: calc(100% + var(--zoom-offset, 20px));
+                                width: var(--zoom-panel-w, 540px);
+                                height: var(--zoom-panel-h, 540px);
+                                border: 2px solid #fff;
+                                border-radius: 16px;
+                                background-color: #0b0f19;
+                                box-shadow: 0 24px 50px -10px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(0, 0, 0, 0.08);
+                                pointer-events: none;
+                                overflow: hidden;
+                                opacity: 0;
+                                transform: scale(0.97) translateY(4px);
+                                transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
                             }
-                            .hover-zoom-caption {
-                            position: absolute;
-                            left: 10px;
-                            bottom: 8px;
-                            padding: 4px 8px;
-                            border-radius: 999px;
-                            background: rgba(0, 0, 0, 0.62);
-                            color: #fff;
-                            font-size: 0.68rem;
+                            .hover-zoom-panel.is-visible {
+                                display: block;
+                                opacity: 1;
+                                transform: scale(1) translateY(0);
                             }
-                            .gallery-stage.hover-zoom-mode .hover-zoom-panel.is-visible { display: block; }
-                            .hover-zoom-mode .gallery-main-img { cursor: crosshair; }
+                            .hover-zoom-canvas-wrap {
+                                position: relative;
+                                width: 100%;
+                                height: 100%;
+                                overflow: hidden;
+                                background: #0b0f19;
+                            }
+                            .hover-zoom-img {
+                                position: absolute;
+                                top: 0;
+                                left: 0;
+                                max-width: none !important;
+                                max-height: none !important;
+                                pointer-events: none;
+                                image-rendering: -webkit-optimize-contrast;
+                                image-rendering: high-quality;
+                                will-change: transform, width, height;
+                                transform-origin: top left;
+                            }
+                            .hover-zoom-topbar {
+                                position: absolute;
+                                top: 12px;
+                                left: 12px;
+                                right: 12px;
+                                display: flex;
+                                align-items: center;
+                                justify-content: space-between;
+                                pointer-events: none;
+                                z-index: 5;
+                            }
+                            .hover-zoom-badge {
+                                padding: 4px 10px;
+                                border-radius: 999px;
+                                background: rgba(15, 23, 42, 0.85);
+                                backdrop-filter: blur(8px);
+                                color: #fff;
+                                font-size: 0.75rem;
+                                font-weight: 700;
+                                letter-spacing: 0.02em;
+                                border: 1px solid rgba(255, 255, 255, 0.2);
+                                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+                            }
+                            .hover-zoom-hint {
+                                padding: 4px 10px;
+                                border-radius: 999px;
+                                background: rgba(0, 0, 0, 0.65);
+                                backdrop-filter: blur(8px);
+                                color: rgba(255, 255, 255, 0.88);
+                                font-size: 0.72rem;
+                                border: 1px solid rgba(255, 255, 255, 0.15);
+                            }
+                            .hover-zoom-loader {
+                                position: absolute;
+                                inset: 0;
+                                background: rgba(255, 255, 255, 0.9);
+                                backdrop-filter: blur(4px);
+                                display: none;
+                                align-items: center;
+                                justify-content: center;
+                                z-index: 6;
+                            }
+                            .hover-zoom-loader.is-loading {
+                                display: flex;
+                            }
 
                             .image-zoom-controls {
                             display: flex;
@@ -889,21 +1248,31 @@
                             color: #222;
                             }
 
+                            @@media (max-width: 991.98px) {
+                                .hover-zoom-panel {
+                                    top: auto !important;
+                                    left: 50% !important;
+                                    bottom: 14px !important;
+                                    transform: translateX(-50%) !important;
+                                    width: min(360px, calc(100% - 24px)) !important;
+                                    height: 280px !important;
+                                }
+                                .gallery-zoom-level-group {
+                                    display: none !important;
+                                }
+                            }
                             @@media (max-width: 768px) {
-                            .hover-zoom-panel {
-                            top: auto;
-                            left: 50%;
-                            bottom: 14px;
-                            transform: translateX(-50%);
-                            width: min(320px, calc(100% - 28px));
-                            height: 260px;
-                            }
-                            .gallery-viewport {
-                            height: 320px;
-                            }
-
-                            .gallery-main-img {
-                            max-height: 300px;
-                            }
+                                .hover-zoom-panel {
+                                    display: none !important;
+                                }
+                                .gallery-zoom-lens {
+                                    display: none !important;
+                                }
+                                .gallery-viewport {
+                                    height: 320px;
+                                }
+                                .gallery-main-img {
+                                    max-height: 300px;
+                                }
                             }
                         </style>

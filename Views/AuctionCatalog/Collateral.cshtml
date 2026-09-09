@@ -155,6 +155,7 @@
                             {
                                 <img src="@item.ThumbnailUrl" class="w-100 h-100 auction-img" alt="@item.Title" loading="lazy"
                                      decoding="async" />
+                                <span class="card-zoom-badge"><i class="bi bi-search"></i> Hover zoom</span>
                             }
                             else
                             {
@@ -370,16 +371,51 @@
     .image-container {
         height: 220px;
         width: 100%;
+        position: relative;
+        overflow: hidden;
+        cursor: crosshair;
     }
 
     .auction-img {
         object-fit: cover;
         object-position: center;
-        transition: transform 0.5s ease;
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: high-quality;
+        transform-origin: center center;
+        transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        will-change: transform, transform-origin;
     }
 
-    .auction-card:hover .auction-img {
-        transform: scale(1.05);
+    .image-container:hover .auction-img {
+        transform: scale(1.48);
+    }
+
+    .card-zoom-badge {
+        position: absolute;
+        bottom: 10px;
+        left: 10px;
+        z-index: 3;
+        padding: 3px 9px;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.75);
+        backdrop-filter: blur(4px);
+        color: #fff;
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        pointer-events: none;
+        opacity: 0;
+        transform: translateY(4px);
+        transition: opacity 0.25s ease, transform 0.25s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .image-container:hover .card-zoom-badge {
+        opacity: 1;
+        transform: translateY(0);
     }
 
     .btn-outline-coral {
@@ -407,3 +443,30 @@
         color: var(--bs-primary);
     }
 </style>
+
+<script>
+    (function () {
+        // Daraz / AliExpress-Style Interactive Focal Zoom on Listing Cards
+        document.querySelectorAll('.image-container').forEach(container => {
+            const img = container.querySelector('.auction-img');
+            if (!img) return;
+
+            let rafId = null;
+
+            container.addEventListener('mousemove', e => {
+                if (rafId) cancelAnimationFrame(rafId);
+                rafId = requestAnimationFrame(() => {
+                    const rect = container.getBoundingClientRect();
+                    const x = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
+                    const y = Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100));
+                    img.style.transformOrigin = `${x}% ${y}%`;
+                });
+            });
+
+            container.addEventListener('mouseleave', () => {
+                if (rafId) cancelAnimationFrame(rafId);
+                img.style.transformOrigin = 'center center';
+            });
+        });
+    })();
+</script>
