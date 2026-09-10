@@ -368,6 +368,7 @@ FodyWeavers.xsd
 
 # User-uploaded attachments (images/PDFs saved by AttachmentUploadService)
 wwwroot/uploads/
+wwwroot/is-cache/
 
 # Local secrets / connection strings (if ever added to appsettings)
 appsettings.*.local.json

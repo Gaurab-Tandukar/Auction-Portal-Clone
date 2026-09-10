@@ -4,6 +4,7 @@ using Auction_Portal_Clone.Services.Implementation;
 using Auction_Portal_Clone.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using SixLabors.ImageSharp.Web;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +20,12 @@ builder.Services.AddScoped<IAdminDashboardService, AdminDashboardService>();
 builder.Services.AddScoped<IAttachmentUploadService, AttachmentUploadService>();
 builder.Services.AddScoped<IAdminViewDataHelper, AdminViewDataHelper>();
 builder.Services.AddScoped<IEmailSender, GmailEmailSender>();
+
+// ─── ImageSharp.Web: on-the-fly image resizing/compression ───
+// Serves resized/recompressed variants via query string (?width=900&quality=75&format=webp)
+// for any image under wwwroot, with automatic disk caching so each variant is only
+// processed once. Requires: dotnet add package SixLabors.ImageSharp.Web
+builder.Services.AddImageSharp();
 
 builder.Services.AddIdentity<User, IdentityRole>(options =>
 {
@@ -109,6 +116,11 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseRouting();
+
+// IMPORTANT: UseImageSharp() must run before static files are served, so it can
+// intercept image requests and return a resized/recompressed variant instead of
+// the original file.
+app.UseImageSharp();
 
 app.UseAuthentication();
 app.UseAuthorization();

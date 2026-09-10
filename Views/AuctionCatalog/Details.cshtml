@@ -7,6 +7,14 @@
 
     var startUtc = DateTime.SpecifyKind(Model.AuctionStartDate, DateTimeKind.Utc).ToString("o");
     var endUtc = DateTime.SpecifyKind(Model.AuctionEndDate, DateTimeKind.Utc).ToString("o");
+
+    // ─── Image optimization helper ───
+    // Appends ImageSharp.Web query params to request a resized/recompressed variant.
+    // Only used for images that load immediately (gallery main image, thumbnails,
+    // ambient blur background). Hover-zoom and the fullscreen modal keep using the
+    // raw imgUrl (via data-zoom-src / JS) so they stay full resolution.
+    Func<string, int, int, string> Resized = (url, width, quality) =>
+        string.IsNullOrEmpty(url) ? url : $"{url}?width={width}&quality={quality}&format=webp";
 }
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -103,10 +111,13 @@
                                     <div class="carousel-item @(i == 0 ? "active" : "")">
                                         <div class="gallery-viewport">
                                             <!-- Ambient Backdrop Blur (Eliminates harsh white cutoffs for portrait images) -->
-                                            <div class="gallery-ambient-bg" style="background-image: url('@imgUrl');"></div>
+                                            <!-- Tiny, heavily compressed variant — this is just a blurred backdrop -->
+                                            <div class="gallery-ambient-bg" style="background-image: url('@Resized(imgUrl, 80, 35)');"></div>
 
-                                            <!-- Main Product Image (Exact same image used for zoom & modal) -->
-                                            <img src="@imgUrl" class="gallery-main-img" alt="@Model.Title" data-bs-toggle="modal"
+                                            <!-- Main Product Image: compressed display-size variant.
+                                                 Full-res original is kept ONLY in data-zoom-src, used by
+                                                 hover-zoom and the fullscreen modal on demand. -->
+                                            <img src="@Resized(imgUrl, 900, 75)" class="gallery-main-img" alt="@Model.Title" data-bs-toggle="modal"
                                                  data-bs-target="#imageZoomModal" data-zoom-src="@imgUrl"
                                                  title="Click to view full size" loading="@(i == 0 ? "eager" : "lazy")" decoding="async" />
 
@@ -141,7 +152,8 @@
                                 {
                                     <button type="button" class="gallery-thumb-btn @(i == 0 ? "active" : "")"
                                             data-bs-target="#itemCarousel" data-bs-slide-to="@i" aria-label="Slide @(i + 1)">
-                                        <img src="@Model.ImageUrls[i]" alt="Thumbnail @(i + 1)" loading="lazy" decoding="async" />
+                                        <!-- Thumbnails only need to be a few KB, not the full original -->
+                                        <img src="@Resized(Model.ImageUrls[i], 130, 60)" alt="Thumbnail @(i + 1)" loading="lazy" decoding="async" />
                                     </button>
                                 }
                             </div>
@@ -639,7 +651,10 @@
                                     hoverZoomPanel.style.transform = '';
                                 }
 
-                                // Uses the exact same image currently displayed in the main hover view
+                                // Uses the exact same image currently displayed in the main hover view.
+                                // NOTE: data-zoom-src always holds the ORIGINAL, full-resolution URL
+                                // (set server-side above), so hover-zoom stays high quality even though
+                                // the visible <img> src is now the compressed display variant.
                                 function loadZoomImage(activeImg) {
                                     if (!activeImg || !hoverZoomImg) return;
 
