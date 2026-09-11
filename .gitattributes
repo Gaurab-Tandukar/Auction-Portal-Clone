@@ -4,6 +4,18 @@
 * text=auto
 
 ###############################################################################
+# GitHub Linguist - Language detection overrides
+# Treat Razor views as C# so the repository shows as C# instead of HTML
+###############################################################################
+*.cshtml linguist-language=C#
+*.razor  linguist-language=C#
+
+# Optional: mark common static/vendor folders as vendored
+**/wwwroot/lib/**   linguist-vendored
+**/wwwroot/css/**   linguist-vendored
+**/wwwroot/js/**    linguist-vendored
+
+###############################################################################
 # Set default behavior for command prompt diff.
 #
 # This is need for earlier builds of msysgit that does not have it on by
