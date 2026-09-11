@@ -149,9 +149,12 @@
                         badgeContainer.innerHTML = `<span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-3 py-2 fw-semibold"><i class="bi bi-shield-exclamation me-1"></i>Unverified Bidder</span>`;
                         verifyContainer.innerHTML = `
                             <div class="d-flex flex-column flex-sm-row justify-content-center align-items-center gap-2 mt-2">
+                                @if (!string.IsNullOrWhiteSpace(Configuration["Authentication:Google:ClientId"]) && !string.IsNullOrWhiteSpace(Configuration["Authentication:Google:ClientSecret"]))
+                                {
                                 <a href="/api/user/profile/verify-with-google" class="btn btn-coral btn-sm rounded-pill px-3 py-2 fw-semibold shadow-sm">
                                     <i class="bi bi-google me-1"></i>Verify with Google
                                 </a>
+                                }
                                 <button id="verifyBiddingEmailBtn" class="btn btn-outline-secondary btn-sm rounded-pill px-3 py-2 fw-semibold">
                                     <i class="bi bi-envelope me-1"></i>Verify via Email
                                 </button>

@@ -74,9 +74,23 @@ namespace Auction_Portal_Clone.Controllers
         [HttpGet]
         public IActionResult GoogleLogin(string? returnUrl = null)
         {
+            if (!GoogleAuthenticationIsConfigured())
+            {
+                TempData["ErrorMessage"] = "Google sign-in is not configured. Use email and password instead.";
+                return RedirectToAction(nameof(Index));
+            }
+
             var redirectUrl = Url.Action(nameof(GoogleCallback), "Login", new { returnUrl });
             var properties = new AuthenticationProperties { RedirectUri = redirectUrl };
             return Challenge(properties, GoogleDefaults.AuthenticationScheme);
+        }
+
+        private bool GoogleAuthenticationIsConfigured()
+        {
+            return !string.IsNullOrWhiteSpace(HttpContext.RequestServices
+                .GetRequiredService<IConfiguration>()["Authentication:Google:ClientId"])
+                && !string.IsNullOrWhiteSpace(HttpContext.RequestServices
+                .GetRequiredService<IConfiguration>()["Authentication:Google:ClientSecret"]);
         }
 
         // GET: /Login/GoogleCallback

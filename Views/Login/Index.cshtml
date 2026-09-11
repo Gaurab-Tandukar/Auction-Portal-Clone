@@ -78,6 +78,8 @@
             <p class="text-secondary small">Access your live bids and saved auction assets</p>
         </div>
 
+        @if (!string.IsNullOrWhiteSpace(Configuration["Authentication:Google:ClientId"]) && !string.IsNullOrWhiteSpace(Configuration["Authentication:Google:ClientSecret"]))
+        {
         <div class="d-grid mb-3">
             <a href="@Url.Action("GoogleLogin", "Login")" class="btn btn-light py-2.5 rounded-3 fs-6 d-flex align-items-center justify-content-center fw-semibold gap-2 border shadow-sm" style="transition: all 0.2s ease;">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 48 48">
@@ -89,6 +91,7 @@
                 Continue with Google
             </a>
         </div>
+        }
 
         <div class="d-flex align-items-center my-3">
             <hr class="flex-grow-1 text-muted opacity-25 m-0" />

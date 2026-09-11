@@ -44,6 +44,13 @@ namespace Auction_Portal_Clone.Controllers
         [Authorize]
         public IActionResult VerifyWithGoogle()
         {
+            var configuration = HttpContext.RequestServices.GetRequiredService<IConfiguration>();
+            if (string.IsNullOrWhiteSpace(configuration["Authentication:Google:ClientId"])
+                || string.IsNullOrWhiteSpace(configuration["Authentication:Google:ClientSecret"]))
+            {
+                return RedirectToAction(nameof(Index), new { verify = "unavailable" });
+            }
+
             var redirectUrl = Url.Action(nameof(GoogleVerifyCallback), "UserProfile");
             var properties = new AuthenticationProperties { RedirectUri = redirectUrl };
             return Challenge(properties, GoogleDefaults.AuthenticationScheme);
