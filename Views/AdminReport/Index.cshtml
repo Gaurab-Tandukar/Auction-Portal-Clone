@@ -1,0 +1,553 @@
+@model Auction_Portal_Clone.DTO.AuctionReportViewModel
+@{
+    ViewData["Title"] = "Ended Auctions & Winner Report";
+    var categories = ViewData["Categories"] as List<Auction_Portal_Clone.Models.Category> ?? new();
+    var filter = Model.Filter;
+    var summary = Model.Summary;
+}
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<div class="admin-report-container py-4 px-3 px-lg-5" style="max-width: 1440px; margin: 0 auto;">
+
+    <!-- ══════════════════════════════════════════
+         1. TOP HEADER & ACTIONS
+         ══════════════════════════════════════════ -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4 bg-white overflow-hidden">
+        <div class="card-body p-4 d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="report-avatar-box rounded-circle d-flex align-items-center justify-content-center flex-shrink-0">
+                    <i class="bi bi-file-earmark-bar-graph-fill fs-3 text-white"></i>
+                </div>
+                <div>
+                    <h1 class="h3 mb-0 fw-bold text-dark tracking-tight">Auction Settlement &amp; Winner Report</h1>
+                    <div class="d-flex align-items-center gap-2 mt-1">
+                        <span class="badge bg-coral-subtle rounded-pill px-3 py-1 font-monospace fw-bold" style="font-size: 0.75rem; color: #b83a28 !important;">
+                            <i class="bi bi-award-fill me-1"></i>Official Bank Operations
+                        </span>
+                        <span class="text-muted small">• Generated @DateTime.UtcNow.ToLocalTime().ToString("d MMM yyyy, HH:mm")</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <!-- Manual Finalize Trigger -->
+                <form asp-controller="AdminReport" asp-action="FinalizeEnded" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-sm btn-coral rounded-pill px-3.5 py-2 fw-bold shadow-sm"
+                            onclick="return confirm('Scan and finalize all ended auctions now? Winning bidders will receive email notifications.');">
+                        <i class="bi bi-hammer me-1.5 pe-1"></i>Finalize Ended Auctions Now
+                    </button>
+                </form>
+
+                <!-- Export CSV -->
+                <a asp-controller="AdminReport" asp-action="ExportCsv"
+                   asp-route-DateFrom="@filter.DateFrom?.ToString("yyyy-MM-dd")"
+                   asp-route-DateTo="@filter.DateTo?.ToString("yyyy-MM-dd")"
+                   asp-route-FinalStatus="@filter.FinalStatus"
+                   asp-route-CategoryId="@filter.CategoryId"
+                   asp-route-CollateralCategory="@filter.CollateralCategory"
+                   asp-route-Keyword="@filter.Keyword"
+                   class="btn btn-sm btn-outline-dark rounded-pill px-3 py-2 fw-semibold">
+                    <i class="bi bi-filetype-csv me-1"></i>Export CSV
+                </a>
+
+                <!-- Print Report Button -->
+                <button type="button" onclick="window.print()" class="btn btn-sm btn-light border rounded-pill px-3 py-2 text-secondary fw-semibold">
+                    <i class="bi bi-printer me-1"></i>Print View
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alerts / Flash Messages -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show rounded-4 border-0 shadow-sm mb-4 py-3" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-check-circle-fill fs-4 me-3 text-success"></i>
+                <div class="fw-semibold">@TempData["SuccessMessage"]</div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["InfoMessage"] != null)
+    {
+        <div class="alert alert-info alert-dismissible fade show rounded-4 border-0 shadow-sm mb-4 py-3" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-info-circle-fill fs-4 me-3 text-info"></i>
+                <div class="fw-semibold">@TempData["InfoMessage"]</div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show rounded-4 border-0 shadow-sm mb-4 py-3" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-exclamation-triangle-fill fs-4 me-3 text-danger"></i>
+                <div class="fw-semibold">@TempData["ErrorMessage"]</div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- ══════════════════════════════════════════
+         2. KPI SUMMARY CARDS
+         ══════════════════════════════════════════ -->
+    <div class="row g-3 g-lg-4 mb-4">
+        <!-- Total Ended -->
+        <div class="col-6 col-lg-3">
+            <div class="card metric-kpi-card border-0 shadow-sm rounded-4 h-100 p-3 p-lg-4">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="kpi-label">Ended Auctions</span>
+                    <div class="kpi-icon-box bg-secondary bg-opacity-10 text-secondary">
+                        <i class="bi bi-calendar2-check"></i>
+                    </div>
+                </div>
+                <div class="d-flex align-items-baseline gap-2">
+                    <h2 class="h1 fw-bold text-dark mb-0">@summary.TotalEndedAuctions</h2>
+                    <span class="small text-muted">total closed</span>
+                </div>
+                <div class="mt-3 pt-2 border-top small text-muted">
+                    <span>Includes sold, unsold &amp; pending</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sold (Winners) -->
+        <div class="col-6 col-lg-3">
+            <div class="card metric-kpi-card border-0 shadow-sm rounded-4 h-100 p-3 p-lg-4">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="kpi-label text-success">Sold (Won)</span>
+                    <div class="kpi-icon-box bg-success bg-opacity-10 text-success">
+                        <i class="bi bi-patch-check-fill"></i>
+                    </div>
+                </div>
+                <div class="d-flex align-items-baseline gap-2">
+                    <h2 class="h1 fw-bold text-success mb-0">@summary.TotalSoldAuctions</h2>
+                    <span class="small text-muted">assets awarded</span>
+                </div>
+                <div class="mt-3 pt-2 border-top small text-muted">
+                    <span class="fw-semibold text-success">
+                        @(summary.TotalEndedAuctions > 0 ? (summary.TotalSoldAuctions * 100 / summary.TotalEndedAuctions) : 0)% conversion rate
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Unsold -->
+        <div class="col-6 col-lg-3">
+            <div class="card metric-kpi-card border-0 shadow-sm rounded-4 h-100 p-3 p-lg-4">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="kpi-label text-dark">Unsold / Reserve Unmet</span>
+                    <div class="kpi-icon-box bg-dark bg-opacity-10 text-dark">
+                        <i class="bi bi-x-circle-fill"></i>
+                    </div>
+                </div>
+                <div class="d-flex align-items-baseline gap-2">
+                    <h2 class="h1 fw-bold text-dark mb-0">@summary.TotalUnsoldAuctions</h2>
+                    <span class="small text-muted">no winning bid</span>
+                </div>
+                <div class="mt-3 pt-2 border-top small text-muted">
+                    <span>Reserve not met or no bids</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Realized Value -->
+        <div class="col-6 col-lg-3">
+            <div class="card metric-kpi-card border-0 shadow-sm rounded-4 h-100 p-3 p-lg-4">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="kpi-label" style="color: #c23d2c;">Realized Value</span>
+                    <div class="kpi-icon-box bg-danger bg-opacity-10 text-danger">
+                        <i class="bi bi-cash-stack"></i>
+                    </div>
+                </div>
+                <div class="d-flex align-items-baseline gap-1">
+                    <span class="fw-bold" style="font-size: 1.1rem; color: #c23d2c;">Rs.</span>
+                    <h2 class="h2 fw-bold mb-0" style="color: #c23d2c;">@summary.TotalWinningValue.ToString("N0")</h2>
+                </div>
+                <div class="mt-3 pt-2 border-top small text-muted">
+                    <span>Across @summary.TotalBidsCount total submitted bids</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         3. ADVANCED FILTER PANEL
+         ══════════════════════════════════════════ -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4 bg-white no-print">
+        <div class="card-header bg-transparent border-0 pt-4 px-4 pb-0">
+            <h2 class="h6 mb-0 fw-bold text-dark d-flex align-items-center gap-2">
+                <i class="bi bi-funnel-fill text-coral"></i> Filter Report Criteria
+            </h2>
+        </div>
+        <div class="card-body p-4">
+            <form method="get" asp-controller="AdminReport" asp-action="Index">
+                <div class="row g-3 align-items-end">
+                    <!-- Search Term -->
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold text-muted text-uppercase tracking-wider">Search</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 rounded-start-3"><i class="bi bi-search text-muted"></i></span>
+                            <input type="text" name="Keyword" value="@filter.Keyword" class="form-control rounded-end-3 border-start-0"
+                                   placeholder="Title or Winner name/email..." />
+                        </div>
+                    </div>
+
+                    <!-- Final Status -->
+                    <div class="col-md-2">
+                        <label class="form-label small fw-bold text-muted text-uppercase tracking-wider">Final Outcome</label>
+                        <select name="FinalStatus" class="form-select rounded-3">
+                            <option value="">All Outcomes</option>
+                            <option value="Sold" selected="@(filter.FinalStatus == Auction_Portal_Clone.Models.AuctionFinalStatus.Sold)">Sold (Winner Found)</option>
+                            <option value="Unsold" selected="@(filter.FinalStatus == Auction_Portal_Clone.Models.AuctionFinalStatus.Unsold)">Unsold (No Winner)</option>
+                            <option value="Pending" selected="@(filter.FinalStatus == Auction_Portal_Clone.Models.AuctionFinalStatus.Pending)">Pending Finalization</option>
+                        </select>
+                    </div>
+
+                    <!-- Collateral Category -->
+                    <div class="col-md-2">
+                        <label class="form-label small fw-bold text-muted text-uppercase tracking-wider">Collateral</label>
+                        <select name="CollateralCategory" class="form-select rounded-3">
+                            <option value="">All Collateral Types</option>
+                            @foreach (Auction_Portal_Clone.Models.CollateralCategory cat in Enum.GetValues(typeof(Auction_Portal_Clone.Models.CollateralCategory)))
+                            {
+                                <option value="@cat" selected="@(filter.CollateralCategory == cat)">@cat.ToDisplayName()</option>
+                            }
+                        </select>
+                    </div>
+
+                    <!-- Date Range: From -->
+                    <div class="col-md-2">
+                        <label class="form-label small fw-bold text-muted text-uppercase tracking-wider">Ended From</label>
+                        <input type="date" name="DateFrom" value="@filter.DateFrom?.ToString("yyyy-MM-dd")" class="form-control rounded-3" />
+                    </div>
+
+                    <!-- Date Range: To -->
+                    <div class="col-md-2">
+                        <label class="form-label small fw-bold text-muted text-uppercase tracking-wider">Ended To</label>
+                        <input type="date" name="DateTo" value="@filter.DateTo?.ToString("yyyy-MM-dd")" class="form-control rounded-3" />
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="col-md-1 d-flex gap-1">
+                        <button type="submit" class="btn btn-coral rounded-3 w-100 fw-bold" title="Apply Filter">
+                            <i class="bi bi-filter"></i>
+                        </button>
+                        <a asp-action="Index" class="btn btn-light border rounded-3" title="Reset Filters">
+                            <i class="bi bi-arrow-counterclockwise"></i>
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         4. DATA TABLE OF ENDED AUCTIONS
+         ══════════════════════════════════════════ -->
+    <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden">
+        <div class="card-header bg-transparent border-0 pt-4 px-4 pb-2 d-flex justify-content-between align-items-center">
+            <div>
+                <h3 class="h5 mb-0 fw-bold text-dark d-flex align-items-center gap-2">
+                    <i class="bi bi-table text-primary"></i> Ended Auction Records
+                </h3>
+                <p class="text-muted small mb-0">Showing @Model.PagedItems.Items.Count of @Model.PagedItems.TotalCount results</p>
+            </div>
+            <span class="badge bg-light border text-dark px-3 py-1.5 rounded-pill small">
+                Page @Model.PagedItems.Page of @Model.PagedItems.TotalPages
+            </span>
+        </div>
+
+        <div class="card-body px-4 pb-4 pt-2">
+            @if (Model.PagedItems.Items.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" id="reportTable">
+                        <thead class="table-light text-uppercase small text-muted" style="font-size: 0.72rem; letter-spacing: 0.05em;">
+                            <tr>
+                                <th class="border-0 rounded-start-3">Asset / Item</th>
+                                <th class="border-0">End Date</th>
+                                <th class="border-0 text-end">Reserve Price</th>
+                                <th class="border-0 text-end">Winning Bid</th>
+                                <th class="border-0 text-center">Outcome</th>
+                                <th class="border-0">Winner Details</th>
+                                <th class="border-0 text-center">Bids</th>
+                                <th class="border-0 text-end rounded-end-3">Determined At</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.PagedItems.Items)
+                            {
+                                <tr>
+                                    <!-- Asset / Title -->
+                                    <td style="max-width: 260px;">
+                                        <div class="fw-bold text-dark text-truncate" title="@item.Title">
+                                            <a asp-controller="AuctionCatalog" asp-action="Details" asp-route-id="@item.AuctionItemId"
+                                               class="text-decoration-none text-dark hover-coral" target="_blank">
+                                                @item.Title
+                                            </a>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-2 mt-1 small text-muted">
+                                            <span class="badge bg-light border text-secondary px-2 py-0.5 rounded-pill" style="font-size: 0.68rem;">
+                                                @item.CollateralCategoryName
+                                            </span>
+                                            <span><i class="bi bi-geo-alt me-0.5"></i>@item.MunicipalityName</span>
+                                        </div>
+                                    </td>
+
+                                    <!-- End Date -->
+                                    <td class="small text-muted" style="white-space: nowrap;">
+                                        @item.AuctionEndDate.ToLocalTime().ToString("d MMM yyyy")<br />
+                                        <span class="text-secondary" style="font-size: 0.75rem;">@item.AuctionEndDate.ToLocalTime().ToString("HH:mm")</span>
+                                    </td>
+
+                                    <!-- Reserve Price -->
+                                    <td class="text-end fw-semibold text-secondary small" style="white-space: nowrap;">
+                                        Rs. @item.ReservePrice.ToString("N2")
+                                    </td>
+
+                                    <!-- Winning Bid -->
+                                    <td class="text-end fw-bold text-dark" style="white-space: nowrap;">
+                                        @if (item.WinningAmount.HasValue)
+                                        {
+                                            <span class="text-success">Rs. @item.WinningAmount.Value.ToString("N2")</span>
+                                        }
+                                        else if (item.HighestBidAmount.HasValue)
+                                        {
+                                            <span class="text-muted text-decoration-line-through small">Rs. @item.HighestBidAmount.Value.ToString("N2")</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted small">No Bids</span>
+                                        }
+                                    </td>
+
+                                    <!-- Outcome Badge -->
+                                    <td class="text-center" style="white-space: nowrap;">
+                                        @if (item.FinalStatus == Auction_Portal_Clone.Models.AuctionFinalStatus.Sold)
+                                        {
+                                            <span class="badge bg-success bg-opacity-15 text-success border border-success border-opacity-25 px-2.5 py-1.5 rounded-pill fw-bold" style="font-size: 0.72rem;">
+                                                <i class="bi bi-check-circle-fill me-1"></i>Sold
+                                            </span>
+                                        }
+                                        else if (item.FinalStatus == Auction_Portal_Clone.Models.AuctionFinalStatus.Unsold)
+                                        {
+                                            <span class="badge bg-dark bg-opacity-10 text-dark border border-dark border-opacity-15 px-2.5 py-1.5 rounded-pill fw-bold" style="font-size: 0.72rem;">
+                                                <i class="bi bi-x-circle me-1"></i>Unsold
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning bg-opacity-15 text-dark border border-warning border-opacity-25 px-2.5 py-1.5 rounded-pill fw-bold" style="font-size: 0.72rem;">
+                                                <i class="bi bi-clock-history me-1"></i>Pending
+                                            </span>
+                                        }
+                                    </td>
+
+                                    <!-- Winner Details -->
+                                    <td style="max-width: 220px;">
+                                        @if (!string.IsNullOrEmpty(item.WinnerName))
+                                        {
+                                            <div class="fw-bold text-dark text-truncate" title="@item.WinnerName">
+                                                <i class="bi bi-person-fill text-primary me-1"></i>@item.WinnerName
+                                            </div>
+                                            <div class="text-muted small text-truncate" title="@item.WinnerEmail" style="font-size: 0.75rem;">
+                                                @item.WinnerEmail
+                                            </div>
+                                            @if (item.WinnerNotifiedAt.HasValue)
+                                            {
+                                                <span class="badge bg-light text-success border border-success border-opacity-25 px-1.5 py-0.5 rounded-pill" style="font-size: 0.65rem;" title="Email sent: @item.WinnerNotifiedAt.Value.ToLocalTime().ToString("g")">
+                                                    <i class="bi bi-envelope-check-fill me-1"></i>Notified
+                                                </span>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted small">None</span>
+                                        }
+                                    </td>
+
+                                    <!-- Total Bids -->
+                                    <td class="text-center">
+                                        <span class="badge bg-light text-dark border px-2.5 py-1 rounded-pill small fw-semibold">
+                                            @item.TotalBids
+                                        </span>
+                                    </td>
+
+                                    <!-- Winner Determined At -->
+                                    <td class="text-end small text-muted" style="white-space: nowrap;">
+                                        @if (item.WinnerDeterminedAt.HasValue)
+                                        {
+                                            <span>@item.WinnerDeterminedAt.Value.ToLocalTime().ToString("d MMM, HH:mm")</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted opacity-50">&mdash;</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                @if (Model.PagedItems.TotalPages > 1)
+                {
+                    <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top no-print">
+                        <span class="small text-muted">
+                            Page @Model.PagedItems.Page of @Model.PagedItems.TotalPages (@Model.PagedItems.TotalCount total records)
+                        </span>
+
+                        <ul class="pagination pagination-sm mb-0">
+                            @if (Model.PagedItems.HasPreviousPage)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link rounded-pill me-1" asp-action="Index"
+                                       asp-route-Page="@(Model.PagedItems.Page - 1)"
+                                       asp-route-Keyword="@filter.Keyword"
+                                       asp-route-FinalStatus="@filter.FinalStatus"
+                                       asp-route-CategoryId="@filter.CategoryId"
+                                       asp-route-CollateralCategory="@filter.CollateralCategory"
+                                       asp-route-DateFrom="@filter.DateFrom?.ToString("yyyy-MM-dd")"
+                                       asp-route-DateTo="@filter.DateTo?.ToString("yyyy-MM-dd")">
+                                        &larr; Previous
+                                    </a>
+                                </li>
+                            }
+
+                            @for (int p = 1; p <= Model.PagedItems.TotalPages; p++)
+                            {
+                                if (p == Model.PagedItems.Page || p == 1 || p == Model.PagedItems.TotalPages || (p >= Model.PagedItems.Page - 2 && p <= Model.PagedItems.Page + 2))
+                                {
+                                    <li class="page-item @(p == Model.PagedItems.Page ? "active" : "")">
+                                        <a class="page-link rounded-circle mx-0.5" asp-action="Index"
+                                           asp-route-Page="@p"
+                                           asp-route-Keyword="@filter.Keyword"
+                                           asp-route-FinalStatus="@filter.FinalStatus"
+                                           asp-route-CategoryId="@filter.CategoryId"
+                                           asp-route-CollateralCategory="@filter.CollateralCategory"
+                                           asp-route-DateFrom="@filter.DateFrom?.ToString("yyyy-MM-dd")"
+                                           asp-route-DateTo="@filter.DateTo?.ToString("yyyy-MM-dd")">
+                                            @p
+                                        </a>
+                                    </li>
+                                }
+                            }
+
+                            @if (Model.PagedItems.HasNextPage)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link rounded-pill ms-1" asp-action="Index"
+                                       asp-route-Page="@(Model.PagedItems.Page + 1)"
+                                       asp-route-Keyword="@filter.Keyword"
+                                       asp-route-FinalStatus="@filter.FinalStatus"
+                                       asp-route-CategoryId="@filter.CategoryId"
+                                       asp-route-CollateralCategory="@filter.CollateralCategory"
+                                       asp-route-DateFrom="@filter.DateFrom?.ToString("yyyy-MM-dd")"
+                                       asp-route-DateTo="@filter.DateTo?.ToString("yyyy-MM-dd")">
+                                        Next &rarr;
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="text-center py-5 text-muted">
+                    <i class="bi bi-inbox-fill fs-1 d-block mb-2 opacity-40"></i>
+                    <h5 class="fw-bold text-dark">No ended auctions found</h5>
+                    <p class="small text-muted mb-3">There are no ended auctions matching the specified filter criteria.</p>
+                    <a asp-action="Index" class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1.5">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i>Clear Filters
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+
+</div>
+
+<style>
+    .tracking-tight { letter-spacing: -0.025em; }
+    .tracking-wider { letter-spacing: 0.05em; }
+
+    .report-avatar-box {
+        width: 52px;
+        height: 52px;
+        background: linear-gradient(135deg, #ff6b57 0%, #d94b37 100%);
+        box-shadow: 0 4px 12px rgba(255, 107, 87, 0.35);
+    }
+
+    .bg-coral {
+        background-color: #ff6b57 !important;
+        color: #ffffff !important;
+    }
+
+    .bg-coral-subtle {
+        background-color: #fff0ec !important;
+    }
+
+    .text-coral {
+        color: #c23d2c !important;
+    }
+
+    .hover-coral:hover {
+        color: #c23d2c !important;
+    }
+
+    .metric-kpi-card {
+        background: #ffffff;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        border: 1px solid rgba(0, 0, 0, 0.08) !important;
+    }
+
+    .metric-kpi-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08) !important;
+    }
+
+    .kpi-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #4a4a4a;
+    }
+
+    .kpi-icon-box {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.15rem;
+    }
+
+    /* Print Styles */
+    @@media print {
+        header, footer, .no-print, .btn, .pagination, #wishlist-toggle-btn {
+            display: none !important;
+        }
+        body, .admin-report-container {
+            max-width: 100% !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            background: #fff !important;
+        }
+        .card {
+            border: 1px solid #ddd !important;
+            box-shadow: none !important;
+        }
+        .table {
+            font-size: 10pt !important;
+        }
+    }
+</style>

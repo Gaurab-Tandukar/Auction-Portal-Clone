@@ -1,4 +1,4 @@
-﻿@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Identity
 @using Auction_Portal_Clone.Models
 @inject SignInManager<User> SignInManager
 @inject UserManager<User> UserManager
@@ -51,8 +51,11 @@
                             <li class="nav-item">
                                 <a class="nav-link active fw-semibold" aria-current="page" href="/Admin/AuctionItem">Auction
                                     Manager</a>
-                                </li>
-                            } else
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link active fw-semibold" aria-current="page" href="/Admin/Reports">Reports</a>
+                            </li>
+                        } else
                             {
                                 <li class="nav-item">
                                     <a class="nav-link active fw-semibold" aria-current="page"

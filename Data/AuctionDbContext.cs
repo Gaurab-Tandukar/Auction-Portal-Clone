@@ -77,6 +77,14 @@ namespace Auction_Portal_Clone.Data
                         .HasConversion<int>()
                         .IsRequired();
 
+                        entity.Property(a => a.FinalStatus)
+                        .HasConversion<int>()
+                        .IsRequired()
+                        .HasDefaultValue(AuctionFinalStatus.Pending);
+
+                        entity.Property(a => a.WinningAmount)
+                        .HasColumnType("decimal(18,2)");
+
                         // Relationship: Category -> AuctionItems (Restrict Delete)
                         entity.HasOne(a => a.Category)
                         .WithMany(c => c.AuctionItems)
@@ -89,9 +97,22 @@ namespace Auction_Portal_Clone.Data
                         .HasForeignKey(a => a.MunicipalityId)
                         .OnDelete(DeleteBehavior.Restrict);
 
+                        // Relationship: WinnerUser -> AuctionItems (Restrict Delete)
+                        entity.HasOne(a => a.WinnerUser)
+                        .WithMany()
+                        .HasForeignKey(a => a.WinnerUserId)
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                        // Relationship: WinningBid -> AuctionItems (Restrict Delete)
+                        entity.HasOne(a => a.WinningBid)
+                        .WithMany()
+                        .HasForeignKey(a => a.WinningBidId)
+                        .OnDelete(DeleteBehavior.Restrict);
+
                         // Indexing for search & filtering performance
                         entity.HasIndex(a => new { a.CategoryId, a.Status, a.AuctionEndDate });
                         entity.HasIndex(a => new { a.CollateralCategory, a.Status, a.AuctionEndDate });
+                        entity.HasIndex(a => new { a.FinalStatus, a.AuctionEndDate });
                         entity.HasIndex(a => a.MunicipalityId);
                   });
 

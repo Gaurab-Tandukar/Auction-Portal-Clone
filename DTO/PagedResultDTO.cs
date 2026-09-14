@@ -8,5 +8,7 @@ namespace Auction_Portal_Clone.DTO
         public int PageSize { get; set; }
 
         public int TotalPages => PageSize == 0 ? 0 : (int)Math.Ceiling(TotalCount / (double)PageSize);
+        public bool HasPreviousPage => Page > 1;
+        public bool HasNextPage => Page < TotalPages;
     }
 }

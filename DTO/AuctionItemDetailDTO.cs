@@ -31,6 +31,14 @@ namespace Auction_Portal_Clone.DTO
 
         public bool IsSavedByCurrentUser { get; set; }
         public bool HasCurrentUserBid { get; set; }
+        public decimal? CurrentUserHighestBid { get; set; }
+
+        // Final determination outcome & winner info
+        public AuctionFinalStatus FinalStatus { get; set; }
+        public DateTime? WinnerDeterminedAt { get; set; }
+        public decimal? WinningAmount { get; set; }
+        public bool IsCurrentUserWinner { get; set; }
+        public string? WinnerDisplayName { get; set; }
     }
 
     public class AttachmentDocumentDTO

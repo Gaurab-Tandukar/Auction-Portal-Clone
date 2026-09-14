@@ -42,12 +42,29 @@ The project provides a practical foundation for a transparent digital auction wo
 - View saved listings and retrieve wishlist data for the navigation UI
 - View current user profile and bidding-verification state
 
+### 🏆 Auction Settlement, Winner Determination & Notifications
+
+- **Automatic Background Worker**: Periodic hosted service (`AuctionWinnerHostedService`) runs every 60 seconds (configurable) to scan and finalize ended auctions without requiring page visits.
+- **Idempotent Winner Logic**: When an auction ends (`AuctionEndDate <= UtcNow`):
+  - Qualifying bids must meet or exceed `ReservePrice`.
+  - The highest qualifying bid is awarded the win (ties broken by earliest submission timestamp).
+  - If no bids or no bids meet reserve, the asset is marked `Unsold` (No Winner).
+  - Determinations are recorded atomically (`WinnerUserId`, `WinningBidId`, `WinningAmount`, `FinalStatus`, `WinnerDeterminedAt`) and are fully idempotent.
+- **Winner Email Notification**: Winning bidder receives an official HTML notification via `IEmailSender` including asset reference, winning amount in NPR, claim instructions, bank branch location, and a 7-day claim window.
+- **Bidder Experience**:
+  - Details page displays clear outcome banners: 🎉 **You Won** (with claim next steps), **You Did Not Win** (with winning bid amount comparison), or **Auction Ended • No Winner**.
+  - Bidder Profile includes a dedicated **My Bids & Outcomes** tracking section.
+
 ### 🛡️ Bank Staff Administration
 
 Users in the `BankStaff` role can:
 
 - View dashboard summary information
 - Search and filter all auction items
+- Access the **Auction Settlement & Winner Report** (`/Admin/Reports`) with KPI summary cards (Total Ended, Sold, Unsold, Realized Value, Bids)
+- Filter ended auctions by date range, outcome (Sold/Unsold/Pending), collateral type, and keywords
+- Trigger immediate settlement via the **Finalize Ended Auctions Now** manual fallback action
+- Export ended auction records to **CSV** and generate clean **Print Views**
 - Create and edit auction listings
 - Manage draft and active listing intent (upcoming/closed states resolved from dates)
 - Upload images and supporting documents
@@ -209,6 +226,61 @@ dotnet dev-certs https --trust
 | Profile             | `/profile`                     | Public page; protected profile actions |
 | Admin dashboard     | `/Admin/Dashboard`             | `BankStaff`                            |
 | Admin auction items | `/Admin/AuctionItem`           | `BankStaff`                            |
+| Admin winner report | `/Admin/Reports`               | `BankStaff`                            |
+
+---
+
+## ⚡ Auction Winner Settlement & How to Test It
+
+### ⚙️ How Winner Determination Operates
+
+1. **Background Service (`AuctionWinnerHostedService`)**:
+   - Runs continuously in the background on a configurable timer (`AuctionSettings:WinnerCheckIntervalSeconds`, default: 60s).
+   - Scans for auction listings that meet all three conditions:
+     - `Status != AuctionStatus.Draft`
+     - `AuctionEndDate <= UtcNow`
+     - `FinalStatus == AuctionFinalStatus.Pending` (`WinnerDeterminedAt == null`)
+2. **Winner Selection Logic (`AuctionWinnerService`)**:
+   - Compares all bids placed on the item where `OfferedAmount >= ReservePrice`.
+   - Highest `OfferedAmount` wins. If two bidders bid the same highest amount, the earlier `SubmittedAt` takes precedence.
+   - If one or more bids meet or exceed the reserve price:
+     - Sets `FinalStatus = Sold` and `Status = Closed`.
+     - Sets `WinnerUserId`, `WinningBidId`, `WinningAmount`, and `WinnerDeterminedAt`.
+     - Dispatches a formatted HTML award email to the winner's registered address via `IEmailSender`.
+     - Marks `WinnerNotifiedAt` to prevent duplicate emails.
+   - If no bids were submitted or no bids reached the reserve price:
+     - Sets `FinalStatus = Unsold` and `Status = Closed`.
+     - Sets `WinnerDeterminedAt` with null winner.
+3. **Idempotency & Concurrency Safety**:
+   - Double-invocations or parallel threads are prevented via DB-state checking and a synchronization semaphore. Already-determined auctions are skipped.
+4. **Manual Trigger Fallback**:
+   - An administrator logged in as `BankStaff` can click **"Finalize Ended Auctions Now"** from `/Admin/Reports` to trigger immediate evaluation without waiting for the background timer.
+
+### 🧪 Step-by-Step Local Testing Guide
+
+#### Scenario 1: Successful Auction with Winner
+1. Log in as an administrator (`admin@auctionportal.local` / `Admin@12345`).
+2. Go to **Auction Manager** (`/Admin/AuctionItem`) and create a new auction listing:
+   - Start Date: Past date/time (e.g. yesterday).
+   - End Date: 1–2 minutes in the future (or a past time).
+   - Reserve Price: `Rs. 500,000`.
+   - Status: `Active`.
+3. Log out and register or log in as a regular verified bidder (e.g. `bidder1@test.local`).
+4. Navigate to the auction Details page and submit a bid higher than the reserve (e.g., `Rs. 550,000`).
+5. (Optional) Log in as a second verified bidder and place a bid of `Rs. 520,000`.
+6. Allow the end date to elapse. Within 60 seconds (or immediately by clicking **"Finalize Ended Auctions Now"** under `/Admin/Reports`), the background worker finalizes the auction.
+7. **Verification**:
+   - Open `/Admin/Reports`: The auction is listed as **Sold** with the winning bidder name, email, and amount `Rs. 550,000`.
+   - Log in as the winning bidder and view the auction Details page: A celebration card displays **"🎉 You Won This Auction!"** with claim instructions.
+   - Log in as the second bidder: The Details page displays **"You Did Not Win"** with the winning bid amount.
+   - In the user profile (`/profile`), the **My Bids & Outcomes** section displays the **Won (Rs. 550,000)** or **Did Not Win** status badge.
+
+#### Scenario 2: Unsold Auction (Reserve Not Met)
+1. Create an active auction with Reserve Price `Rs. 1,000,000` and an End Date set to the past.
+2. If any bids are below `Rs. 1,000,000` (or if no bids were submitted), trigger finalization.
+3. **Verification**:
+   - `/Admin/Reports` lists the auction as **Unsold**.
+   - Public Details page displays **"Auction Ended • No Winner"** (reserve price not met).
 
 ---
 

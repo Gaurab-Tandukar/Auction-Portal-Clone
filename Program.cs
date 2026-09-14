@@ -20,6 +20,9 @@ builder.Services.AddScoped<IAdminDashboardService, AdminDashboardService>();
 builder.Services.AddScoped<IAttachmentUploadService, AttachmentUploadService>();
 builder.Services.AddScoped<IAdminViewDataHelper, AdminViewDataHelper>();
 builder.Services.AddScoped<IEmailSender, GmailEmailSender>();
+builder.Services.AddScoped<IAuctionWinnerService, AuctionWinnerService>();
+builder.Services.AddScoped<IAuctionReportService, AuctionReportService>();
+builder.Services.AddHostedService<AuctionWinnerHostedService>();
 
 // ─── ImageSharp.Web: on-the-fly image resizing/compression ───
 // Serves resized/recompressed variants via query string (?width=900&quality=75&format=webp)

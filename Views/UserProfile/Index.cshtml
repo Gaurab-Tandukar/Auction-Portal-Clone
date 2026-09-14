@@ -3,7 +3,7 @@
     var verifiedResult = ViewData["VerifiedResult"] as string;
 }
 
-<div class="container py-5" style="max-width: 600px;">
+<div class="container py-5" style="max-width: 860px;">
 
     @if (!string.IsNullOrEmpty(verifiedResult))
     {
@@ -70,7 +70,7 @@
     </div>
 
     <!-- Profile Main Card -->
-    <div id="profileCard" class="card border-0 shadow-sm rounded-4 overflow-hidden d-none">
+    <div id="profileCard" class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 d-none">
         <div class="card-header bg-white border-0 pt-5 px-4 pb-0 text-center">
             <div class="avatar-circle bg-light text-primary mx-auto mb-3 d-flex align-items-center justify-content-center fw-bold fs-3 rounded-circle shadow-sm"
                  style="width: 80px; height: 80px;" id="profAvatar">
@@ -94,6 +94,28 @@
                 <a href="/" class="btn btn-outline-secondary rounded-pill px-4 py-2 fw-semibold w-50">Back to Home</a>
                 <button class="btn btn-coral w-50 py-2" onclick="handleProfileLogout()">Sign Out</button>
             </div>
+        </div>
+    </div>
+
+    <!-- My Bids & Auction Outcomes Card -->
+    <div id="myBidsCard" class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 d-none">
+        <div class="card-header bg-white border-0 pt-4 px-4 pb-2 d-flex justify-content-between align-items-center">
+            <div>
+                <h4 class="h5 mb-0 fw-bold text-dark d-flex align-items-center gap-2">
+                    <i class="bi bi-hammer text-coral"></i> My Bids &amp; Outcomes
+                </h4>
+                <p class="text-muted small mb-0">Track your active bids, awards, and historical outcomes</p>
+            </div>
+            <span class="badge bg-light text-dark border px-3 py-1.5 rounded-pill small" id="bidsCountBadge">
+                0 Bids
+            </span>
+        </div>
+        <div class="card-body px-4 pb-4 pt-2">
+            <div id="bidsLoading" class="text-center py-4 text-muted">
+                <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                <span>Loading your bids...</span>
+            </div>
+            <div id="bidsContainer"></div>
         </div>
     </div>
 
@@ -167,6 +189,7 @@
                     }
 
                     card.classList.remove("d-none");
+                    await loadMyBids();
                 } else {
                     unauthCard.classList.remove("d-none");
                 }
@@ -175,6 +198,81 @@
                 unauthCard.classList.remove("d-none");
             }
         });
+
+        async function loadMyBids() {
+            const bidsCard = document.getElementById("myBidsCard");
+            const loading = document.getElementById("bidsLoading");
+            const container = document.getElementById("bidsContainer");
+            const countBadge = document.getElementById("bidsCountBadge");
+
+            if (!bidsCard || !container) return;
+            bidsCard.classList.remove("d-none");
+
+            try {
+                const res = await fetch('/api/user/profile/my-bids');
+                loading.classList.add("d-none");
+
+                if (res.ok) {
+                    const bids = await res.json();
+                    countBadge.innerText = `${bids.length} Bid${bids.length === 1 ? '' : 's'}`;
+
+                    if (bids.length === 0) {
+                        container.innerHTML = `
+                            <div class="text-center py-4 text-muted">
+                                <i class="bi bi-hammer fs-2 d-block mb-2 opacity-40"></i>
+                                <p class="mb-0 small fw-medium">You have not placed any bids yet.</p>
+                                <a href="/AuctionCatalog" class="btn btn-sm btn-outline-dark rounded-pill px-3 py-1.5 mt-2">Browse Auctions</a>
+                            </div>`;
+                        return;
+                    }
+
+                    let html = '<div class="list-group list-group-flush">';
+                    for (const b of bids) {
+                        let outcomeBadge = '';
+                        // Outcomes: 0=ActiveLeading, 1=ActiveOutbid, 2=Won, 3=Lost, 4=EndedUnsold
+                        if (b.outcome === 2) {
+                            outcomeBadge = `<span class="badge bg-success text-white rounded-pill px-2.5 py-1 fw-bold"><i class="bi bi-trophy-fill me-1 text-warning"></i>Won (Rs. ${Number(b.winningAmount || b.userBidAmount).toLocaleString()})</span>`;
+                        } else if (b.outcome === 0) {
+                            outcomeBadge = `<span class="badge bg-primary text-white rounded-pill px-2.5 py-1 fw-bold"><i class="bi bi-check2-circle me-1"></i>Leading Bid</span>`;
+                        } else if (b.outcome === 1) {
+                            outcomeBadge = `<span class="badge bg-warning text-dark rounded-pill px-2.5 py-1 fw-bold"><i class="bi bi-exclamation-triangle-fill me-1"></i>Outbid</span>`;
+                        } else if (b.outcome === 3) {
+                            outcomeBadge = `<span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 rounded-pill px-2.5 py-1 fw-semibold"><i class="bi bi-x-circle me-1"></i>Did Not Win</span>`;
+                        } else if (b.outcome === 4) {
+                            outcomeBadge = `<span class="badge bg-secondary bg-opacity-10 text-dark border border-secondary border-opacity-25 rounded-pill px-2.5 py-1 fw-semibold"><i class="bi bi-slash-circle me-1"></i>Unsold</span>`;
+                        }
+
+                        const endFormatted = new Date(b.auctionEndDate).toLocaleDateString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+
+                        html += `
+                            <div class="list-group-item px-0 py-3 border-bottom d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
+                                <div>
+                                    <a href="/AuctionCatalog/Details/${b.auctionItemId}" class="fw-bold text-dark text-decoration-none hover-coral">
+                                        ${b.auctionTitle}
+                                    </a>
+                                    <div class="small text-muted mt-0.5">
+                                        Your Offer: <span class="fw-bold text-dark">Rs. ${Number(b.userBidAmount).toLocaleString()}</span>
+                                        • Ends/Ended: ${endFormatted}
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    ${outcomeBadge}
+                                    <a href="/AuctionCatalog/Details/${b.auctionItemId}" class="btn btn-sm btn-light border rounded-pill px-2.5 py-1" title="View Listing">
+                                        <i class="bi bi-arrow-right"></i>
+                                    </a>
+                                </div>
+                            </div>`;
+                    }
+                    html += '</div>';
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = '<div class="alert alert-warning small mb-0 rounded-3">Could not load bids history.</div>';
+                }
+            } catch (e) {
+                loading.classList.add("d-none");
+                container.innerHTML = '<div class="alert alert-warning small mb-0 rounded-3">Could not load bids history.</div>';
+            }
+        }
 
         function showDynamicAlert(status) {
             const container = document.getElementById("dynamicAlertContainer");

@@ -34,6 +34,10 @@
                    class="btn btn-sm btn-outline-dark rounded-pill px-3 py-2 fw-semibold">
                     <i class="bi bi-list-columns-reverse me-1 pe-2"></i>All Listings
                 </a>
+                <a asp-controller="AdminReport" asp-action="Index"
+                   class="btn btn-sm btn-outline-dark rounded-pill px-3 py-2 fw-semibold">
+                    <i class="bi bi-file-earmark-bar-graph me-1 pe-2"></i>Reports
+                </a>
                 <a asp-controller="AdminAuctionItem" asp-action="Create"
                    class="btn btn-sm btn-coral rounded-pill px-3.5 py-2 fw-bold shadow-sm">
                     <i class="bi bi-plus-circle-fill me-1.5 pe-2"></i>Create Listing
@@ -133,7 +137,7 @@
                 </div>
                 <div class="mt-3 pt-2 border-top d-flex align-items-center justify-content-between">
                     <span class="small text-muted">Finalized auctions</span>
-                    <a asp-controller="AdminAuctionItem" asp-action="Index"
+                    <a asp-controller="AdminReport" asp-action="Index"
                        class="small text-decoration-none fw-semibold text-dark">
                         History &rarr;
                     </a>

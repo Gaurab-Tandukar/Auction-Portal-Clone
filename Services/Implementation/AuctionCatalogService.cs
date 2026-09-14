@@ -1,4 +1,4 @@
-﻿using Auction_Portal_Clone.Data;
+using Auction_Portal_Clone.Data;
 using Auction_Portal_Clone.DTO;
 using Auction_Portal_Clone.Models;
 using Auction_Portal_Clone.Services.Interfaces;
@@ -90,6 +90,7 @@ namespace Auction_Portal_Clone.Services.Implementation
                 .Include(a => a.Category)
                 .Include(a => a.Attachments)
                 .Include(a => a.Municipality).ThenInclude(m => m.District).ThenInclude(d => d.Province)
+                .Include(a => a.WinnerUser)
                 .FirstOrDefaultAsync(a => a.Id == id);
 
             if (item is null)
@@ -97,15 +98,28 @@ namespace Auction_Portal_Clone.Services.Implementation
 
             bool isSaved = false;
             bool hasBid = false;
+            decimal? userHighestBid = null;
 
             if (!string.IsNullOrEmpty(currentUserId))
             {
                 isSaved = await _db.SavedListings
                     .AnyAsync(s => s.AuctionItemId == id && s.UserId == currentUserId);
 
-                hasBid = await _db.Bids
-                    .AnyAsync(b => b.AuctionItemId == id && b.UserId == currentUserId);
+                var userBids = await _db.Bids
+                    .Where(b => b.AuctionItemId == id && b.UserId == currentUserId)
+                    .Select(b => b.OfferedAmount)
+                    .ToListAsync();
+
+                if (userBids.Count > 0)
+                {
+                    hasBid = true;
+                    userHighestBid = userBids.Max();
+                }
             }
+
+            bool isWinner = !string.IsNullOrEmpty(currentUserId) &&
+                            item.FinalStatus == AuctionFinalStatus.Sold &&
+                            item.WinnerUserId == currentUserId;
 
             return new AuctionItemDetailDTO
             {
@@ -142,7 +156,13 @@ namespace Auction_Portal_Clone.Services.Implementation
                     })
                     .ToList(),
                 IsSavedByCurrentUser = isSaved,
-                HasCurrentUserBid = hasBid
+                HasCurrentUserBid = hasBid,
+                CurrentUserHighestBid = userHighestBid,
+                FinalStatus = item.FinalStatus,
+                WinningAmount = item.WinningAmount,
+                WinnerDeterminedAt = item.WinnerDeterminedAt,
+                IsCurrentUserWinner = isWinner,
+                WinnerDisplayName = item.WinnerUser?.FullName
             };
         }
     }

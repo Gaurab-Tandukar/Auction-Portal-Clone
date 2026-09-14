@@ -1,11 +1,14 @@
+using Auction_Portal_Clone.Data;
 using Auction_Portal_Clone.DTO;
 using Auction_Portal_Clone.Models;
+using Auction_Portal_Clone.Services;
 using Auction_Portal_Clone.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Net;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
@@ -135,6 +138,75 @@ namespace Auction_Portal_Clone.Controllers
                 IsVerifiedForBidding = user.IsVerifiedForBidding,
                 Roles = roles
             });
+        }
+
+        // GET: api/user/profile/my-bids
+        [HttpGet("my-bids")]
+        [Authorize]
+        public async Task<IActionResult> GetMyBids([FromServices] AuctionDbContext db)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            var now = DateTime.UtcNow;
+
+            var bids = await db.Bids
+                .Include(b => b.AuctionItem)
+                    .ThenInclude(a => a.Bids)
+                .Where(b => b.UserId == userId)
+                .OrderByDescending(b => b.SubmittedAt)
+                .ToListAsync();
+
+            var list = new List<UserBidHistoryItemDTO>();
+            var grouped = bids.GroupBy(b => b.AuctionItemId);
+
+            foreach (var group in grouped)
+            {
+                var highestUserBid = group.OrderByDescending(b => b.OfferedAmount).First();
+                var item = highestUserBid.AuctionItem;
+                var effectiveStatus = AuctionStatusResolver.Resolve(item.Status, item.AuctionStartDate, item.AuctionEndDate, now);
+                var allItemBids = item.Bids.OrderByDescending(b => b.OfferedAmount).ToList();
+                var currentHighest = allItemBids.FirstOrDefault()?.OfferedAmount ?? item.ReservePrice;
+
+                UserBidOutcome outcome;
+                bool isWinner = item.FinalStatus == AuctionFinalStatus.Sold && item.WinnerUserId == userId;
+
+                if (effectiveStatus == AuctionStatus.Closed)
+                {
+                    if (isWinner)
+                        outcome = UserBidOutcome.Won;
+                    else if (item.FinalStatus == AuctionFinalStatus.Unsold)
+                        outcome = UserBidOutcome.EndedUnsold;
+                    else
+                        outcome = UserBidOutcome.Lost;
+                }
+                else
+                {
+                    outcome = (highestUserBid.OfferedAmount >= currentHighest)
+                        ? UserBidOutcome.ActiveLeading
+                        : UserBidOutcome.ActiveOutbid;
+                }
+
+                list.Add(new UserBidHistoryItemDTO
+                {
+                    BidId = highestUserBid.Id,
+                    AuctionItemId = item.Id,
+                    AuctionTitle = item.Title,
+                    ReservePrice = item.ReservePrice,
+                    UserBidAmount = highestUserBid.OfferedAmount,
+                    CurrentHighestBid = currentHighest,
+                    SubmittedAt = highestUserBid.SubmittedAt,
+                    AuctionEndDate = item.AuctionEndDate,
+                    AuctionStatus = effectiveStatus,
+                    FinalStatus = item.FinalStatus,
+                    IsUserWinner = isWinner,
+                    WinningAmount = item.WinningAmount,
+                    Outcome = outcome
+                });
+            }
+
+            return Ok(list);
         }
 
         // POST: api/user/profile/send-verification

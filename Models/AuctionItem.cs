@@ -7,6 +7,13 @@ namespace Auction_Portal_Clone.Models
         Active = 2,
         Closed = 3
     }
+    public enum AuctionFinalStatus
+    {
+        Pending = 0,
+        Sold = 1,
+        Unsold = 2
+    }
+
     public class AuctionItem
     {
         public int Id { get; set; }
@@ -22,6 +29,16 @@ namespace Auction_Portal_Clone.Models
         public DateTime AuctionEndDate { get; set; }
         public AuctionStatus Status { get; set; } = AuctionStatus.Draft;
         public CollateralCategory CollateralCategory { get; set; } = CollateralCategory.Land;
+
+        // Final determination outcome & winner info
+        public AuctionFinalStatus FinalStatus { get; set; } = AuctionFinalStatus.Pending;
+        public string? WinnerUserId { get; set; }
+        public User? WinnerUser { get; set; }
+        public int? WinningBidId { get; set; }
+        public Bid? WinningBid { get; set; }
+        public decimal? WinningAmount { get; set; }
+        public DateTime? WinnerDeterminedAt { get; set; }
+        public DateTime? WinnerNotifiedAt { get; set; }
 
         // Foreign Keys
         public int CategoryId { get; set; }
