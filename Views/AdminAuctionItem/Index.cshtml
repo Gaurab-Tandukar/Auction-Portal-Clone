@@ -20,9 +20,14 @@
             <p class="text-muted mb-0 fs-6">Filter, review, and manage inventory across all auction listings.</p>
         </div>
         <div>
-            <a asp-action="Create" class="btn btn-coral rounded-pill px-4 py-2 shadow-sm fw-semibold">
-                <i class="bi bi-plus-lg me-1"></i>New Auction Item
-            </a>
+            <div class="d-flex flex-wrap gap-2">
+                <a asp-action="BulkImport" class="btn btn-outline-dark rounded-pill px-4 py-2 shadow-sm fw-semibold">
+                    <i class="bi bi-box-arrow-in-up me-1"></i>Bulk Import
+                </a>
+                <a asp-action="Create" class="btn btn-coral rounded-pill px-4 py-2 shadow-sm fw-semibold">
+                    <i class="bi bi-plus-lg me-1"></i>New Auction Item
+                </a>
+            </div>
         </div>
     </div>
 

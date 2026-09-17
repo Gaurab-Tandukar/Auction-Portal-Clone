@@ -66,6 +66,9 @@ Users in the `BankStaff` role can:
 - Trigger immediate settlement via the **Finalize Ended Auctions Now** manual fallback action
 - Export ended auction records to **CSV** and generate clean **Print Views**
 - Create and edit auction listings
+- **Bulk import auction items** from an Excel (.xlsx) spreadsheet with an optional ZIP of images/PDF notices
+  (`/Admin/AuctionItem/BulkImport`): download a ready-made template, upload the spreadsheet + media ZIP, and review a
+  per-row success/failure report (up to 200 rows per import; rows referencing missing media fail without creating the item)
 - Manage draft and active listing intent (upcoming/closed states resolved from dates)
 - Upload images and supporting documents
 - Remove listing attachments
@@ -92,6 +95,7 @@ Users in the `BankStaff` role can:
 | ASP.NET Core Identity      | Authentication & authorization                |
 | Google Authentication      | OAuth login + bidding verification            |
 | Razor Views + HTML/CSS/JS  | UI layer                                      |
+| ClosedXML                  | Excel (.xlsx) parsing & template generation (bulk import) |
 | SixLabors ImageSharp.Web   | On-demand image resizing & caching            |
 | Gmail SMTP                 | Bidding verification emails                   |
 

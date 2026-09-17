@@ -18,6 +18,7 @@ builder.Services.AddScoped<IBidService, BidService>();
 builder.Services.AddScoped<IAdminAuctionItemService, AdminAuctionItemService>();
 builder.Services.AddScoped<IAdminDashboardService, AdminDashboardService>();
 builder.Services.AddScoped<IAttachmentUploadService, AttachmentUploadService>();
+builder.Services.AddScoped<IBulkAuctionImportService, BulkAuctionImportService>();
 builder.Services.AddScoped<IAdminViewDataHelper, AdminViewDataHelper>();
 builder.Services.AddScoped<IEmailSender, GmailEmailSender>();
 builder.Services.AddScoped<IAuctionWinnerService, AuctionWinnerService>();

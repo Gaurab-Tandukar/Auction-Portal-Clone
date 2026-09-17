@@ -13,15 +13,18 @@ namespace Auction_Portal_Clone.Controllers.Admin
         private readonly IAdminAuctionItemService _adminService;
         private readonly IAttachmentUploadService _uploadService;
         private readonly IAdminViewDataHelper _viewDataHelper;
+        private readonly IBulkAuctionImportService _bulkImportService;
 
         public AdminAuctionItemController(
             IAdminAuctionItemService adminService,
             IAttachmentUploadService uploadService,
-            IAdminViewDataHelper viewDataHelper)
+            IAdminViewDataHelper viewDataHelper,
+            IBulkAuctionImportService bulkImportService)
         {
             _adminService = adminService;
             _uploadService = uploadService;
             _viewDataHelper = viewDataHelper;
+            _bulkImportService = bulkImportService;
         }
 
         // GET /Admin/AuctionItem
@@ -35,6 +38,38 @@ namespace Auction_Portal_Clone.Controllers.Admin
             await _viewDataHelper.PopulateLocationViewDataAsync(ViewData);
 
             return View(result);
+        }
+
+        // GET /Admin/AuctionItem/BulkImport
+        [HttpGet("BulkImport")]
+        public IActionResult BulkImport()
+        {
+            return View();
+        }
+
+        // POST /Admin/AuctionItem/BulkImport
+        [HttpPost("BulkImport")]
+        [ValidateAntiForgeryToken]
+        [RequestSizeLimit(110 * 1024 * 1024)] // spreadsheet + optional ZIP of media
+        public async Task<IActionResult> BulkImport(IFormFile? spreadsheetFile, IFormFile? mediaZip)
+        {
+            if (spreadsheetFile is null || spreadsheetFile.Length == 0)
+            {
+                ModelState.AddModelError(string.Empty, "Please choose an .xlsx spreadsheet to import.");
+                return View();
+            }
+
+            var result = await _bulkImportService.ImportAsync(spreadsheetFile, mediaZip);
+            return View("BulkImportResult", result);
+        }
+
+        // GET /Admin/AuctionItem/BulkImportTemplate
+        [HttpGet("BulkImportTemplate")]
+        public IActionResult BulkImportTemplate()
+        {
+            var bytes = _bulkImportService.GenerateTemplate();
+            const string contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+            return File(bytes, contentType, "auction-items-bulk-import-template.xlsx");
         }
 
         // GET /Admin/AuctionItem/Create

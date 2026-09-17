@@ -27,16 +27,13 @@ namespace Auction_Portal_Clone.Services.Implementation
             List<IFormFile>? images,
             List<IFormFile>? documents)
         {
-            var uploadRoot = Path.Combine(_env.WebRootPath, "uploads", auctionItemId.ToString());
-            Directory.CreateDirectory(uploadRoot);
-
             var errors = new List<string>();
 
             if (images is not null)
             {
                 foreach (var file in images)
                 {
-                    var error = await SaveFileAsync(file, uploadRoot, auctionItemId, AllowedImageExtensions, FileType.Image);
+                    var error = await SaveFileAsync(file, auctionItemId, FileType.Image);
                     if (error is not null) errors.Add(error);
                 }
             }
@@ -45,7 +42,7 @@ namespace Auction_Portal_Clone.Services.Implementation
             {
                 foreach (var file in documents)
                 {
-                    var error = await SaveFileAsync(file, uploadRoot, auctionItemId, AllowedDocExtensions, FileType.PDFNotice);
+                    var error = await SaveFileAsync(file, auctionItemId, FileType.PDFNotice);
                     if (error is not null) errors.Add(error);
                 }
             }
@@ -55,35 +52,68 @@ namespace Auction_Portal_Clone.Services.Implementation
                 : ServiceResult<bool>.Failure(string.Join(" ", errors));
         }
 
+        /// <summary>
+        /// Saves a single attachment from an arbitrary stream (e.g. a file
+        /// extracted from a ZIP during bulk import) using the same storage
+        /// rules as the IFormFile upload path:
+        /// wwwroot/uploads/{auctionItemId}/{guid}{ext}.
+        /// </summary>
+        public async Task<ServiceResult<string>> SaveStreamAsync(
+            int auctionItemId,
+            Stream content,
+            long contentLength,
+            string originalFileName,
+            FileType fileType)
+        {
+            var allowedExtensions = fileType == FileType.Image ? AllowedImageExtensions : AllowedDocExtensions;
+
+            if (contentLength <= 0)
+                return ServiceResult<string>.Failure($"'{originalFileName}' is empty and was skipped.");
+
+            if (contentLength > MaxFileSizeBytes)
+                return ServiceResult<string>.Failure($"'{originalFileName}' exceeds the 10 MB limit and was skipped.");
+
+            var ext = Path.GetExtension(originalFileName).ToLowerInvariant();
+            if (!allowedExtensions.Contains(ext))
+                return ServiceResult<string>.Failure($"'{originalFileName}' has an unsupported file type and was skipped.");
+
+            var uploadRoot = Path.Combine(_env.WebRootPath, "uploads", auctionItemId.ToString());
+            Directory.CreateDirectory(uploadRoot);
+
+            var safeFileName = $"{Guid.NewGuid()}{ext}";
+            var fullPath = Path.Combine(uploadRoot, safeFileName);
+
+            using (var stream = new FileStream(fullPath, FileMode.Create, FileAccess.Write, FileShare.None))
+            {
+                await content.CopyToAsync(stream);
+            }
+
+            var relativeUrl = $"/uploads/{auctionItemId}/{safeFileName}";
+            var addResult = await _adminService.AddAttachmentAsync(auctionItemId, relativeUrl, originalFileName, fileType);
+            if (!addResult.Succeeded)
+            {
+                // Do not leave an orphan file behind when the DB insert fails.
+                try { System.IO.File.Delete(fullPath); }
+                catch (Exception) { /* best effort cleanup */ }
+
+                return ServiceResult<string>.Failure(
+                    $"'{originalFileName}' could not be recorded: {addResult.ErrorMessage}");
+            }
+
+            return ServiceResult<string>.Success(relativeUrl);
+        }
+
         private async Task<string?> SaveFileAsync(
             IFormFile file,
-            string uploadRoot,
             int auctionItemId,
-            string[] allowedExtensions,
             FileType fileType)
         {
             if (file.Length == 0)
                 return null;
 
-            if (file.Length > MaxFileSizeBytes)
-                return $"'{file.FileName}' exceeds the 10 MB limit and was skipped.";
-
-            var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
-            if (!allowedExtensions.Contains(ext))
-                return $"'{file.FileName}' has an unsupported file type and was skipped.";
-
-            var safeFileName = $"{Guid.NewGuid()}{ext}";
-            var fullPath = Path.Combine(uploadRoot, safeFileName);
-
-            using (var stream = new FileStream(fullPath, FileMode.Create))
-            {
-                await file.CopyToAsync(stream);
-            }
-
-            var relativeUrl = $"/uploads/{auctionItemId}/{safeFileName}";
-            await _adminService.AddAttachmentAsync(auctionItemId, relativeUrl, file.FileName, fileType);
-
-            return null;
+            await using var stream = file.OpenReadStream();
+            var result = await SaveStreamAsync(auctionItemId, stream, file.Length, file.FileName, fileType);
+            return result.Succeeded ? null : result.ErrorMessage;
         }
     }
 }

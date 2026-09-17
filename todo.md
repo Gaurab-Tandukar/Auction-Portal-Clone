@@ -20,5 +20,7 @@
 - BankStaff Admin Reporting suite at /Admin/Reports with KPI cards, filtering, CSV export, and manual finalize trigger --done
 
 in admin section
-add a feature to add data in bulk
-feature to add data in excel sheet and upload image
+add a feature to add data in bulk --done
+feature to add data in excel sheet and upload image --done
+
+make it good

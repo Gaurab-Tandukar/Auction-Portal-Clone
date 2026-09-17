@@ -7,21 +7,24 @@ namespace Auction_Portal_Clone.Data
     {
         public static async Task SeedInitialDataAsync(AuctionDbContext context)
         {
-            // 1. Seed Categories if empty
-            if (!await context.Categories.AnyAsync())
+            // 1. Seed Categories if missing
+            var defaultCategories = new List<string>
             {
-                var categories = new List<Category>
-                {
-                    new Category { Name = "Real Estate", Active = true },
-                    new Category { Name = "Vehicles", Active = true },
-                    new Category { Name = "Industrial Machinery", Active = true },
-                    new Category { Name = "Commercial Assets", Active = true },
-                    new Category { Name = "Gold & Ornaments", Active = true }
-                };
+                "Real Estate",
+                "Vehicles",
+                "Industrial Machinery",
+                "Commercial Assets",
+                "Gold & Ornaments"
+            };
 
-                await context.Categories.AddRangeAsync(categories);
-                await context.SaveChangesAsync();
+            foreach (var catName in defaultCategories)
+            {
+                if (!await context.Categories.AnyAsync(c => c.Name == catName))
+                {
+                    await context.Categories.AddAsync(new Category { Name = catName, Active = true });
+                }
             }
+            await context.SaveChangesAsync();
 
             // 2. Seed Provinces, Districts, and Municipalities if empty
             if (!await context.Provinces.AnyAsync())
