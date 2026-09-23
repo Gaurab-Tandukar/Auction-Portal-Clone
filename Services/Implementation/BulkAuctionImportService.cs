@@ -16,6 +16,14 @@ namespace Auction_Portal_Clone.Services.Implementation
     /// AdminAuctionItemService (CreateAsync / AddAttachmentAsync) and
     /// AttachmentUploadService (SaveStreamAsync) so imported items and their
     /// files are stored exactly like items created through the single-item flow.
+    ///
+    /// Media matching: the ZIP is expected to contain a parent folder with one
+    /// numbered subfolder per row (e.g. "1/", "2/", "3/"...). A row's
+    /// MediaFolder column holds that number; every image and PDF found inside
+    /// the matching subfolder is attached to the row's item automatically
+    /// (images vs. PDF is decided purely by file extension). Any wrapping
+    /// top-level folder name in the ZIP is ignored — only the immediate
+    /// parent folder of each file needs to be the plain number.
     /// </summary>
     public class BulkAuctionImportService : IBulkAuctionImportService
     {
@@ -29,6 +37,8 @@ namespace Auction_Portal_Clone.Services.Implementation
 
         private static readonly string[] AllowedSpreadsheetExtensions = { ".xlsx" };
         private static readonly string[] AllowedZipExtensions = { ".zip" };
+        private static readonly string[] AllowedImageExtensions = { ".jpg", ".jpeg", ".png", ".webp" };
+        private static readonly string[] AllowedDocumentExtensions = { ".pdf" };
 
         // Exact spreadsheet headers (matched case-insensitively).
         internal static readonly string[] Headers =
@@ -36,7 +46,7 @@ namespace Auction_Portal_Clone.Services.Implementation
             "Title", "Description", "ReservePrice", "Latitude", "Longitude",
             "AuctionStartDate", "AuctionEndDate", "Status", "CollateralCategory",
             "CategoryName", "ProvinceName", "DistrictName", "MunicipalityName",
-            "ImageFileNames", "DocumentFileNames"
+            "MediaFolder"
         };
 
         private static readonly string[] RequiredHeaders =
@@ -95,9 +105,9 @@ namespace Auction_Portal_Clone.Services.Implementation
                 return result;
             }
 
-            // ── 2. Load the optional ZIP into memory (sanitized entry names) ──
-            Dictionary<string, byte[]>? zipFiles = null;
-            var zipEntryErrors = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            // ── 2. Load the optional ZIP into memory, grouped by numbered subfolder ──
+            Dictionary<string, Dictionary<string, byte[]>>? zipFolders = null;
+            var folderWarnings = new Dictionary<string, List<string>>(StringComparer.Ordinal);
 
             if (zipFile is not null && zipFile.Length > 0)
             {
@@ -112,8 +122,8 @@ namespace Auction_Portal_Clone.Services.Implementation
                     return result;
                 }
 
-                zipFiles = await LoadZipAsync(zipFile, zipEntryErrors, result);
-                if (zipFiles is null)
+                zipFolders = await LoadZipAsync(zipFile, folderWarnings, result);
+                if (zipFolders is null)
                     return result; // FileError already set inside LoadZipAsync
             }
 
@@ -149,7 +159,7 @@ namespace Auction_Portal_Clone.Services.Implementation
             // ── 5. Process row by row ────────────────────────────────────────
             foreach (var row in dataRows)
             {
-                var rowResult = await ProcessRowAsync(row, zipFiles, zipEntryErrors, categoriesByName, municipalitiesByKey);
+                var rowResult = await ProcessRowAsync(row, zipFolders, folderWarnings, categoriesByName, municipalitiesByKey);
                 result.Rows.Add(rowResult);
 
                 if (rowResult.Succeeded)
@@ -169,8 +179,8 @@ namespace Auction_Portal_Clone.Services.Implementation
 
         private async Task<BulkImportRowResultDTO> ProcessRowAsync(
             ParsedRow row,
-            Dictionary<string, byte[]>? zipFiles,
-            Dictionary<string, string> zipEntryErrors,
+            Dictionary<string, Dictionary<string, byte[]>>? zipFolders,
+            Dictionary<string, List<string>> folderWarnings,
             Dictionary<string, Category> categoriesByName,
             Dictionary<string, Municipality> municipalitiesByKey)
         {
@@ -250,14 +260,38 @@ namespace Auction_Portal_Clone.Services.Implementation
                     return Fail(row, $"Municipality '{municipalityName}' was not found under district '{districtName}' (province '{provinceName}'). " +
                                      "Check the spelling and make sure the municipality belongs to that district and province.");
 
-                // Referenced media files must exist inside the uploaded ZIP.
-                // If files are referenced but no ZIP was uploaded, fail the row
-                // BEFORE creating the auction item.
-                var imageNames = ParseFileNames(row.Cells.GetValueOrDefault("ImageFileNames"));
-                var documentNames = ParseFileNames(row.Cells.GetValueOrDefault("DocumentFileNames"));
-                var mediaError = ValidateReferencedFiles(imageNames, documentNames, zipFiles, zipEntryErrors);
-                if (mediaError is not null)
-                    return Fail(row, mediaError);
+                // ── Resolve this row's media folder (if any) ──
+                // MediaFolder holds a plain number (e.g. "1") matching a subfolder
+                // inside the uploaded ZIP. Every image/PDF found inside that
+                // subfolder is attached automatically — no filenames need to be typed.
+                var imageNames = new List<string>();
+                var documentNames = new List<string>();
+                Dictionary<string, byte[]>? folderFiles = null;
+
+                var folderText = row.Cells.GetValueOrDefault("MediaFolder");
+                if (!string.IsNullOrWhiteSpace(folderText))
+                {
+                    if (zipFolders is null)
+                        return Fail(row, $"This row references media folder '{folderText}', but no ZIP archive was uploaded. " +
+                                         "Upload the ZIP or clear the MediaFolder column.");
+
+                    if (!int.TryParse(folderText.Trim(), out var folderNumber) || folderNumber <= 0)
+                        return Fail(row, $"MediaFolder '{folderText}' must be a positive whole number matching a subfolder name in the ZIP (e.g. 1, 2, 3).");
+
+                    var folderKey = folderNumber.ToString(CultureInfo.InvariantCulture);
+
+                    if (!zipFolders.TryGetValue(folderKey, out folderFiles) || folderFiles.Count == 0)
+                        return Fail(row, $"No usable files were found inside subfolder '{folderKey}' of the uploaded ZIP.");
+
+                    foreach (var name in folderFiles.Keys)
+                    {
+                        var ext = Path.GetExtension(name).ToLowerInvariant();
+                        if (AllowedImageExtensions.Contains(ext))
+                            imageNames.Add(name);
+                        else if (AllowedDocumentExtensions.Contains(ext))
+                            documentNames.Add(name);
+                    }
+                }
 
                 // ── Create the item through the same service as the single-item flow ──
                 var dto = new AdminAuctionItemCreateDTO
@@ -281,13 +315,20 @@ namespace Auction_Portal_Clone.Services.Implementation
 
                 int newItemId = createResult.Data;
 
-                // ── Save the referenced media exactly like the single-item upload flow ──
+                // ── Save the resolved media exactly like the single-item upload flow ──
                 var warnings = new List<string>();
-                if (zipFiles is not null)
+
+                if (!string.IsNullOrWhiteSpace(folderText) &&
+                    folderWarnings.TryGetValue(int.Parse(folderText.Trim()).ToString(CultureInfo.InvariantCulture), out var skipped))
+                {
+                    warnings.AddRange(skipped);
+                }
+
+                if (folderFiles is not null)
                 {
                     foreach (var name in imageNames)
                     {
-                        var bytes = zipFiles[NormalizeFileKey(name)];
+                        var bytes = folderFiles[name];
                         var saved = await _uploadService.SaveStreamAsync(
                             newItemId, new MemoryStream(bytes), bytes.Length, name, FileType.Image);
                         if (!saved.Succeeded)
@@ -296,7 +337,7 @@ namespace Auction_Portal_Clone.Services.Implementation
 
                     foreach (var name in documentNames)
                     {
-                        var bytes = zipFiles[NormalizeFileKey(name)];
+                        var bytes = folderFiles[name];
                         var saved = await _uploadService.SaveStreamAsync(
                             newItemId, new MemoryStream(bytes), bytes.Length, name, FileType.PDFNotice);
                         if (!saved.Succeeded)
@@ -466,16 +507,22 @@ namespace Auction_Portal_Clone.Services.Implementation
         // ═══════════════════════ ZIP handling ═══════════════════════
 
         /// <summary>
-        /// Loads all sanitized ZIP entries into memory keyed by bare file name
-        /// (case-insensitive). Folder structure inside the ZIP is ignored and
-        /// path traversal is neutralized because only Path.GetFileName is kept.
+        /// Loads every image/PDF entry from the ZIP into memory, grouped by its
+        /// immediate parent folder name — which must be a plain number ("1", "2",
+        /// "3"...). Any folder wrapping those numbered folders (e.g. a top-level
+        /// "AuctionMedia/" the person zipped up) is ignored; only the last path
+        /// segment before the file name matters. Files that sit directly at the
+        /// ZIP root, inside a non-numbered folder, have an unsupported extension,
+        /// or exceed the per-file size limit are skipped and recorded as a
+        /// per-folder warning (or logged, if they can't be tied to a folder at all)
+        /// rather than failing the whole import.
         /// </summary>
-        private async Task<Dictionary<string, byte[]>?> LoadZipAsync(
+        private async Task<Dictionary<string, Dictionary<string, byte[]>>?> LoadZipAsync(
             IFormFile zipFile,
-            Dictionary<string, string> entryErrors,
+            Dictionary<string, List<string>> folderWarnings,
             BulkImportResultDTO result)
         {
-            var files = new Dictionary<string, byte[]>(StringComparer.OrdinalIgnoreCase);
+            var folders = new Dictionary<string, Dictionary<string, byte[]>>(StringComparer.Ordinal);
             long totalUncompressed = 0;
 
             try
@@ -485,16 +532,36 @@ namespace Auction_Portal_Clone.Services.Implementation
 
                 foreach (var entry in archive.Entries)
                 {
-                    var name = Path.GetFileName(entry.FullName);
-                    if (string.IsNullOrWhiteSpace(name))
+                    var entryPath = entry.FullName.Replace('\\', '/').Trim('/');
+                    if (string.IsNullOrWhiteSpace(entryPath) || entry.FullName.EndsWith("/"))
                         continue; // directory entry
 
-                    if (files.ContainsKey(name) || entryErrors.ContainsKey(name))
+                    var parts = entryPath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+                    var fileName = Path.GetFileName(parts[^1]);
+                    if (string.IsNullOrWhiteSpace(fileName))
                         continue;
+
+                    // The immediate parent folder must be a plain positive number.
+                    if (parts.Length < 2 || parts[^2].Length == 0 || !parts[^2].All(char.IsDigit))
+                    {
+                        _logger.LogWarning(
+                            "Bulk import: ZIP entry '{Entry}' is not inside a numbered subfolder (e.g. \"1/{File}\") and was skipped.",
+                            entryPath, fileName);
+                        continue;
+                    }
+
+                    var folderKey = int.Parse(parts[^2], CultureInfo.InvariantCulture).ToString(CultureInfo.InvariantCulture);
+
+                    var ext = Path.GetExtension(fileName).ToLowerInvariant();
+                    if (!AllowedImageExtensions.Contains(ext) && !AllowedDocumentExtensions.Contains(ext))
+                    {
+                        AddFolderWarning(folderWarnings, folderKey, $"'{fileName}' in folder '{folderKey}' has an unsupported file type and was skipped.");
+                        continue;
+                    }
 
                     if (entry.Length > MaxMediaFileBytes)
                     {
-                        entryErrors[name] = $"'{name}' inside the ZIP exceeds the 10 MB per-file limit.";
+                        AddFolderWarning(folderWarnings, folderKey, $"'{fileName}' in folder '{folderKey}' exceeds the 10 MB per-file limit and was skipped.");
                         continue;
                     }
 
@@ -506,13 +573,22 @@ namespace Auction_Portal_Clone.Services.Implementation
                         return null;
                     }
 
+                    if (!folders.TryGetValue(folderKey, out var filesInFolder))
+                    {
+                        filesInFolder = new Dictionary<string, byte[]>(StringComparer.OrdinalIgnoreCase);
+                        folders[folderKey] = filesInFolder;
+                    }
+
+                    if (filesInFolder.ContainsKey(fileName))
+                        continue; // duplicate name within the same folder — first one wins
+
                     using var entryStream = entry.Open();
                     using var buffer = new MemoryStream();
                     await entryStream.CopyToAsync(buffer);
-                    files[name] = buffer.ToArray();
+                    filesInFolder[fileName] = buffer.ToArray();
                 }
 
-                return files;
+                return folders;
             }
             catch (InvalidDataException ex)
             {
@@ -520,6 +596,16 @@ namespace Auction_Portal_Clone.Services.Implementation
                 result.FileError = "The uploaded ZIP file is not a valid archive.";
                 return null;
             }
+        }
+
+        private static void AddFolderWarning(Dictionary<string, List<string>> folderWarnings, string folderKey, string message)
+        {
+            if (!folderWarnings.TryGetValue(folderKey, out var list))
+            {
+                list = new List<string>();
+                folderWarnings[folderKey] = list;
+            }
+            list.Add(message);
         }
 
         // ═══════════════════════ Lookups ═══════════════════════
@@ -572,8 +658,8 @@ namespace Auction_Portal_Clone.Services.Implementation
             var rows = new[]
             {
                 Headers,
-                new[] { "Sample Land Auction - Ward 5, Kathmandu", "2 ropani land with 20 ft road access near the main highway.", "1500000", "27.7172", "85.3240", "2026-10-01 10:00", "2026-10-10 17:00", "Active", "Land", "Land & Property", "Bagmati", "Kathmandu", "Kathmandu Metropolitan City", "land-photo-1.jpg, land-photo-2.png", "auction-notice.pdf" },
-                new[] { "Sample Vehicle Auction - Truck", "2019 model truck, 6 tyres, running condition.", "2200000", "", "", "2026-11-01 09:00", "2026-11-05 17:00", "Draft", "Vehicle", "Vehicles", "Bagmati", "Lalitpur", "Lalitpur Metropolitan City", "", "" }
+                new[] { "Sample Land Auction - Ward 5, Kathmandu", "2 ropani land with 20 ft road access near the main highway.", "1500000", "27.7172", "85.3240", "2026-10-01 10:00", "2026-10-10 17:00", "Active", "Land", "Land & Property", "Bagmati", "Kathmandu", "Kathmandu Metropolitan City", "1" },
+                new[] { "Sample Vehicle Auction - Truck", "2019 model truck, 6 tyres, running condition.", "2200000", "", "", "2026-11-01 09:00", "2026-11-05 17:00", "Draft", "Vehicle", "Vehicles", "Bagmati", "Lalitpur", "Lalitpur Metropolitan City", "" }
             };
 
             var worksheet = new XElement(SpreadsheetNs + "worksheet",
@@ -623,47 +709,6 @@ namespace Auction_Portal_Clone.Services.Implementation
             allowed.Contains(Path.GetExtension(fileName).ToLowerInvariant());
 
         private static string Normalize(string? value) => (value ?? string.Empty).Trim().ToLowerInvariant();
-
-        private static string NormalizeFileKey(string? value) => (value ?? string.Empty).Trim();
-
-        private static List<string> ParseFileNames(string? raw)
-        {
-            if (string.IsNullOrWhiteSpace(raw))
-                return new List<string>();
-
-            return raw.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                      .ToList();
-        }
-
-        /// <summary>
-        /// Checks that every referenced file exists inside the uploaded ZIP.
-        /// Returns an error message for the row, or null when everything is fine.
-        /// </summary>
-        private static string? ValidateReferencedFiles(
-            List<string> imageNames,
-            List<string> documentNames,
-            Dictionary<string, byte[]>? zipFiles,
-            Dictionary<string, string> zipEntryErrors)
-        {
-            if (imageNames.Count == 0 && documentNames.Count == 0)
-                return null;
-
-            if (zipFiles is null)
-                return "This row references media files in ImageFileNames/DocumentFileNames, " +
-                       "but no ZIP archive was uploaded. Upload the ZIP or clear those columns.";
-
-            foreach (var name in imageNames.Concat(documentNames))
-            {
-                var key = NormalizeFileKey(name);
-                if (zipEntryErrors.TryGetValue(key, out var entryError))
-                    return entryError;
-
-                if (!zipFiles.ContainsKey(key))
-                    return $"File '{name}' listed in the spreadsheet was not found inside the uploaded ZIP.";
-            }
-
-            return null;
-        }
 
         private static bool TryParseStatus(string text, out AuctionStatus? status)
         {

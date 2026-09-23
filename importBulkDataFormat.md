@@ -28,6 +28,3 @@ You are generating rows for an "Auction Items" bulk import Excel/CSV file. Each 
 - Use exact official spelling/casing for Province and District names (e.g. `Sudurpaschim Province`, not `Sudurpashchim Province`).
 - Dates must be chronologically valid and in `YYYY-MM-DD HH:MM` format.
 - Don't leave any Required column blank.
-
-## When you don't have the full Nepal administrative dataset available
-Ask for or request the authoritative Province → District → Municipality list before generating rows, rather than guessing names from memory — administrative names/spellings vary and an incorrect guess will fail import.
