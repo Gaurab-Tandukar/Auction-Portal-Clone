@@ -9,116 +9,176 @@
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-5 gap-3">
         <div>
             <h1 class="h2 mb-1 fw-bold text-dark tracking-tight">Bulk Import Auction Items</h1>
-            <p class="text-muted mb-0 fs-6">Create many auction items at once from an Excel spreadsheet and a ZIP of media files.</p>
+            <p class="text-muted mb-0 fs-6">Create many auction items at once from an Excel spreadsheet and a ZIP of
+                media files.</p>
+            </div>
+            <div>
+                <a asp-action="Index" class="btn btn-outline-dark rounded-pill px-4 py-2 shadow-sm fw-semibold">
+                    <i class="bi bi-arrow-left me-1"></i>Back to Auction Items
+                </a>
+            </div>
         </div>
-        <div>
-            <a asp-action="Index" class="btn btn-outline-dark rounded-pill px-4 py-2 shadow-sm fw-semibold">
-                <i class="bi bi-arrow-left me-1"></i>Back to Auction Items
-            </a>
-        </div>
-    </div>
 
-    <div class="row g-4">
-        <!-- Instructions -->
-        <div class="col-lg-7">
-            <div class="card border-0 shadow-sm rounded-4 h-100">
-                <div class="card-body p-4">
-                    <h2 class="h5 fw-bold text-dark mb-3">
-                        <i class="bi bi-file-earmark-spreadsheet text-primary me-2"></i>How it works
-                    </h2>
-                    <ol class="text-muted mb-4 ps-3">
-                        <li class="mb-2">
-                            <a asp-action="BulkImportTemplate" class="fw-semibold">
-                                <i class="bi bi-download me-1"></i>Download the template
-                            </a> and fill in one row per auction item.
-                        </li>
-                        <li class="mb-2">
-                            Put all images (<span class="fw-semibold">.jpg, .jpeg, .png, .webp</span>) and PDF notices
-                            referenced in the spreadsheet into a single <span class="fw-semibold">.zip</span> archive
-                            (plain file names &mdash; folders inside the ZIP are ignored).
-                        </li>
-                        <li class="mb-2">
-                            In <span class="fw-semibold">ImageFileNames</span> / <span class="fw-semibold">DocumentFileNames</span>,
-                            list the ZIP file names, comma-separated (e.g. <code>land-photo-1.jpg, auction-notice.pdf</code>).
-                        </li>
-                        <li class="mb-2">
-                            Upload the spreadsheet (and the ZIP) below. Each row is validated and created one by one;
-                            failed rows are reported with the reason and do not stop the rest of the import.
-                        </li>
-                    </ol>
+        <div class="row g-4">
+            <!-- Instructions -->
+            <div class="col-lg-7">
+                <div class="card border-0 shadow-sm rounded-4 h-100">
+                    <div class="card-body p-4">
+                        <h2 class="h5 fw-bold text-dark mb-3">
+                            <i class="bi bi-file-earmark-spreadsheet text-primary me-2"></i>How it works
+                        </h2>
+                        <ol class="text-muted mb-4 ps-3">
+                            <li class="mb-2">
+                                <a asp-action="BulkImportTemplate" class="fw-semibold">
+                                    <i class="bi bi-download me-1"></i>Download the template
+                                </a> and fill in one row per auction item.
+                            </li>
+                            <li class="mb-2">
+                                Put all images (<span class="fw-semibold">.jpg, .jpeg, .png, .webp</span>) and PDF notices
+                                referenced in the spreadsheet into a single <span class="fw-semibold">.zip</span> archive
+                                (plain file names &mdash; folders inside the ZIP are ignored).
+                            </li>
+                            <li class="mb-2">
+                                In <span class="fw-semibold">ImageFileNames</span> / <span
+                                class="fw-semibold">DocumentFileNames</span>,
+                                list the ZIP file names, comma-separated (e.g.
+                                <code>land-photo-1.jpg, auction-notice.pdf</code>).
+                            </li>
+                            <li class="mb-2">
+                                The <span class="fw-semibold">Description</span> field supports HTML tags for formatting
+                                (e.g. <code>&lt;b&gt;Bold text&lt;/b&gt;</code>, <code>&lt;br&gt;</code>,
+                                <code>&lt;i&gt;Italic&lt;/i&gt;</code>).
+                                Example:
+                                <code>2 ropani land with 15 ft road access. &lt;b&gt;Suitable&lt;/b&gt; for residential &lt;br&gt;development.</code>
+                            </li>
+                            <li class="mb-2">
+                                Upload the spreadsheet (and the ZIP) below. Each row is validated and created one by one;
+                                failed rows are reported with the reason and do not stop the rest of the import.
+                            </li>
+                        </ol>
 
-                    <h3 class="h6 fw-bold text-dark mb-2">Column reference</h3>
-                    <div class="table-responsive">
-                        <table class="table table-sm table-hover align-middle mb-0 fs-7">
-                            <thead>
-                                <tr>
-                                    <th>Column</th>
-                                    <th>Required</th>
-                                    <th>Notes</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr><td>Title</td><td><span class="badge rounded-pill text-bg-danger">Yes</span></td><td>Auction item title.</td></tr>
-                                <tr><td>Description</td><td>No</td><td>Free-text description.</td></tr>
-                                <tr><td>ReservePrice</td><td><span class="badge rounded-pill text-bg-danger">Yes</span></td><td>Must be greater than 0 (e.g. 1500000).</td></tr>
-                                <tr><td>Latitude / Longitude</td><td>No</td><td>Map coordinates (-90..90 / -180..180).</td></tr>
-                                <tr><td>AuctionStartDate</td><td><span class="badge rounded-pill text-bg-danger">Yes</span></td><td>e.g. 2026-10-01 10:00 or 01/10/2026 10:00.</td></tr>
-                                <tr><td>AuctionEndDate</td><td><span class="badge rounded-pill text-bg-danger">Yes</span></td><td>Must be after the start date.</td></tr>
-                                <tr><td>Status</td><td><span class="badge rounded-pill text-bg-danger">Yes</span></td><td>Only <code>Draft</code> or <code>Active</code>.</td></tr>
-                                <tr><td>CollateralCategory</td><td><span class="badge rounded-pill text-bg-danger">Yes</span></td><td>Land, Residential Property, Commercial or Vehicle.</td></tr>
-                                <tr><td>CategoryName</td><td><span class="badge rounded-pill text-bg-danger">Yes</span></td><td>An existing category name.</td></tr>
-                                <tr><td>ProvinceName / DistrictName / MunicipalityName</td><td><span class="badge rounded-pill text-bg-danger">Yes</span></td><td>Exact names of an existing location.</td></tr>
-                                <tr><td>ImageFileNames / DocumentFileNames</td><td>No</td><td>Comma-separated file names that must exist in the ZIP.</td></tr>
-                            </tbody>
-                        </table>
+                        <h3 class="h6 fw-bold text-dark mb-2">Column reference</h3>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover align-middle mb-0 fs-7">
+                                <thead>
+                                    <tr>
+                                        <th>Column</th>
+                                        <th>Required</th>
+                                        <th>Notes</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Title</td>
+                                        <td><span class="badge rounded-pill text-bg-danger">Yes</span></td>
+                                        <td>Auction item title.</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Description</td>
+                                        <td>No</td>
+                                        <td>Free-text description with optional HTML tags (<code>&lt;b&gt;</code>,
+                                            <code>&lt;i&gt;</code>, <code>&lt;br&gt;</code>, etc.).
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>ReservePrice</td>
+                                        <td><span class="badge rounded-pill text-bg-danger">Yes</span></td>
+                                        <td>Must be greater than 0 (e.g. 1500000).</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Latitude / Longitude</td>
+                                        <td>No</td>
+                                        <td>Map coordinates (-90..90 / -180..180).</td>
+                                    </tr>
+                                    <tr>
+                                        <td>AuctionStartDate</td>
+                                        <td><span class="badge rounded-pill text-bg-danger">Yes</span></td>
+                                        <td>e.g. 2026-10-01 10:00 or 01/10/2026 10:00.</td>
+                                    </tr>
+                                    <tr>
+                                        <td>AuctionEndDate</td>
+                                        <td><span class="badge rounded-pill text-bg-danger">Yes</span></td>
+                                        <td>Must be after the start date.</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Status</td>
+                                        <td><span class="badge rounded-pill text-bg-danger">Yes</span></td>
+                                        <td>Only <code>Draft</code> or <code>Active</code>.</td>
+                                    </tr>
+                                    <tr>
+                                        <td>CollateralCategory</td>
+                                        <td><span class="badge rounded-pill text-bg-danger">Yes</span></td>
+                                        <td>Land, Residential Property, Commercial or Vehicle.</td>
+                                    </tr>
+                                    <tr>
+                                        <td>CategoryName</td>
+                                        <td><span class="badge rounded-pill text-bg-danger">Yes</span></td>
+                                        <td>An existing category name.</td>
+                                    </tr>
+                                    <tr>
+                                        <td>ProvinceName / DistrictName / MunicipalityName</td>
+                                        <td><span class="badge rounded-pill text-bg-danger">Yes</span></td>
+                                        <td>Exact names of an existing location.</td>
+                                    </tr>
+                                    <tr>
+                                        <td>ImageFileNames / DocumentFileNames</td>
+                                        <td>No</td>
+                                        <td>Comma-separated file names that must exist in the ZIP.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <p class="text-muted small mb-0 mt-3">
+                            <i class="bi bi-info-circle me-1"></i>Up to
+                            @Auction_Portal_Clone.Services.Implementation.BulkAuctionImportService.MaxRowsPerImport rows per
+                            import,
+                            spreadsheet up to 10 MB, ZIP up to 100 MB, each media file up to 10 MB.
+                            Images: .jpg/.jpeg/.png/.webp &mdash; Documents: .pdf only.
+                        </p>
                     </div>
-                    <p class="text-muted small mb-0 mt-3">
-                        <i class="bi bi-info-circle me-1"></i>Up to @Auction_Portal_Clone.Services.Implementation.BulkAuctionImportService.MaxRowsPerImport rows per import,
-                        spreadsheet up to 10 MB, ZIP up to 100 MB, each media file up to 10 MB.
-                        Images: .jpg/.jpeg/.png/.webp &mdash; Documents: .pdf only.
-                    </p>
+                </div>
+            </div>
+
+            <!-- Upload form -->
+            <div class="col-lg-5">
+                <div class="card border-0 shadow-sm rounded-4 h-100">
+                    <div class="card-body p-4">
+                        <h2 class="h5 fw-bold text-dark mb-3">
+                            <i class="bi bi-cloud-arrow-up text-primary me-2"></i>Upload files
+                        </h2>
+
+                        <div asp-validation-summary="All" class="text-danger small mb-3"></div>
+
+                        <form asp-action="BulkImport" method="post" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold" for="spreadsheetFile">
+                                    Spreadsheet (.xlsx) <span class="text-danger">*</span>
+                                </label>
+                                <input type="file" id="spreadsheetFile" name="spreadsheetFile" accept=".xlsx"
+                                       class="form-control" required />
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label fw-semibold" for="mediaZip">
+                                    Media archive (.zip) <span class="text-muted fw-normal">(optional)</span>
+                                </label>
+                                <input type="file" id="mediaZip" name="mediaZip" accept=".zip" class="form-control" />
+                                <div class="form-text">Required only if rows reference files in ImageFileNames /
+                                    DocumentFileNames.</div>
+                                </div>
+
+                                <button type="submit" class="btn btn-coral rounded-pill px-4 py-2 shadow-sm fw-semibold">
+                                    <i class="bi bi-box-arrow-in-up me-1"></i>Start Import
+                                </button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Upload form -->
-        <div class="col-lg-5">
-            <div class="card border-0 shadow-sm rounded-4 h-100">
-                <div class="card-body p-4">
-                    <h2 class="h5 fw-bold text-dark mb-3">
-                        <i class="bi bi-cloud-arrow-up text-primary me-2"></i>Upload files
-                    </h2>
-
-                    <div asp-validation-summary="All" class="text-danger small mb-3"></div>
-
-                    <form asp-action="BulkImport" method="post" enctype="multipart/form-data">
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold" for="spreadsheetFile">
-                                Spreadsheet (.xlsx) <span class="text-danger">*</span>
-                            </label>
-                            <input type="file" id="spreadsheetFile" name="spreadsheetFile"
-                                   accept=".xlsx" class="form-control" required />
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="form-label fw-semibold" for="mediaZip">
-                                Media archive (.zip) <span class="text-muted fw-normal">(optional)</span>
-                            </label>
-                            <input type="file" id="mediaZip" name="mediaZip"
-                                   accept=".zip" class="form-control" />
-                            <div class="form-text">Required only if rows reference files in ImageFileNames / DocumentFileNames.</div>
-                        </div>
-
-                        <button type="submit" class="btn btn-coral rounded-pill px-4 py-2 shadow-sm fw-semibold">
-                            <i class="bi bi-box-arrow-in-up me-1"></i>Start Import
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<style>
-    .tracking-tight { letter-spacing: -0.025em; }
-</style>
+        <style>
+            .tracking-tight {
+                letter-spacing: -0.025em;
+            }
+        </style>
