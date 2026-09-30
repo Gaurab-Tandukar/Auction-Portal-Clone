@@ -330,25 +330,63 @@
 
                         @if (totalPages > 1)
                         {
+                            int pgCurrent = Model.Page;
+
+                            // Copies every query-string value (including multi-select filters like
+                            // CategoryIds, ProvinceIds...) and only replaces Page.
+                            string PageUrl(int p)
+                            {
+                                var parts = new List<string>();
+                                foreach (var kv in Context.Request.Query)
+                                {
+                                    if (string.Equals(kv.Key, "Page", StringComparison.OrdinalIgnoreCase))
+                                        continue;
+                                    foreach (var v in kv.Value)
+                                        parts.Add($"{Uri.EscapeDataString(kv.Key)}={Uri.EscapeDataString(v ?? string.Empty)}");
+                                }
+                                parts.Add($"Page={p}");
+                                return Url.Action("Index", "AuctionCatalog") + "?" + string.Join("&", parts);
+                            }
+
+                            // First, last, and 2 pages either side of the current page
+                            var pagesToShow = Enumerable.Range(1, totalPages)
+                                .Where(n => n == 1 || n == totalPages || Math.Abs(n - pgCurrent) <= 2)
+                                .ToList();
+                            int pgPrevious = 0;
+
                             <nav aria-label="Auction catalog pagination" class="mt-4 mb-5">
-                                <ul class="pagination justify-content-center gap-1">
-                                    @for (int i = 1; i <= totalPages; i++)
+                                <ul class="pagination justify-content-center flex-wrap gap-1">
+
+                                    <li class="page-item @(pgCurrent <= 1 ? "disabled" : "")">
+                                        <a class="page-link rounded-3 border-0 shadow-sm px-3 py-2 fw-medium text-dark bg-white"
+                                           href="@(pgCurrent <= 1 ? "#" : PageUrl(pgCurrent - 1))" aria-label="Previous">
+                                            <i class="bi bi-chevron-left"></i>
+                                        </a>
+                                    </li>
+
+                                    @foreach (var n in pagesToShow)
                                     {
-                                        <li class="page-item @(i == Model.Page ? "active" : "")">
-                                            <a class="page-link rounded-3 border-0 shadow-sm px-3 py-2 fw-medium @(i == Model.Page ? "bg-primary text-white" : "text-dark bg-white")"
-                                               asp-controller="AuctionCatalog" asp-action="Index" asp-route-SearchTerm="@filter.SearchTerm"
-                                               asp-route-CategoryId="@filter.CategoryId"
-                                               asp-route-CollateralCategory="@filter.CollateralCategory"
-                                               asp-route-ProvinceId="@filter.ProvinceId" asp-route-DistrictId="@filter.DistrictId"
-                                               asp-route-MunicipalityId="@filter.MunicipalityId" asp-route-MinPrice="@filter.MinPrice"
-                                               asp-route-MaxPrice="@filter.MaxPrice"
-                                               asp-route-AuctionDateFrom="@filter.AuctionDateFrom?.ToString("yyyy-MM-dd")"
-                                               asp-route-AuctionDateTo="@filter.AuctionDateTo?.ToString("yyyy-MM-dd")" asp-route-Page="@i"
-                                               asp-route-PageSize="@filter.PageSize">
-                                                @i
-                                            </a>
+                                        if (n - pgPrevious > 1)
+                                        {
+                                            <li class="page-item disabled">
+                                                <span class="page-link rounded-3 border-0 bg-transparent text-muted px-2 py-2">&hellip;</span>
+                                            </li>
+                                        }
+
+                                        <li class="page-item @(n == pgCurrent ? "active" : "")">
+                                            <a class="page-link rounded-3 border-0 shadow-sm px-3 py-2 fw-medium @(n == pgCurrent ? "bg-primary text-white" : "text-dark bg-white")"
+                                               href="@PageUrl(n)">@n</a>
                                         </li>
+
+                                        pgPrevious = n;
                                     }
+
+                                    <li class="page-item @(pgCurrent >= totalPages ? "disabled" : "")">
+                                        <a class="page-link rounded-3 border-0 shadow-sm px-3 py-2 fw-medium text-dark bg-white"
+                                           href="@(pgCurrent >= totalPages ? "#" : PageUrl(pgCurrent + 1))" aria-label="Next">
+                                            <i class="bi bi-chevron-right"></i>
+                                        </a>
+                                    </li>
                                 </ul>
                             </nav>
                         }

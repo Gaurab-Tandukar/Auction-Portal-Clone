@@ -1,7 +1,8 @@
 @model Auction_Portal_Clone.DTO.PagedResultDTO<Auction_Portal_Clone.DTO.AuctionItemListItemDTO>
 @{
     ViewData["Title"] = "Manage Auction Items";
-    var filter = ViewData["Filter"] as Auction_Portal_Clone.DTO.AuctionItemFilterDTO ?? new Auction_Portal_Clone.DTO.AuctionItemFilterDTO();
+    var filter = ViewData["Filter"] as Auction_Portal_Clone.DTO.AuctionItemFilterDTO ?? new
+Auction_Portal_Clone.DTO.AuctionItemFilterDTO();
 
     bool hasAdvancedFilters = filter.CategoryId.HasValue || filter.ProvinceId.HasValue
         || filter.DistrictId.HasValue || filter.MunicipalityId.HasValue
@@ -71,21 +72,16 @@
                     <span class="input-group-text bg-white border-end-0 rounded-start-3">
                         <i class="bi bi-search text-muted"></i>
                     </span>
-                    <input type="text"
-                           name="SearchTerm"
-                           value="@filter.SearchTerm"
+                    <input type="text" name="SearchTerm" value="@filter.SearchTerm"
                            class="form-control border-start-0 rounded-end-3"
-                            placeholder="Search by ID, title, description, auction category, collateral, location, or status..." />
+                           placeholder="Search by ID, title, description, auction category, collateral, location, or status..." />
                 </div>
                 <button type="submit" class="btn btn-coral rounded-pill px-4 fw-semibold text-nowrap">
                     Search
                 </button>
-                <button type="button"
-                        class="btn btn-light border rounded-pill px-3 text-nowrap position-relative"
-                        data-bs-toggle="collapse"
-                        data-bs-target="#advancedFilters"
-                        aria-expanded="@(hasAdvancedFilters ? "true" : "false")"
-                        aria-controls="advancedFilters">
+                <button type="button" class="btn btn-light border rounded-pill px-3 text-nowrap position-relative"
+                        data-bs-toggle="collapse" data-bs-target="#advancedFilters"
+                        aria-expanded="@(hasAdvancedFilters ? "true" : "false")" aria-controls="advancedFilters">
                     <i class="bi bi-sliders me-1"></i>Filters
                     @if (hasAdvancedFilters)
                     {
@@ -143,7 +139,8 @@
                                     </td>
                                     <td class="text-muted">@item.CategoryName</td>
                                     <td>
-                                        <span class="badge bg-light text-dark border px-2.5 py-1 fw-semibold rounded-pill" style="font-size: 0.72rem;">
+                                        <span class="badge bg-light text-dark border px-2.5 py-1 fw-semibold rounded-pill"
+                                              style="font-size: 0.72rem;">
                                             @item.CollateralCategoryName
                                         </span>
                                     </td>
@@ -170,10 +167,8 @@
                                                class="btn btn-outline-secondary rounded-start-3 px-2.5">
                                                 <i class="bi bi-pencil me-1"></i>Edit
                                             </a>
-                                            <button type="button"
-                                                    class="btn btn-outline-danger rounded-end-3 px-2.5"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#deleteModal-@item.Id">
+                                            <button type="button" class="btn btn-outline-danger rounded-end-3 px-2.5"
+                                                    data-bs-toggle="modal" data-bs-target="#deleteModal-@item.Id">
                                                 <i class="bi bi-trash me-1"></i>Delete
                                             </button>
                                         </div>
@@ -185,11 +180,12 @@
                                                     <form asp-action="Delete" asp-route-id="@item.Id" method="post">
                                                         @Html.AntiForgeryToken()
                                                         <div class="modal-header border-0 pb-0">
-                                                             <h5 class="modal-title fw-bold text-dark">
+                                                            <h5 class="modal-title fw-bold text-dark">
                                                                 <i class="bi bi-exclamation-triangle text-danger me-2"></i>
                                                                 Delete Auction Item
                                                             </h5>
-                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                                    aria-label="Close"></button>
                                                         </div>
                                                         <div class="modal-body text-start py-4">
                                                             Are you sure you want to delete
@@ -197,7 +193,8 @@
                                                             This action cannot be undone.
                                                         </div>
                                                         <div class="modal-footer border-0 pt-0">
-                                                            <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">
+                                                            <button type="button" class="btn btn-light rounded-pill px-4"
+                                                                    data-bs-dismiss="modal">
                                                                 Cancel
                                                             </button>
                                                             <button type="submit" class="btn btn-danger rounded-pill px-4">
@@ -230,56 +227,114 @@
     </div>
 
     <!-- Pagination -->
-    @if (Model.TotalPages > 1)
+
+    @{
+        int totalPages = Model.TotalPages > 0
+            ? Model.TotalPages
+            : (int)Math.Ceiling((double)Model.TotalCount / Math.Max(Model.PageSize, 1));
+    }
+
+    @if (totalPages > 1)
     {
+        int pgCurrent = Model.Page;
+
+        // Copies every current query-string value and only replaces Page,
+        // so all filters survive when changing page.
+        string PageUrl(int p)
+        {
+            var parts = new List<string>();
+            foreach (var kv in Context.Request.Query)
+            {
+                if (string.Equals(kv.Key, "Page", StringComparison.OrdinalIgnoreCase))
+                    continue;
+                foreach (var v in kv.Value)
+                    parts.Add($"{Uri.EscapeDataString(kv.Key)}={Uri.EscapeDataString(v ?? string.Empty)}");
+            }
+            parts.Add($"Page={p}");
+            return Context.Request.PathBase + Context.Request.Path + "?" + string.Join("&", parts);
+        }
+
+        // First, last, and 2 pages either side of the current page
+        var pagesToShow = Enumerable.Range(1, totalPages)
+            .Where(n => n == 1 || n == totalPages || Math.Abs(n - pgCurrent) <= 2)
+            .ToList();
+        int pgPrevious = 0;
+
         <nav aria-label="Auction items pagination" class="mt-4">
-            <ul class="pagination justify-content-center gap-1">
-                @for (int i = 1; i <= Model.TotalPages; i++)
+            <ul class="pagination justify-content-center flex-wrap gap-1">
+
+                <li class="page-item @(pgCurrent <= 1 ? "disabled" : "")">
+                    <a class="page-link rounded-3 border-0 shadow-sm px-3 py-2 text-dark bg-white"
+                       href="@(pgCurrent <= 1 ? "#" : PageUrl(pgCurrent - 1))" aria-label="Previous">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                </li>
+
+                @foreach (var n in pagesToShow)
                 {
-                    <li class="page-item @(i == Model.Page ? "active" : "")">
-                        <a class="page-link rounded-3 border-0 shadow-sm px-3 py-2 @(i == Model.Page ? "bg-primary text-white" : "text-dark")"
-                           asp-action="Index"
-                           asp-route-SearchTerm="@filter.SearchTerm"
-                           asp-route-CategoryId="@filter.CategoryId"
-                           asp-route-CollateralCategory="@filter.CollateralCategory"
-                           asp-route-ProvinceId="@filter.ProvinceId"
-                           asp-route-DistrictId="@filter.DistrictId"
-                           asp-route-MunicipalityId="@filter.MunicipalityId"
-                           asp-route-MinPrice="@filter.MinPrice"
-                           asp-route-MaxPrice="@filter.MaxPrice"
-                           asp-route-AuctionDateFrom="@filter.AuctionDateFrom?.ToString("yyyy-MM-dd")"
-                           asp-route-AuctionDateTo="@filter.AuctionDateTo?.ToString("yyyy-MM-dd")"
-                           asp-route-Page="@i"
-                           asp-route-PageSize="@filter.PageSize">
-                            @i
-                        </a>
+                    if (n - pgPrevious > 1)
+                    {
+                        <li class="page-item disabled">
+                            <span class="page-link rounded-3 border-0 bg-transparent text-muted px-2 py-2">&hellip;</span>
+                        </li>
+                    }
+
+                    <li class="page-item @(n == pgCurrent ? "active" : "")">
+                        <a class="page-link rounded-3 border-0 shadow-sm px-3 py-2 @(n == pgCurrent ? "bg-primary text-white" : "text-dark bg-white")"
+                           href="@PageUrl(n)">@n</a>
                     </li>
+
+                    pgPrevious = n;
                 }
+
+                <li class="page-item @(pgCurrent >= totalPages ? "disabled" : "")">
+                    <a class="page-link rounded-3 border-0 shadow-sm px-3 py-2 text-dark bg-white"
+                       href="@(pgCurrent >= totalPages ? "#" : PageUrl(pgCurrent + 1))" aria-label="Next">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
             </ul>
         </nav>
     }
 </div>
 
 <style>
-    .tracking-wider { letter-spacing: 0.05em; }
-    .tracking-tight { letter-spacing: -0.025em; }
-    .fs-7 { font-size: 0.75rem; }
-    .hover-primary:hover { color: var(--bs-primary) !important; }
+    .tracking-wider {
+        letter-spacing: 0.05em;
+    }
+
+    .tracking-tight {
+        letter-spacing: -0.025em;
+    }
+
+    .fs-7 {
+        font-size: 0.75rem;
+    }
+
+    .hover-primary:hover {
+        color: var(--bs-primary) !important;
+    }
 
     /* Soften table hover to match warm cream theme */
-    .table-hover > tbody > tr:hover {
+    .table-hover>tbody>tr:hover {
         background-color: rgba(255, 107, 87, 0.04);
     }
 
-    /* Active pagination matches coral primary */
+    /* Active pagination in coral */
     .pagination .page-item.active .page-link {
-        background-color: var(--bs-primary);
-        color: #fff;
+        background-color: #ff6b57 !important;
+        border-color: #ff6b57 !important;
+        color: #fff !important;
         box-shadow: 0 4px 12px rgba(255, 107, 87, 0.25);
     }
 
     .pagination .page-link:hover {
-        background-color: rgba(255, 107, 87, 0.08);
-        color: var(--bs-primary);
+        background-color: #ffe5d9;
+        color: #ff6b57;
+    }
+
+    .pagination .page-item.active .page-link:hover {
+        background-color: #ff6b57 !important;
+        color: #fff !important;
     }
 </style>

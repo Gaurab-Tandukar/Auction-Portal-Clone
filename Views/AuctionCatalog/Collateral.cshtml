@@ -135,7 +135,7 @@
     <div class="d-flex align-items-center justify-content-between mb-4">
         <div class="text-muted fs-6">
             Showing <strong class="text-dark">@Model.Items.Count of @Model.TotalCount</strong> listing@(Model.TotalCount
-                        == 1 ? "" : "s") in <span
+                                                                                    == 1 ? "" : "s") in <span
             class="badge bg-light text-dark border px-2.5 py-1 rounded-pill">@selectedName</span>
         </div>
     </div>
@@ -232,24 +232,68 @@
         <!-- Pagination -->
         @if (totalPages > 1)
         {
+            int current = Model.Page;
+
+            // One place to build the URL, so every filter is kept when changing page
+            string PageUrl(int p) => Url.Action("Collateral", "AuctionCatalog", new
+            {
+                id = selectedCat.ToString(),
+                SearchTerm = filter.SearchTerm,
+                CategoryId = filter.CategoryId,
+                ProvinceId = filter.ProvinceId,
+                DistrictId = filter.DistrictId,
+                MunicipalityId = filter.MunicipalityId,
+                MinPrice = filter.MinPrice,
+                MaxPrice = filter.MaxPrice,
+                AuctionDateFrom = filter.AuctionDateFrom?.ToString("yyyy-MM-dd"),
+                AuctionDateTo = filter.AuctionDateTo?.ToString("yyyy-MM-dd"),
+                Page = p,
+                PageSize = filter.PageSize
+            })!;
+
+            // Pages to show: first, last, and 2 either side of the current page
+            var pagesToShow = Enumerable.Range(1, totalPages)
+                .Where(i => i == 1 || i == totalPages || Math.Abs(i - current) <= 2)
+                .ToList();
+                
             <nav aria-label="Collateral catalog pagination" class="mt-4 mb-5">
-                <ul class="pagination justify-content-center gap-1">
-                    @for (int i = 1; i <= totalPages; i++)
-                    {
-                        <li class="page-item @(i == Model.Page ? "active" : "")">
-                            <a class="page-link rounded-3 border-0 shadow-sm px-3 py-2 fw-medium @(i == Model.Page ? "bg-primary text-white" : "text-dark bg-white")"
-                               asp-controller="AuctionCatalog" asp-action="Collateral" asp-route-id="@selectedCat.ToString()"
-                               asp-route-SearchTerm="@filter.SearchTerm" asp-route-CategoryId="@filter.CategoryId"
-                               asp-route-ProvinceId="@filter.ProvinceId" asp-route-DistrictId="@filter.DistrictId"
-                               asp-route-MunicipalityId="@filter.MunicipalityId" asp-route-MinPrice="@filter.MinPrice"
-                               asp-route-MaxPrice="@filter.MaxPrice"
-                               asp-route-AuctionDateFrom="@filter.AuctionDateFrom?.ToString("yyyy-MM-dd")"
-                               asp-route-AuctionDateTo="@filter.AuctionDateTo?.ToString("yyyy-MM-dd")" asp-route-Page="@i"
-                               asp-route-PageSize="@filter.PageSize">
-                                @i
-                            </a>
-                        </li>
+                <ul class="pagination justify-content-center flex-wrap gap-1">
+
+                    <!-- Previous -->
+                    <li class="page-item @(current <= 1 ? "disabled" : "")">
+                        <a class="page-link rounded-3 border-0 shadow-sm px-3 py-2 fw-medium text-dark bg-white"
+                           href="@(current <= 1 ? "#" : PageUrl(current - 1))" aria-label="Previous">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>
+
+                    @{
+                        int previous = 0;
                     }
+                    @foreach (var i in pagesToShow)
+                    {
+                        if (i - previous > 1)
+                        {
+                            <li class="page-item disabled">
+                                <span class="page-link rounded-3 border-0 bg-transparent text-muted px-2 py-2">&hellip;</span>
+                            </li>
+                        }
+
+                        <li class="page-item @(i == current ? "active" : "")">
+                            <a class="page-link rounded-3 border-0 shadow-sm px-3 py-2 fw-medium @(i == current ? "bg-primary text-white" : "text-dark bg-white")"
+                               href="@PageUrl(i)">@i</a>
+                        </li>
+
+                        previous = i;
+                    }
+
+                    <!-- Next -->
+                    <li class="page-item @(current >= totalPages ? "disabled" : "")">
+                        <a class="page-link rounded-3 border-0 shadow-sm px-3 py-2 fw-medium text-dark bg-white"
+                           href="@(current >= totalPages ? "#" : PageUrl(current + 1))" aria-label="Next">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
                 </ul>
             </nav>
         }
