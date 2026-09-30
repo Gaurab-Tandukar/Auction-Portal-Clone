@@ -147,6 +147,7 @@ app.UseRouting();
 // intercept image requests and return a resized/recompressed variant instead of
 // the original file.
 app.UseImageSharp();
+app.UseStaticFiles();
 
 app.UseAuthentication();
 app.UseAuthorization();

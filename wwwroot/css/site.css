@@ -103,11 +103,21 @@ body {
 }
 
 @keyframes heartbeat {
-  0%   { transform: scale(1); }
-  14%  { transform: scale(1.3); }
-  28%  { transform: scale(1); }
-  42%  { transform: scale(1.2); }
-  70%  { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+  14% {
+    transform: scale(1.3);
+  }
+  28% {
+    transform: scale(1);
+  }
+  42% {
+    transform: scale(1.2);
+  }
+  70% {
+    transform: scale(1);
+  }
 }
 
 /* Badge */
@@ -130,8 +140,14 @@ body {
 }
 
 @keyframes badge-pop {
-  from { transform: scale(0); opacity: 0; }
-  to   { transform: scale(1); opacity: 1; }
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 /* ==========================================================================
@@ -260,7 +276,9 @@ body {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Empty State */
@@ -309,8 +327,14 @@ body {
 }
 
 @keyframes slide-in-item {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .wishlist-item-card:hover {
@@ -382,7 +406,7 @@ body {
   height: 26px;
   border-radius: 50%;
   border: none;
-  background: rgba(0,0,0,0.06);
+  background: rgba(0, 0, 0, 0.06);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -506,7 +530,9 @@ body {
   min-width: 330px;
   background-color: #ffffff;
   border: 1px solid rgba(0, 0, 0, 0.08) !important;
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.03) !important;
+  box-shadow:
+    0 16px 36px rgba(0, 0, 0, 0.08),
+    0 4px 12px rgba(0, 0, 0, 0.03) !important;
   animation: navDropdownFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -577,3 +603,206 @@ body {
   transform: translateY(-1px);
 }
 
+/* hero section landing page styling */
+
+.hero-wrapper {
+  position: relative;
+}
+
+/* Ambient Accent Glows filling side space */
+.hero-glow-left,
+.hero-glow-right {
+  position: absolute;
+  width: 380px;
+  height: 380px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 107, 87, 0.18) 0%,
+    rgba(250, 247, 242, 0) 70%
+  );
+  filter: blur(50px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hero-glow-left {
+  top: -40px;
+  left: -100px;
+}
+
+.hero-glow-right {
+  top: 60px;
+  right: -100px;
+}
+
+/* Vibrant Gradient Accent Text */
+.text-gradient-coral {
+  background: linear-gradient(135deg, #111111 20%, #ff6b57 80%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Floating Abstract Accent Cards for Side Fillers */
+.floating-badge {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 107, 87, 0.2);
+  padding: 10px 18px;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  font-size: 0.88rem;
+  z-index: 2;
+  animation: floatAnim 4s ease-in-out infinite alternate;
+}
+
+.floating-badge-left {
+  top: 25%;
+  left: 3%;
+  transform: rotate(-4deg);
+}
+
+.floating-badge-right {
+  top: 32%;
+  right: 3%;
+  transform: rotate(5deg);
+  animation-delay: -2s;
+}
+
+.floating-badge .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #ff6b57;
+  box-shadow: 0 0 10px #ff6b57;
+}
+
+/* Pulsing Live Dot */
+.pulse-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--bs-primary);
+  box-shadow: 0 0 0 0 rgba(255, 107, 87, 0.7);
+  animation: pulse 1.8s infinite;
+  margin-right: 6px;
+}
+
+/* ==========================================================================
+           Carousel Base Styles
+           ========================================================================== */
+.carousel-viewport {
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  padding: 50px 0;
+  z-index: 1;
+}
+
+.carousel-track {
+  display: flex;
+  gap: 20px;
+  width: max-content;
+  align-items: center;
+  animation: autoRotate 25s linear infinite;
+  will-change: transform;
+}
+
+.carousel-viewport:hover .carousel-track {
+  animation-play-state: paused;
+}
+
+.auction-card-item {
+  width: 230px;
+  height: 380px;
+  border-radius: 28px;
+  overflow: hidden;
+  flex-shrink: 0;
+  position: relative;
+  background-color: #efece6;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  will-change: transform;
+}
+
+.auction-card-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition:
+    transform 0.4s ease,
+    filter 0.4s ease;
+}
+
+.auction-card-item:hover {
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+  z-index: 10;
+}
+
+.auction-card-item:hover img {
+  transform: scale(1.12);
+  filter: brightness(1.05);
+}
+
+.auction-card-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0) 30%,
+    rgba(0, 0, 0, 0.85) 100%
+  );
+  display: flex;
+  align-items: flex-end;
+  padding: 18px;
+  color: #ffffff;
+}
+
+.handwriting-note {
+  font-family: var(--bs-handwriting-font);
+  font-size: 1.4rem;
+  color: #333333;
+  position: absolute;
+  line-height: 1;
+}
+
+/* Keyframe Animations */
+@keyframes autoRotate {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 107, 87, 0.7);
+  }
+
+  70% {
+    box-shadow: 0 0 0 8px rgba(255, 107, 87, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 107, 87, 0);
+  }
+}
+
+@keyframes floatAnim {
+  0% {
+    transform: translateY(0px) rotate(-4deg);
+  }
+
+  100% {
+    transform: translateY(-12px) rotate(-2deg);
+  }
+}
