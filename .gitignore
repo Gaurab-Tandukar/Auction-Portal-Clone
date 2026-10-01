@@ -378,3 +378,5 @@ appsettings.json
 # EF Core migrations bundle output (if you ever generate one)
 *.migrations.sql
 .vscode/
+
+/scripts

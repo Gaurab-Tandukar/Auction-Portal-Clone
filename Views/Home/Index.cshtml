@@ -3,212 +3,15 @@
 
     var auctionItems = new[]
     {
-        new { Image = "https://images.unsplash.com/photo-1541701494587-cb58502866ab?auto=format&fit=crop&w=600&q=80", Title = "Fine Art" },
-        new { Image = "https://images.unsplash.com/photo-1563089145-599997674d42?auto=format&fit=crop&w=600&q=80", Title = "Rare Collectibles" },
-        new { Image = "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=600&q=80", Title = "Vintage Watches" },
-        new { Image = "https://images.unsplash.com/photo-1617814076367-b759c7d7e738?auto=format&fit=crop&w=600&q=80", Title = "Sports Car" },
-        new { Image = "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=600&q=80", Title = "Luxury Real Estate" },
-        new { Image = "https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=600&q=80", Title = "Superbike" },
-        new { Image = "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=600&q=80", Title = "High Jewelry" }
+        new { Image = "fine-art.avif", Title = "Fine Art" },
+        new { Image = "rare-collectibles.avif", Title = "Rare Collectibles" },
+        new { Image = "vintage-watches.avif", Title = "Vintage Watches" },
+        new { Image = "sports-car.avif", Title = "Sports Car" },
+        new { Image = "luxury-real-estate.avif", Title = "Luxury Real Estate" },
+        new { Image = "superbike.avif", Title = "Superbike" },
+        new { Image = "high-jewelry.avif", Title = "High Jewelry" }
     };
 }
-
-<style>
-    /* ==========================================================================
-           Visual Enhancement & Background Glows
-           ========================================================================== */
-    .hero-wrapper {
-        position: relative;
-    }
-
-    /* Ambient Accent Glows filling side space */
-    .hero-glow-left, .hero-glow-right {
-        position: absolute;
-        width: 380px;
-        height: 380px;
-        border-radius: 50%;
-        background: radial-gradient(circle, rgba(255, 107, 87, 0.18) 0%, rgba(250, 247, 242, 0) 70%);
-        filter: blur(50px);
-        pointer-events: none;
-        z-index: 0;
-    }
-
-    .hero-glow-left {
-        top: -40px;
-        left: -100px;
-    }
-
-    .hero-glow-right {
-        top: 60px;
-        right: -100px;
-    }
-
-    /* Vibrant Gradient Accent Text */
-    .text-gradient-coral {
-        background: linear-gradient(135deg, #111111 20%, #FF6B57 80%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-
-    /* Floating Abstract Accent Cards for Side Fillers */
-    .floating-badge {
-        position: absolute;
-        background: rgba(255, 255, 255, 0.85);
-        backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 107, 87, 0.2);
-        padding: 10px 18px;
-        border-radius: 16px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        font-weight: 600;
-        font-size: 0.88rem;
-        z-index: 2;
-        animation: floatAnim 4s ease-in-out infinite alternate;
-    }
-
-    .floating-badge-left {
-        top: 25%;
-        left: 3%;
-        transform: rotate(-4deg);
-    }
-
-    .floating-badge-right {
-        top: 32%;
-        right: 3%;
-        transform: rotate(5deg);
-        animation-delay: -2s;
-    }
-
-    .floating-badge .dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        background-color: #FF6B57;
-        box-shadow: 0 0 10px #FF6B57;
-    }
-
-    /* Pulsing Live Dot */
-    .pulse-dot {
-        display: inline-block;
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background-color: var(--bs-primary);
-        box-shadow: 0 0 0 0 rgba(255, 107, 87, 0.7);
-        animation: pulse 1.8s infinite;
-        margin-right: 6px;
-    }
-
-    /* ==========================================================================
-           Carousel Base Styles
-           ========================================================================== */
-    .carousel-viewport {
-        width: 100%;
-        overflow: hidden;
-        position: relative;
-        padding: 50px 0;
-        z-index: 1;
-    }
-
-    .carousel-track {
-        display: flex;
-        gap: 20px;
-        width: max-content;
-        align-items: center;
-        animation: autoRotate 25s linear infinite;
-        will-change: transform;
-    }
-
-    .carousel-viewport:hover .carousel-track {
-        animation-play-state: paused;
-    }
-
-    .auction-card-item {
-        width: 220px;
-        height: 380px;
-        border-radius: 28px;
-        overflow: hidden;
-        flex-shrink: 0;
-        position: relative;
-        background-color: #EFECE6;
-        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
-        cursor: pointer;
-        will-change: transform, height, width;
-        transition: transform 0.1s ease-out, height 0.1s ease-out, width 0.1s ease-out;
-    }
-
-        .auction-card-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.4s ease, filter 0.4s ease;
-        }
-
-        .auction-card-item:hover {
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
-            z-index: 10;
-        }
-
-            .auction-card-item:hover img {
-                transform: scale(1.12);
-                filter: brightness(1.05);
-            }
-
-    .auction-card-overlay {
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(180deg, rgba(0,0,0,0) 30%, rgba(0, 0, 0, 0.85) 100%);
-        display: flex;
-        align-items: flex-end;
-        padding: 18px;
-        color: #FFFFFF;
-    }
-
-    .handwriting-note {
-        font-family: var(--bs-handwriting-font);
-        font-size: 1.4rem;
-        color: #333333;
-        position: absolute;
-        line-height: 1;
-    }
-
-    /* Keyframe Animations */
-    @@keyframes autoRotate {
-        from {
-            transform: translateX(0);
-        }
-
-        to {
-            transform: translateX(-50%);
-        }
-    }
-
-    @@keyframes pulse {
-        0% {
-            box-shadow: 0 0 0 0 rgba(255, 107, 87, 0.7);
-        }
-
-        70% {
-            box-shadow: 0 0 0 8px rgba(255, 107, 87, 0);
-        }
-
-        100% {
-            box-shadow: 0 0 0 0 rgba(255, 107, 87, 0);
-        }
-    }
-
-    @@keyframes floatAnim {
-        0% {
-            transform: translateY(0px) rotate(-4deg);
-        }
-
-        100% {
-            transform: translateY(-12px) rotate(-2deg);
-        }
-    }
-</style>
 
 <section class="hero-wrapper py-5 text-center overflow-hidden">
     <!-- Soft Ambient Accent Glows -->
@@ -241,7 +44,8 @@
 
         <!-- Subtitle with Bolding -->
         <p class="fs-5 text-secondary mx-auto mb-5" style="max-width: 620px; line-height: 1.6;">
-            Discover exclusive auctions from verified sellers. From <strong class="text-dark">luxury vehicles</strong> to <strong class="text-dark">rare art</strong>, your next win is one click away.
+            Discover exclusive auctions from verified sellers. From <strong class="text-dark">luxury vehicles</strong>
+            to <strong class="text-dark">rare art</strong>, your next win is one click away.
         </p>
     </div>
 
@@ -251,7 +55,7 @@
             @foreach (var item in auctionItems)
             {
                 <div class="auction-card-item">
-                    <img src="@item.Image" alt="@item.Title" loading="lazy" />
+                    <img src="~/images/hero/@item.Image" alt="@item.Title" width="230" height="380" decoding="async" />
                     <div class="auction-card-overlay">
                         <span class="fw-semibold fs-6">@item.Title</span>
                     </div>
@@ -260,7 +64,7 @@
             @foreach (var item in auctionItems)
             {
                 <div class="auction-card-item">
-                    <img src="@item.Image" alt="@item.Title" loading="lazy" />
+                    <img src="~/images/hero/@item.Image" alt="@item.Title" width="230" height="380" decoding="async" />
                     <div class="auction-card-overlay">
                         <span class="fw-semibold fs-6">@item.Title</span>
                     </div>
@@ -272,17 +76,20 @@
     <!-- CTA Area -->
     <div class="container mt-4 position-relative" style="z-index: 2;">
         <div class="d-inline-block position-relative">
-            <span class="handwriting-note d-none d-md-block" style="bottom: 12px; left: -110px; transform: rotate(-8deg);">
+            <span class="handwriting-note d-none d-md-block"
+                  style="bottom: 12px; left: -110px; transform: rotate(-8deg);">
                 It's free &rarr;
             </span>
 
-            <a href="@Url.Action("Index", "AuctionCatalog")" class="btn btn-coral fs-5 px-4 py-2.5 rounded-pill shadow-sm d-inline-flex align-items-center gap-2">
+            <a href="@Url.Action("Index", "AuctionCatalog")"
+               class="btn btn-coral fs-5 px-4 py-2.5 rounded-pill shadow-sm d-inline-flex align-items-center gap-2">
                 <i class="bi bi-hammer"></i>
                 <span>Explore Auctions</span>
                 <i class="bi bi-arrow-right"></i>
             </a>
 
-            <span class="handwriting-note d-none d-md-block" style="top: -24px; right: -140px; transform: rotate(10deg);">
+            <span class="handwriting-note d-none d-md-block"
+                  style="top: -24px; right: -140px; transform: rotate(10deg);">
                 &nwarr; Elevate your style
             </span>
         </div>
@@ -293,38 +100,42 @@
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             const viewport = document.getElementById("carouselViewport");
-            const cards = document.querySelectorAll(".auction-card-item");
+            const cards = Array.from(document.querySelectorAll(".auction-card-item"));
+            let visible = true;
 
-            function updateCardShapes() {
-                const viewportRect = viewport.getBoundingClientRect();
-                const viewportCenter = viewportRect.left + viewportRect.width / 2;
-                const maxDistance = viewportRect.width / 2;
+            new IntersectionObserver(([entry]) => {
+                visible = entry.isIntersecting;
+                if (visible) requestAnimationFrame(update);
+            }).observe(viewport);
 
-                cards.forEach(card => {
-                    const cardRect = card.getBoundingClientRect();
-                    const cardCenter = cardRect.left + cardRect.width / 2;
+            document.addEventListener("visibilitychange", () => {
+                if (!document.hidden && visible) requestAnimationFrame(update);
+            });
 
-                    let distanceFromCenter = Math.abs(viewportCenter - cardCenter) / maxDistance;
-                    distanceFromCenter = Math.min(Math.max(distanceFromCenter, 0), 1);
+            function update() {
+                if (!visible || document.hidden) return;
 
-                    const minHeight = 210;
-                    const maxHeight = 380;
-                    const minWidth = 210;
-                    const maxWidth = 230;
+                // Read phase: measure everything first
+                const vr = viewport.getBoundingClientRect();
+                const center = vr.left + vr.width / 2;
+                const maxDist = vr.width / 2;
+                const rects = cards.map(c => c.getBoundingClientRect());
 
-                    const currentHeight = minHeight + (maxHeight - minHeight) * Math.pow(distanceFromCenter, 1.2);
-                    const currentWidth = minWidth + (maxWidth - minWidth) * distanceFromCenter;
-                    const translateY = (1 - distanceFromCenter) * 35;
+                // Write phase: transforms only, no layout
+                cards.forEach((card, i) => {
+                    const r = rects[i];
+                    let d = Math.abs(center - (r.left + r.width / 2)) / maxDist;
+                    d = Math.min(Math.max(d, 0), 1);
 
-                    card.style.height = `${currentHeight}px`;
-                    card.style.width = `${currentWidth}px`;
-                    card.style.transform = `translateY(${translateY}px)`;
+                    const scale = 0.7 + 0.3 * Math.pow(d, 1.2);   // 0.7 at center, 1.0 at edges
+                    const translateY = (1 - d) * 35;
+                    card.style.transform = `translateY(${translateY}px) scale(${scale})`;
                 });
 
-                requestAnimationFrame(updateCardShapes);
+                requestAnimationFrame(update);
             }
 
-            requestAnimationFrame(updateCardShapes);
+            requestAnimationFrame(update);
         });
     </script>
 }
