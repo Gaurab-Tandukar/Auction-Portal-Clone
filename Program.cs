@@ -8,7 +8,7 @@ using SixLabors.ImageSharp.Web;
 using Microsoft.AspNetCore.Http.Features;
 
 var builder = WebApplication.CreateBuilder(args);
-const long MaxRequestBytes = 335544320; // 320 MB
+const long MaxRequestBytes = 524288000; // 500 MB
 
 builder.Services.AddDbContext<AuctionDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -76,6 +76,12 @@ if (!string.IsNullOrWhiteSpace(googleClientId) && !string.IsNullOrWhiteSpace(goo
 builder.WebHost.ConfigureKestrel(options =>
 {
     options.Limits.MaxRequestBodySize = MaxRequestBytes;
+});
+
+// IIS (in-process / out-of-process)
+builder.Services.Configure<IISServerOptions>(options =>
+{
+    options.MaxRequestBodySize = MaxRequestBytes;
 });
 
 // Multipart form parsing

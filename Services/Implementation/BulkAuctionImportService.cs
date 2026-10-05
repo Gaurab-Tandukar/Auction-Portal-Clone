@@ -31,8 +31,8 @@ namespace Auction_Portal_Clone.Services.Implementation
         public const int MaxRowsPerImport = 1000;
 
         private const long MaxSpreadsheetBytes = 10 * 1024 * 1024;       // 10 MB
-        private const long MaxZipBytes = 300 * 1024 * 1024;              // 300 MB
-        private const long MaxZipUncompressedBytes = 300 * 1024 * 1024;  // zip-bomb guard
+        private const long MaxZipBytes = 500 * 1024 * 1024;              // 500 MB
+        private const long MaxZipUncompressedBytes = 500 * 1024 * 1024;  // zip-bomb guard
         private const long MaxMediaFileBytes = 10 * 1024 * 1024;         // 10 MB per file
 
         private static readonly string[] AllowedSpreadsheetExtensions = { ".xlsx" };
@@ -118,7 +118,7 @@ namespace Auction_Portal_Clone.Services.Implementation
                 }
                 if (zipFile.Length > MaxZipBytes)
                 {
-                    result.FileError = "The ZIP file exceeds the 300 MB limit.";
+                    result.FileError = "The ZIP file exceeds the 500 MB limit.";
                     return result;
                 }
 

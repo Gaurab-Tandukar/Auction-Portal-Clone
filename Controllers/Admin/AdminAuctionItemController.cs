@@ -49,8 +49,8 @@ namespace Auction_Portal_Clone.Controllers.Admin
 
         // POST /Admin/AuctionItem/BulkImport
         [HttpPost("BulkImport")]
-        [RequestSizeLimit(335544320)]
-        [RequestFormLimits(MultipartBodyLengthLimit = 335544320)]
+        [RequestSizeLimit(524288000)]
+        [RequestFormLimits(MultipartBodyLengthLimit = 524288000)] // 500 MB
         [ValidateAntiForgeryToken]
         // [RequestSizeLimit(110 * 1024 * 1024)] // spreadsheet + optional ZIP of media
         public async Task<IActionResult> BulkImport(IFormFile? spreadsheetFile, IFormFile? mediaZip)

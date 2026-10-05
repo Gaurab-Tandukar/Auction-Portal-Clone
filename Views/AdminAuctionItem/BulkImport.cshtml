@@ -151,7 +151,7 @@
                         <p class="text-muted small mb-0 mt-3">
                             <i class="bi bi-info-circle me-1"></i>Up to
                             @Auction_Portal_Clone.Services.Implementation.BulkAuctionImportService.MaxRowsPerImport rows per
-                            import, spreadsheet up to 10 MB, ZIP up to 100 MB, each media file up to 10 MB.
+                            import, spreadsheet up to 10 MB, ZIP up to 500 MB, each media file up to 10 MB.
                             Images: .jpg/.jpeg/.png/.webp &mdash; Documents: .pdf only.
                         </p>
                     </div>
@@ -180,10 +180,10 @@
 
                             <div class="mb-4">
                                 <label class="form-label fw-semibold" for="mediaZip">
-                                    Media archive (.zip) <span class="text-muted fw-normal">(optional, max 300 MB)</span>
+                                    Media archive (.zip) <span class="text-muted fw-normal">(optional, max 500 MB)</span>
                                 </label>
                                 <input type="file" id="mediaZip" name="mediaZip" accept=".zip" class="form-control"
-                                       data-max-mb="300" />
+                                       data-max-mb="500" />
                                 <div class="text-danger small mt-1 d-none" id="mediaZipError"></div>
                                 <div class="form-text">
                                     Required only if any row has a MediaFolder value.
