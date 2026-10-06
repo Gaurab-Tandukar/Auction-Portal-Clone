@@ -4,7 +4,7 @@ using Auction_Portal_Clone.Services.Implementation;
 using Auction_Portal_Clone.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using SixLabors.ImageSharp.Web;
+using SixLabors.ImageSharp.Web.DependencyInjection;
 using Microsoft.AspNetCore.Http.Features;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -31,7 +31,11 @@ builder.Services.AddHostedService<AuctionWinnerHostedService>();
 // Serves resized/recompressed variants via query string (?width=900&quality=75&format=webp)
 // for any image under wwwroot, with automatic disk caching so each variant is only
 // processed once. Requires: dotnet add package SixLabors.ImageSharp.Web
-builder.Services.AddImageSharp();
+builder.Services.AddImageSharp(options =>
+{
+    options.BrowserMaxAge = TimeSpan.FromDays(30); // header sent to browsers
+    options.CacheMaxAge = TimeSpan.FromDays(365);  // how long processed files stay in its disk cache
+});
 
 builder.Services.AddIdentity<User, IdentityRole>(options =>
 {
@@ -153,7 +157,19 @@ app.UseRouting();
 // intercept image requests and return a resized/recompressed variant instead of
 // the original file.
 app.UseImageSharp();
-app.UseStaticFiles();
+
+// repeat-visit caching
+app.UseStaticFiles(new StaticFileOptions
+{
+    OnPrepareResponse = ctx =>
+    {
+        if (ctx.Context.Request.Path.StartsWithSegments("/uploads"))
+        {
+            ctx.Context.Response.Headers.CacheControl =
+                "public,max-age=2592000"; // 30 days
+        }
+    }
+});
 
 app.UseAuthentication();
 app.UseAuthorization();
