@@ -1,0 +1,20 @@
+{
+  "region": "us-east-1",
+  "configuration": "Release",
+  "framework": "net10.0",
+  "self-contained": false,
+  "application": "AuctionPortal",
+  "environment": "AuctionPortal-dev",
+  "app-path": "/",
+  "iis-website": "Default Web Site",
+  "enable-xray": false,
+  "enhanced-health-type": "basic",
+  "additional-options": "",
+  "solution-stack": "64bit Windows Server 2019 v2.23.6 running IIS 10.0",
+  "environment-type": "SingleInstance",
+  "cname": "auctionportal-dev",
+  "instance-type": "t2.micro",
+  "key-pair": "auction-portal-key",
+  "instance-profile": "LabInstanceProfile",
+  "service-role": "LabRole"
+}

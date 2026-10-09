@@ -99,9 +99,15 @@ builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
-// Seed roles and a default admin user
+// Create/update the database schema, then seed roles and a default admin user
 using (var scope = app.Services.CreateScope())
 {
+    var dbContext = scope.ServiceProvider.GetRequiredService<AuctionDbContext>();
+
+    // Applies all pending EF migrations (creates the database and tables if missing).
+    // Requires a Migrations folder in the project (Add-Migration InitialCreate).
+    await dbContext.Database.MigrateAsync();
+
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
 
@@ -138,7 +144,6 @@ using (var scope = app.Services.CreateScope())
         await userManager.AddToRoleAsync(adminUser, "BankStaff");
     }
 
-    var dbContext = scope.ServiceProvider.GetRequiredService<AuctionDbContext>();
     await DbSeeder.SeedInitialDataAsync(dbContext);
 }
 
@@ -150,7 +155,13 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+// Beanstalk environment only listens on HTTP (port 80), so skip the HTTPS redirect there.
+// Remove this condition once you add an HTTPS listener/certificate to the load balancer.
+if (!app.Environment.IsProduction())
+{
+    app.UseHttpsRedirection();
+}
+
 app.UseRouting();
 
 // IMPORTANT: UseImageSharp() must run before static files are served, so it can
